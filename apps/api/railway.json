@@ -1,0 +1,14 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "RAILPACK",
+    "buildCommand": "npx turbo run build --filter=@salonflow/api",
+    "watchPatterns": ["apps/api/**", "packages/shared/**", "package-lock.json"]
+  },
+  "deploy": {
+    "preDeployCommand": "npm run prisma:deploy -w @salonflow/api",
+    "startCommand": "npm run start -w @salonflow/api",
+    "healthcheckPath": "/health",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

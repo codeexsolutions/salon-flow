@@ -1,0 +1,27 @@
+# Serviços para desenvolvimento local.
+# Em produção: Postgres no Supabase e Redis no Railway.
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: salonflow-postgres
+    environment:
+      POSTGRES_USER: salonflow
+      POSTGRES_PASSWORD: salonflow
+      POSTGRES_DB: salonflow
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U salonflow']
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: salonflow-redis
+    ports:
+      - '6379:6379'
+
+volumes:
+  postgres-data:

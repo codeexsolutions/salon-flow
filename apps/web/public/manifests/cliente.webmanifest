@@ -1,0 +1,14 @@
+{
+  "id": "/",
+  "name": "SalonFlow",
+  "short_name": "SalonFlow",
+  "description": "Encontre salões e agende seus horários",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "lang": "pt-BR",
+  "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

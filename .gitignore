@@ -1,0 +1,30 @@
+# dependências
+node_modules/
+
+# builds
+dist/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# código gerado
+apps/api/src/generated/
+
+# turbo / vercel
+.turbo/
+.vercel/
+
+# testes
+coverage/
+
+# variáveis de ambiente (commitar só os .env.example)
+.env
+.env.*
+!.env.example
+
+# sistema / editor
+.DS_Store
+Thumbs.db
+*.log
+*.pem

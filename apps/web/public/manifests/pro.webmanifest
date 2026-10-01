@@ -1,0 +1,14 @@
+{
+  "id": "/pro",
+  "name": "SalonFlow Pro",
+  "short_name": "SalonFlow Pro",
+  "description": "Agenda e comissões do profissional",
+  "start_url": "/pro",
+  "scope": "/pro",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "lang": "pt-BR",
+  "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "/admin",
+  "name": "SalonFlow — Painel do Salão",
+  "short_name": "Painel",
+  "description": "Gestão do salão: agenda, comandas, comissões e financeiro",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "lang": "pt-BR",
+  "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

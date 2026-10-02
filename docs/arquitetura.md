@@ -72,16 +72,16 @@ Toda chamada à API passa por `src/lib/api/client.ts`.
 
 ## Módulos planejados
 
-| Módulo                                                     | Status                        |
-| ---------------------------------------------------------- | ----------------------------- |
-| health, usuarios, saloes                                   | ✅ base                       |
-| profissionais (jornada, folgas, convite por e-mail)        | ✅                            |
-| servicos (preço, duração, profissionais; ficha técnica ⏳) | ✅                            |
-| clientes (busca e cadastro rápido; ficha completa ⏳)      | 🟡                            |
-| agenda (horários livres, agenda do dia, encaixe, status)   | ✅ painel · ⏳ app do cliente |
-| comandas, caixa                                            | ⏳                            |
-| comissoes (regras configuráveis, repasse salão-parceiro)   | ⏳                            |
-| estoque, fornecedores                                      | ⏳                            |
-| financeiro                                                 | ⏳                            |
-| marketplace (busca, favoritos, avaliações)                 | ⏳                            |
-| notificacoes (web push, e-mail, lembretes)                 | ⏳                            |
+| Módulo                                                     | Status  |
+| ---------------------------------------------------------- | ------- |
+| health, usuarios, saloes                                   | ✅ base |
+| profissionais (jornada, folgas, convite por e-mail)        | ✅      |
+| servicos (preço, duração, profissionais; ficha técnica ⏳) | ✅      |
+| clientes (busca e cadastro rápido; ficha completa ⏳)      | 🟡      |
+| agenda (painel, app do cliente, app do profissional)       | ✅      |
+| comandas, caixa                                            | ⏳      |
+| comissoes (regras configuráveis, repasse salão-parceiro)   | ⏳      |
+| estoque, fornecedores                                      | ⏳      |
+| financeiro                                                 | ⏳      |
+| marketplace (busca, favoritos, avaliações)                 | ⏳      |
+| notificacoes (web push, e-mail, lembretes)                 | ⏳      |

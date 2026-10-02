@@ -38,6 +38,12 @@ export class ContextoSalao {
     return fuso;
   }
 
+  /** Rotas públicas (página do salão): define o salão sem papel de equipe. */
+  definirPublico(salaoId: string, fusoHorario: string) {
+    this.cls.set('salaoId', salaoId);
+    this.cls.set('fusoHorario', fusoHorario);
+  }
+
   definir(salaoId: string, papel: Papel, fusoHorario: string) {
     this.cls.set('salaoId', salaoId);
     this.cls.set('papel', papel);

@@ -27,4 +27,29 @@ export class ClientesRepository {
   criar(salaoId: string, dados: CriarClienteInput) {
     return this.prisma.cliente.create({ data: { ...dados, salaoId } });
   }
+
+  /**
+   * Ficha do usuário do app neste salão: a já vinculada; senão, uma ficha criada pela
+   * recepção com o mesmo e-mail (passa a ser dele); senão, uma nova.
+   */
+  garantirParaUsuario(salaoId: string, usuario: { id: string; email: string; nome: string }) {
+    return this.prisma.$transaction(async (tx) => {
+      const vinculada = await tx.cliente.findUnique({
+        where: { salaoId_usuarioId: { salaoId, usuarioId: usuario.id } },
+      });
+      if (vinculada) return vinculada;
+
+      const mesmoEmail = await tx.cliente.findFirst({
+        where: { salaoId, usuarioId: null, email: { equals: usuario.email, mode: 'insensitive' } },
+        orderBy: { criadoEm: 'asc' },
+      });
+      if (mesmoEmail) {
+        return tx.cliente.update({ where: { id: mesmoEmail.id }, data: { usuarioId: usuario.id } });
+      }
+
+      return tx.cliente.create({
+        data: { salaoId, usuarioId: usuario.id, nome: usuario.nome, email: usuario.email },
+      });
+    });
+  }
 }

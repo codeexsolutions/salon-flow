@@ -25,4 +25,6 @@ export interface SalaoPublico {
   slug: string;
   cidade: string | null;
   uf: string | null;
+  telefone: string | null;
+  fusoHorario: string;
 }

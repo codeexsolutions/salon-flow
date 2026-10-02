@@ -3,6 +3,7 @@ import type {
   AtualizarServicoInput,
   CriarServicoInput,
   DefinirProfissionaisServicoInput,
+  ServicoOnline,
 } from '@salonflow/shared';
 import {
   ConflitoError,
@@ -65,11 +66,12 @@ export class ServicosService {
    * Para a agenda: quem pode fazer o serviço e com que preço/duração.
    * Com `profissionalId`, exige que esse profissional faça o serviço.
    */
-  async opcoesDeAgendamento(servicoId: string, profissionalId?: string) {
+  async opcoesDeAgendamento(servicoId: string, profissionalId?: string, somenteOnline = false) {
     const servico = await this.repository.paraAgendamento(
       this.contexto.salaoId,
       servicoId,
       profissionalId,
+      somenteOnline,
     );
     if (!servico) throw new NaoEncontradoError('Serviço');
     if (profissionalId && servico.profissionais.length === 0) {
@@ -87,6 +89,24 @@ export class ServicosService {
         ...valoresDoProfissional(servico, sp),
       })),
     };
+  }
+
+  /** Página pública do salão: serviços que o cliente pode agendar, com valores por profissional. */
+  async catalogoOnline(): Promise<ServicoOnline[]> {
+    const servicos = await this.repository.catalogoOnline(this.contexto.salaoId);
+    return servicos.map((s) => ({
+      id: s.id,
+      nome: s.nome,
+      descricao: s.descricao,
+      categoria: s.categoria,
+      precoCentavos: s.precoCentavos,
+      duracaoMin: s.duracaoMin,
+      profissionais: s.profissionais.map((sp) => ({
+        id: sp.profissionalId,
+        nome: sp.profissional.nome,
+        ...valoresDoProfissional(s, sp),
+      })),
+    }));
   }
 
   private nomeDuplicado() {

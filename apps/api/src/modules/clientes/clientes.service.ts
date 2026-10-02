@@ -19,6 +19,15 @@ export class ClientesService {
     return this.repository.criar(this.contexto.salaoId, dados);
   }
 
+  /** Ficha do usuário logado no app neste salão (criada no primeiro agendamento). */
+  garantirParaUsuario(usuario: { id: string; email: string; nome?: string }) {
+    return this.repository.garantirParaUsuario(this.contexto.salaoId, {
+      id: usuario.id,
+      email: usuario.email.toLowerCase(),
+      nome: usuario.nome?.trim() || usuario.email.split('@')[0],
+    });
+  }
+
   /** Garante que o cliente existe NESTE salão (usado pela agenda). */
   async obter(id: string) {
     const cliente = await this.repository.buscarPorId(this.contexto.salaoId, id);

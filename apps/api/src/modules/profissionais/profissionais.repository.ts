@@ -38,6 +38,13 @@ export class ProfissionaisRepository {
     });
   }
 
+  buscarPorUsuario(salaoId: string, usuarioId: string) {
+    return this.prisma.profissional.findFirst({
+      where: { salaoId, usuarioId, ativo: true },
+      select: { id: true, nome: true, corAgenda: true },
+    });
+  }
+
   contarAtivos(salaoId: string, ids: string[]) {
     return this.prisma.profissional.count({ where: { salaoId, ativo: true, id: { in: ids } } });
   }

@@ -38,9 +38,9 @@ export class ServicosRepository {
   }
 
   /** Serviço ativo + profissionais ATIVOS que o fazem (com valores próprios). */
-  paraAgendamento(salaoId: string, id: string, profissionalId?: string) {
+  paraAgendamento(salaoId: string, id: string, profissionalId?: string, somenteOnline = false) {
     return this.prisma.servico.findFirst({
-      where: { id, salaoId, ativo: true },
+      where: { id, salaoId, ativo: true, ...(somenteOnline && { visivelOnline: true }) },
       include: {
         profissionais: {
           where: { profissional: { ativo: true }, ...(profissionalId && { profissionalId }) },
@@ -48,6 +48,26 @@ export class ServicosRepository {
           orderBy: { profissional: { nome: 'asc' } },
         },
       },
+    });
+  }
+
+  /** Serviços que o cliente pode agendar pelo app (ativos, online e com profissional ativo). */
+  catalogoOnline(salaoId: string) {
+    return this.prisma.servico.findMany({
+      where: {
+        salaoId,
+        ativo: true,
+        visivelOnline: true,
+        profissionais: { some: { profissional: { ativo: true } } },
+      },
+      include: {
+        profissionais: {
+          where: { profissional: { ativo: true } },
+          include: { profissional: { select: { nome: true } } },
+          orderBy: { profissional: { nome: 'asc' } },
+        },
+      },
+      orderBy: [{ categoria: 'asc' }, { nome: 'asc' }],
     });
   }
 

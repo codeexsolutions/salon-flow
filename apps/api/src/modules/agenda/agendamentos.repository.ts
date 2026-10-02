@@ -51,6 +51,39 @@ export class AgendamentosRepository {
     });
   }
 
+  /** Agendamentos futuros ainda em aberto do cliente neste salão. */
+  contarAbertosDoCliente(salaoId: string, clienteId: string, agora: Date) {
+    return this.prisma.agendamento.count({
+      where: {
+        salaoId,
+        clienteId,
+        status: { in: ['AGENDADO', 'CONFIRMADO'] },
+        inicio: { gte: agora },
+      },
+    });
+  }
+
+  /**
+   * Agendamentos do USUÁRIO (cliente do app) em todos os salões. Filtra pela conta
+   * vinculada à ficha do cliente — nunca expõe dados de outros clientes.
+   */
+  doUsuario(usuarioId: string, desde: Date) {
+    return this.prisma.agendamento.findMany({
+      where: { cliente: { usuarioId }, inicio: { gte: desde } },
+      include: {
+        salao: { select: { nome: true, slug: true, fusoHorario: true, telefone: true } },
+        servico: { select: { nome: true } },
+        profissional: { select: { nome: true } },
+      },
+      orderBy: { inicio: 'asc' },
+      take: 100,
+    });
+  }
+
+  buscarDoUsuario(usuarioId: string, id: string) {
+    return this.prisma.agendamento.findFirst({ where: { id, cliente: { usuarioId } } });
+  }
+
   buscar(salaoId: string, id: string) {
     return this.prisma.agendamento.findFirst({ where: { id, salaoId }, include: comDetalhes });
   }

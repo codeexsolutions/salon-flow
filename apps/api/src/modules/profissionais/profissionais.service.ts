@@ -42,6 +42,13 @@ export class ProfissionaisService {
     return this.repository.dadosDeAgenda(this.contexto.salaoId, inicio, fim, ids);
   }
 
+  /** O profissional que é o usuário logado neste salão (app do profissional). */
+  async doUsuario(usuarioId: string) {
+    const profissional = await this.repository.buscarPorUsuario(this.contexto.salaoId, usuarioId);
+    if (!profissional) throw new NaoEncontradoError('Profissional');
+    return profissional;
+  }
+
   /** Quantos dos ids são profissionais ATIVOS do salão atual (usado por outros módulos). */
   contarAtivos(ids: string[]) {
     if (ids.length === 0) return Promise.resolve(0);

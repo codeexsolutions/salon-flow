@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import type {
-  AgendaDia,
-  AlterarStatusAgendamentoInput,
-  CriarAgendamentoInput,
-  HorariosLivresProfissional,
-  HorariosLivresQuery,
-  RemarcarAgendamentoInput,
+import {
+  ANTECEDENCIA_MINIMA_APP_MIN,
+  JANELA_AGENDAMENTO_APP_DIAS,
+  MAX_AGENDAMENTOS_ABERTOS_POR_CLIENTE,
+  PRAZO_CANCELAMENTO_CLIENTE_MIN,
+  type AgendaDia,
+  type AgendarPeloAppInput,
+  type MeuAgendamento,
+  type AlterarStatusAgendamentoInput,
+  type CriarAgendamentoInput,
+  type HorariosLivresProfissional,
+  type HorariosLivresQuery,
+  type RemarcarAgendamentoInput,
 } from '@salonflow/shared';
+import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import {
   diaSemanaDe,
   limitesDoDia,
@@ -26,6 +33,11 @@ import { ServicosService } from '../servicos/servicos.service.js';
 import { paraAgendamentoAgenda } from './agenda.mapper.js';
 import { AgendamentosRepository } from './agendamentos.repository.js';
 import { avaliarHorario, horariosLivres, type Periodo } from './domain/disponibilidade.js';
+import {
+  avaliarHorarioApp,
+  clientePodeCancelar,
+  primeiroHorarioApp,
+} from './domain/regras-cliente.js';
 import { podeMudarStatus, podeRemarcar } from './domain/status.js';
 
 const MENSAGENS_RECUSA = {
@@ -86,14 +98,16 @@ export class AgendaService {
     };
   }
 
-  /** Horários livres do serviço no dia, por profissional que o faz. */
-  async horariosLivres({
-    servicoId,
-    data,
-    profissionalId,
-  }: HorariosLivresQuery): Promise<HorariosLivresProfissional[]> {
+  /**
+   * Horários livres do serviço no dia, por profissional que o faz.
+   * `paraApp`: só serviços online e respeitando antecedência mínima/janela do cliente.
+   */
+  async horariosLivres(
+    { servicoId, data, profissionalId }: HorariosLivresQuery,
+    paraApp = false,
+  ): Promise<HorariosLivresProfissional[]> {
     const fuso = this.contexto.fusoHorario;
-    const opcoes = await this.servicos.opcoesDeAgendamento(servicoId, profissionalId);
+    const opcoes = await this.servicos.opcoesDeAgendamento(servicoId, profissionalId, paraApp);
     const ids = opcoes.profissionais.map((p) => p.profissionalId);
     if (ids.length === 0) return [];
 
@@ -117,8 +131,8 @@ export class AgendaService {
               ...ocupacoes.filter((o) => o.profissionalId === opcao.profissionalId),
             ],
             duracaoMin: opcao.duracaoMin,
-            naoAntesDe: agora,
-          })
+            naoAntesDe: paraApp ? primeiroHorarioApp(agora) : agora,
+          }).filter((d) => !paraApp || avaliarHorarioApp(d, agora) === null)
         : [];
       return {
         ...opcao,
@@ -130,9 +144,64 @@ export class AgendaService {
     });
   }
 
-  async criar(dados: CriarAgendamentoInput, usuarioId: string) {
+  /** Agendamento feito pela equipe no painel. */
+  criar(dados: CriarAgendamentoInput, usuarioId: string) {
+    return this.inserir({ ...dados, origem: 'SALAO', criadoPorId: usuarioId });
+  }
+
+  /** Agendamento feito pelo próprio cliente no app (página do salão). */
+  async agendarPeloApp(usuario: UsuarioAutenticado, dados: AgendarPeloAppInput) {
+    const agora = new Date();
+    const recusa = avaliarHorarioApp(localParaUtc(dados.inicio, this.contexto.fusoHorario), agora);
+    if (recusa === 'ANTECEDENCIA_MINIMA') {
+      throw new RegraDeNegocioError(
+        recusa,
+        `Escolha um horário com pelo menos ${ANTECEDENCIA_MINIMA_APP_MIN} minutos de antecedência.`,
+      );
+    }
+    if (recusa === 'FORA_DA_JANELA') {
+      throw new RegraDeNegocioError(
+        recusa,
+        `É possível agendar com até ${JANELA_AGENDAMENTO_APP_DIAS} dias de antecedência.`,
+      );
+    }
+
+    const cliente = await this.clientes.garantirParaUsuario(usuario);
+    const abertos = await this.repository.contarAbertosDoCliente(
+      this.contexto.salaoId,
+      cliente.id,
+      agora,
+    );
+    if (abertos >= MAX_AGENDAMENTOS_ABERTOS_POR_CLIENTE) {
+      throw new RegraDeNegocioError(
+        'LIMITE_AGENDAMENTOS',
+        `Você já tem ${abertos} agendamentos em aberto neste salão. Cancele um para marcar outro.`,
+      );
+    }
+
+    return this.inserir({
+      ...dados,
+      clienteId: cliente.id,
+      encaixe: false,
+      origem: 'APP_CLIENTE',
+      criadoPorId: usuario.id,
+      somenteOnline: true,
+    });
+  }
+
+  private async inserir(
+    dados: CriarAgendamentoInput & {
+      origem: 'SALAO' | 'APP_CLIENTE';
+      criadoPorId: string;
+      somenteOnline?: boolean;
+    },
+  ) {
     await this.clientes.obter(dados.clienteId);
-    const opcoes = await this.servicos.opcoesDeAgendamento(dados.servicoId, dados.profissionalId);
+    const opcoes = await this.servicos.opcoesDeAgendamento(
+      dados.servicoId,
+      dados.profissionalId,
+      dados.somenteOnline,
+    );
     const { precoCentavos, duracaoMin } = opcoes.profissionais[0];
 
     const periodo = this.periodo(dados.inicio, duracaoMin);
@@ -147,11 +216,56 @@ export class AgendaService {
       fim: periodo.fim,
       precoCentavos,
       observacoes: dados.observacoes,
-      origem: 'SALAO',
-      criadoPorId: usuarioId,
+      origem: dados.origem,
+      criadoPorId: dados.criadoPorId,
     });
     if (!criado) throw this.horarioOcupado();
     return criado;
+  }
+
+  /** "Meus agendamentos" do cliente, em todos os salões (sem contexto de salão). */
+  async meusAgendamentos(usuarioId: string): Promise<MeuAgendamento[]> {
+    const agora = new Date();
+    const desde = new Date(agora.getTime() - 90 * 24 * 60 * 60_000);
+    const lista = await this.repository.doUsuario(usuarioId, desde);
+    return lista.map((a) => ({
+      id: a.id,
+      inicio: a.inicio.toISOString(),
+      fim: a.fim.toISOString(),
+      status: a.status,
+      precoCentavos: a.precoCentavos,
+      salao: a.salao,
+      servico: a.servico,
+      profissional: a.profissional,
+      podeCancelar: clientePodeCancelar(a.status, a.inicio, agora),
+    }));
+  }
+
+  /** Cancelamento pelo cliente: só o próprio agendamento, em aberto e dentro do prazo. */
+  async cancelarPeloCliente(usuarioId: string, id: string) {
+    const agendamento = await this.repository.buscarDoUsuario(usuarioId, id);
+    if (!agendamento) throw new NaoEncontradoError('Agendamento');
+    if (!clientePodeCancelar(agendamento.status, agendamento.inicio, new Date())) {
+      throw new RegraDeNegocioError(
+        'PRAZO_CANCELAMENTO',
+        `O cancelamento pelo app é possível até ${PRAZO_CANCELAMENTO_CLIENTE_MIN / 60} horas antes. Fale com o salão.`,
+      );
+    }
+    await this.repository.atualizarStatus(agendamento.salaoId, id, 'CANCELADO');
+  }
+
+  /** Agenda do dia do profissional logado (app do profissional). */
+  async agendaDoProfissional(usuarioId: string, data: string): Promise<AgendaDia> {
+    const profissional = await this.profissionais.doUsuario(usuarioId);
+    const agenda = await this.agendaDoDia(data);
+    const naAgenda = agenda.profissionais.find((p) => p.id === profissional.id);
+
+    return {
+      ...agenda,
+      profissionais: [naAgenda ?? { ...profissional, jornada: [] }],
+      agendamentos: agenda.agendamentos.filter((a) => a.profissionalId === profissional.id),
+      bloqueios: agenda.bloqueios.filter((b) => b.profissionalId === profissional.id),
+    };
   }
 
   async remarcar(id: string, dados: RemarcarAgendamentoInput) {

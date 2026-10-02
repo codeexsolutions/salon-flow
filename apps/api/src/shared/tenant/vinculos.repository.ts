@@ -11,6 +11,14 @@ export interface VinculoAtivo {
 export class VinculosRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Salão ativo pelo endereço público (/s/:slug). */
+  buscarSalaoAtivoPorSlug(slug: string) {
+    return this.prisma.salao.findFirst({
+      where: { slug, ativo: true },
+      select: { id: true, fusoHorario: true },
+    });
+  }
+
   async buscarVinculoAtivo(usuarioId: string, salaoId: string): Promise<VinculoAtivo | null> {
     const vinculo = await this.prisma.membroSalao.findFirst({
       where: { usuarioId, salaoId, ativo: true, salao: { ativo: true } },

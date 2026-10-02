@@ -9,5 +9,7 @@ export function paraSalaoPublico(salao: Salao): SalaoPublico {
     slug: salao.slug,
     cidade: salao.cidade,
     uf: salao.uf,
+    telefone: salao.telefone,
+    fusoHorario: salao.fusoHorario,
   };
 }

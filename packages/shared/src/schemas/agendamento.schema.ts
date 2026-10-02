@@ -88,3 +88,37 @@ export interface HorariosLivresProfissional {
   duracaoMin: number;
   horarios: HorarioLivre[];
 }
+
+/** Agendamento feito pelo próprio cliente no app (sem encaixe, sem observação livre). */
+export const agendarPeloAppSchema = z.object({
+  servicoId: z.uuid(),
+  profissionalId: z.uuid(),
+  inicio: dataHoraLocalSchema,
+});
+export type AgendarPeloAppInput = z.infer<typeof agendarPeloAppSchema>;
+
+/** Serviço como o cliente vê na página do salão. */
+export interface ServicoOnline {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  categoria: string | null;
+  /** Valores do serviço; cada profissional pode ter os próprios. */
+  precoCentavos: number;
+  duracaoMin: number;
+  profissionais: { id: string; nome: string; precoCentavos: number; duracaoMin: number }[];
+}
+
+/** Agendamento na lista "Meus agendamentos" do cliente (todos os salões). */
+export interface MeuAgendamento {
+  id: string;
+  inicio: string;
+  fim: string;
+  status: StatusAgendamento;
+  precoCentavos: number;
+  salao: { nome: string; slug: string; fusoHorario: string; telefone: string | null };
+  servico: { nome: string };
+  profissional: { nome: string };
+  /** Se o cliente ainda pode cancelar pelo app. */
+  podeCancelar: boolean;
+}

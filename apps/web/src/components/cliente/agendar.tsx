@@ -197,7 +197,7 @@ export function Agendar({
                 }}
               >
                 <span className="flex flex-col items-center leading-tight">
-                  <span className="text-xs capitalize">
+                  <span className="text-xs">
                     {d === hoje ? 'hoje' : dataPorExtenso(d).split(',')[0].slice(0, 3)}
                   </span>
                   <span className="font-semibold">{d.slice(8)}</span>
@@ -221,7 +221,7 @@ export function Agendar({
             />
           </label>
 
-          <p className="text-sm font-medium capitalize">{dataPorExtenso(data)}</p>
+          <p className="text-sm font-medium">{dataPorExtenso(data)}</p>
           {carregando ? (
             <p className="text-sm text-suave">Buscando horários…</p>
           ) : opcoesDeHorario.length === 0 ? (
@@ -247,9 +247,8 @@ export function Agendar({
           <p className="text-sm">
             <strong>{servico.nome}</strong> com {profissionalEscolhido?.nome}
             <br />
-            <span className="capitalize">
-              {dataPorExtenso(escolha.inicio.slice(0, 10))}
-            </span> às {escolha.inicio.slice(11)} ·{' '}
+            {dataPorExtenso(escolha.inicio.slice(0, 10))}
+            às {escolha.inicio.slice(11)} ·{' '}
             {formatarPreco(profissionalEscolhido?.precoCentavos ?? servico.precoCentavos)}
           </p>
           {erro && (

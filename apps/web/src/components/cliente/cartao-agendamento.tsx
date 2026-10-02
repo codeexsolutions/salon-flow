@@ -30,8 +30,7 @@ export function CartaoAgendamento({ agendamento: a }: { agendamento: MeuAgendame
         <div>
           <p className="font-semibold">{a.servico.nome}</p>
           <p className="text-sm">
-            <span className="capitalize">{dataPorExtenso(dataLocal(a.inicio, fuso))}</span>, às{' '}
-            {horaLocal(a.inicio, fuso)}
+            {dataPorExtenso(dataLocal(a.inicio, fuso))}, às {horaLocal(a.inicio, fuso)}
           </p>
           <p className="text-sm text-suave">
             {a.profissional.nome} ·{' '}

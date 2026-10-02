@@ -56,7 +56,7 @@ export default async function AgendaPage({ searchParams }: PageProps<'/admin/age
             Ir
           </button>
         </form>
-        <p className="text-sm capitalize text-suave">
+        <p className="text-sm text-suave">
           {dataPorExtenso(data)}
           {data === hoje && ' · hoje'}
         </p>

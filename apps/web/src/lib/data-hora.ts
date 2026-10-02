@@ -49,15 +49,16 @@ export function dataLocal(iso: string, fuso: string): string {
   return `${v.year}-${v.month}-${v.day}`;
 }
 
-/** "2026-10-05" -> "segunda-feira, 5 de outubro" */
+/** "2026-10-05" -> "Segunda-feira, 5 de outubro" (só a primeira letra maiúscula) */
 export function dataPorExtenso(data: string): string {
   const [ano, mes, dia] = data.split('-').map(Number);
-  return new Intl.DateTimeFormat('pt-BR', {
+  const texto = new Intl.DateTimeFormat('pt-BR', {
     timeZone: 'UTC',
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   }).format(new Date(Date.UTC(ano, mes - 1, dia)));
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
 /** "09:30" -> 570 */

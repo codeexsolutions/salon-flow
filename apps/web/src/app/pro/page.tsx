@@ -58,7 +58,7 @@ export default async function ProAgendaPage({ searchParams }: PageProps<'/pro'>)
           ←
         </Link>
         <div className="text-center">
-          <p className="font-medium capitalize">{dataPorExtenso(data)}</p>
+          <p className="font-medium">{dataPorExtenso(data)}</p>
           {data === hoje ? (
             <p className="text-xs text-suave">hoje</p>
           ) : (

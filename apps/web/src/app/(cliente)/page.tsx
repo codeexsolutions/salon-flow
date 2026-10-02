@@ -130,7 +130,7 @@ export default async function InicioPage({ searchParams }: PageProps<'/'>) {
           ))}
         </ul>
         <Link
-          href="/admin/novo-salao"
+          href="/cadastro-salao"
           className="inline-flex items-center gap-2 self-start rounded-xl bg-white px-5 py-2.5 font-medium text-[#6e3540] hover:bg-[#fbf0ee]"
         >
           Cadastre seu salão grátis <ArrowRight className="size-4" aria-hidden />

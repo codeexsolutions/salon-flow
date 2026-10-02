@@ -4,7 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { HEADER_SALAO_ID } from '@salonflow/shared';
 import { AppModule } from './app.module.js';
 import type { Env } from './config/env.js';
+import { registrarErrosFatais } from './shared/erros-fatais.js';
 import { GlobalExceptionFilter } from './shared/http/exception.filter.js';
+
+registrarErrosFatais();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

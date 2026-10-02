@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { CalendarHeart, Scissors, Store, type LucideIcon } from 'lucide-react';
 import { criarSupabaseBrowser } from '@/lib/supabase/client';
 import {
   Campo,
@@ -10,7 +11,27 @@ import {
   classeInput,
 } from '@/components/ui/campo';
 
-type Modo = 'entrar' | 'criar' | 'recuperar';
+export type Modo = 'entrar' | 'criar' | 'recuperar';
+
+/** Perfil escolhido ao criar a conta: define para onde a pessoa vai em seguida. */
+export type TipoConta = 'cliente' | 'salao' | 'profissional';
+
+const TIPOS: { tipo: TipoConta; rotulo: string; descricao: string; icone: LucideIcon }[] = [
+  { tipo: 'cliente', rotulo: 'Quero agendar', descricao: 'Cliente', icone: CalendarHeart },
+  { tipo: 'salao', rotulo: 'Tenho um salão', descricao: 'Dono(a)', icone: Store },
+  {
+    tipo: 'profissional',
+    rotulo: 'Sou profissional',
+    descricao: 'Atendo num salão',
+    icone: Scissors,
+  },
+];
+
+const SUBTITULO_CRIAR: Record<TipoConta, string> = {
+  cliente: 'Crie sua conta para agendar em qualquer salão.',
+  salao: 'Crie seu acesso. Em seguida, você cadastra os dados do salão.',
+  profissional: 'Use o mesmo e-mail que o salão cadastrou para você.',
+};
 
 const TITULOS: Record<Modo, { titulo: string; subtitulo: string }> = {
   entrar: { titulo: 'Entrar', subtitulo: 'Acesse com seu e-mail e senha.' },
@@ -22,17 +43,37 @@ const TITULOS: Record<Modo, { titulo: string; subtitulo: string }> = {
 };
 
 /** Login por e-mail e senha: entrar, criar conta e recuperar senha. */
-export function FormLogin({ next, google }: { next: string | null; google: boolean }) {
+export function FormLogin({
+  next,
+  google,
+  modoInicial = 'entrar',
+  tipoInicial = 'cliente',
+}: {
+  next: string | null;
+  google: boolean;
+  modoInicial?: Modo;
+  tipoInicial?: TipoConta;
+}) {
   const router = useRouter();
-  const [modo, setModo] = useState<Modo>('entrar');
+  const [modo, setModo] = useState<Modo>(modoInicial);
+  const [tipo, setTipo] = useState<TipoConta>(tipoInicial);
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
 
-  const continuar = next ? `/auth/continuar?next=${encodeURIComponent(next)}` : '/auth/continuar';
-  const retorno = (destino: string | null) => {
+  // Ao criar conta, o perfil escolhido define o próximo passo.
+  const destino =
+    modo === 'criar' && tipo === 'salao'
+      ? '/admin/novo-salao'
+      : modo === 'criar' && tipo === 'profissional'
+        ? '/pro'
+        : next;
+  const continuar = destino
+    ? `/auth/continuar?next=${encodeURIComponent(destino)}`
+    : '/auth/continuar';
+  const retorno = (caminho: string | null) => {
     const url = new URL('/auth/callback', window.location.origin);
-    if (destino) url.searchParams.set('next', destino);
+    if (caminho) url.searchParams.set('next', caminho);
     return url.toString();
   };
 
@@ -66,7 +107,10 @@ export function FormLogin({ next, google }: { next: string | null; google: boole
           ? await auth.signUp({
               email,
               password: senha,
-              options: { data: { full_name: nome }, emailRedirectTo: retorno(next) },
+              options: {
+                data: { full_name: nome, tipo_conta: tipo },
+                emailRedirectTo: retorno(destino),
+              },
             })
           : await auth.signInWithPassword({ email, password: senha });
 
@@ -94,11 +138,42 @@ export function FormLogin({ next, google }: { next: string | null; google: boole
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h1 className="font-display text-3xl">{TITULOS[modo].titulo}</h1>
-        <p className="mt-1 text-sm text-suave">{TITULOS[modo].subtitulo}</p>
+        <h1 className="font-display text-3xl">
+          {modo === 'criar' && tipo === 'salao' ? 'Cadastre seu salão' : TITULOS[modo].titulo}
+        </h1>
+        <p className="mt-1 text-sm text-suave">
+          {modo === 'criar' ? SUBTITULO_CRIAR[tipo] : TITULOS[modo].subtitulo}
+        </p>
       </div>
 
       <form action={enviar} className="flex flex-col gap-4">
+        {modo === 'criar' && (
+          <fieldset className="grid grid-cols-3 gap-2">
+            <legend className="mb-2 text-sm font-medium">Como você vai usar o SalonFlow?</legend>
+            {TIPOS.map(({ tipo: t, rotulo, descricao, icone: Icone }) => (
+              <label
+                key={t}
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border p-3 text-center text-xs transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primaria/40 ${
+                  tipo === t
+                    ? 'border-primaria bg-nude text-primaria'
+                    : 'border-borda text-suave hover:border-primaria/40'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="tipoConta"
+                  value={t}
+                  checked={tipo === t}
+                  onChange={() => setTipo(t)}
+                  className="sr-only"
+                />
+                <Icone className="size-5" aria-hidden />
+                <span className="font-medium text-foreground">{rotulo}</span>
+                <span>{descricao}</span>
+              </label>
+            ))}
+          </fieldset>
+        )}
         {modo === 'criar' && (
           <Campo rotulo="Seu nome">
             <input name="nome" required autoComplete="name" minLength={2} className={classeInput} />

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { CalendarCheck, HandCoins, Sparkles } from 'lucide-react';
-import { FormLogin } from '@/components/auth/form-login';
+import { FormLogin, type Modo, type TipoConta } from '@/components/auth/form-login';
 import { caminhoSeguro } from '@/lib/auth/destino';
 import { obterSessao } from '@/lib/auth/sessao';
 import { provedoresAtivos } from '@/lib/supabase/provedores';
@@ -16,6 +16,14 @@ const DESTAQUES = [
 export default async function EntrarPage({ searchParams }: PageProps<'/entrar'>) {
   const params = await searchParams;
   const next = caminhoSeguro(typeof params.next === 'string' ? params.next : null);
+
+  // Quem vem de "Cadastre seu salão" já cai em Criar conta > Tenho um salão.
+  const vemDoCadastroDeSalao = next?.startsWith('/admin/novo-salao') ?? false;
+  const tipoPedido = ['cliente', 'salao', 'profissional'].includes(String(params.tipo))
+    ? (params.tipo as TipoConta)
+    : undefined;
+  const tipoInicial: TipoConta = vemDoCadastroDeSalao ? 'salao' : (tipoPedido ?? 'cliente');
+  const modoInicial: Modo = vemDoCadastroDeSalao || params.modo === 'criar' ? 'criar' : 'entrar';
 
   const [sessao, provedores] = await Promise.all([obterSessao(), provedoresAtivos()]);
   if (sessao) {
@@ -44,7 +52,12 @@ export default async function EntrarPage({ searchParams }: PageProps<'/entrar'>)
             O link expirou ou já foi usado. Tente novamente.
           </p>
         )}
-        <FormLogin next={next} google={provedores.google} />
+        <FormLogin
+          next={next}
+          google={provedores.google}
+          modoInicial={modoInicial}
+          tipoInicial={tipoInicial}
+        />
       </section>
     </div>
   );

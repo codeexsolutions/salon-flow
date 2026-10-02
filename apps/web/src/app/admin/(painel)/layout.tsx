@@ -5,7 +5,7 @@ import { env } from '@/lib/env';
 
 const menu = [
   { rotulo: 'Início', href: '/admin' },
-  { rotulo: 'Agenda' },
+  { rotulo: 'Agenda', href: '/admin/agenda' },
   { rotulo: 'Comandas' },
   { rotulo: 'Clientes' },
   { rotulo: 'Profissionais', href: '/admin/profissionais' },

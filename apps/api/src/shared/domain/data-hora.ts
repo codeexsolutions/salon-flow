@@ -49,3 +49,38 @@ export function minutosParaHora(minutos: number): string {
   const m = minutos % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
+
+/** Instante UTC -> "AAAA-MM-DDTHH:MM" no fuso do salão. */
+export function utcParaLocal(instante: Date, fuso: string): string {
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: fuso,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).formatToParts(instante);
+  const v = Object.fromEntries(partes.map((p) => [p.type, p.value]));
+  return `${v.year}-${v.month}-${v.day}T${v.hour}:${v.minute}`;
+}
+
+/** "2026-10-02" -> 0 (domingo) ... 6 (sábado). Independe de fuso: é a data do calendário. */
+export function diaSemanaDe(data: string): number {
+  const [ano, mes, dia] = data.split('-').map(Number);
+  return new Date(Date.UTC(ano, mes - 1, dia)).getUTCDay();
+}
+
+/** "2026-10-31" -> "2026-11-01" */
+export function proximoDia(data: string): string {
+  const [ano, mes, dia] = data.split('-').map(Number);
+  return new Date(Date.UTC(ano, mes - 1, dia + 1)).toISOString().slice(0, 10);
+}
+
+/** Início e fim (exclusivo) do dia local do salão, em UTC. */
+export function limitesDoDia(data: string, fuso: string): { inicio: Date; fim: Date } {
+  return {
+    inicio: localParaUtc(`${data}T00:00`, fuso),
+    fim: localParaUtc(`${proximoDia(data)}T00:00`, fuso),
+  };
+}

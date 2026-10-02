@@ -34,6 +34,7 @@ model Usuario {
 
   vinculos      MembroSalao[]
   profissionais Profissional[]
+  clientes      Cliente[]
 
   @@map("usuarios")
 }
@@ -58,6 +59,8 @@ model Salao {
   bloqueiosAgenda      BloqueioAgenda[]
   servicos             Servico[]
   servicoProfissionais ServicoProfissional[]
+  clientes             Cliente[]
+  agendamentos         Agendamento[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -94,11 +97,12 @@ model Profissional {
   criadoEm     DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
-  salao     Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
-  usuario   Usuario?              @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
-  jornada   JornadaIntervalo[]
-  bloqueios BloqueioAgenda[]
-  servicos  ServicoProfissional[]
+  salao        Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  usuario      Usuario?              @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  jornada      JornadaIntervalo[]
+  bloqueios    BloqueioAgenda[]
+  servicos     ServicoProfissional[]
+  agendamentos Agendamento[]
 
   @@unique([salaoId, email])
   @@unique([salaoId, usuarioId])
@@ -159,6 +163,7 @@ model Servico {
 
   salao         Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
   profissionais ServicoProfissional[]
+  agendamentos  Agendamento[]
 
   @@unique([salaoId, nome])
   @@index([salaoId, ativo])
@@ -180,4 +185,70 @@ model ServicoProfissional {
   @@id([servicoId, profissionalId])
   @@index([profissionalId])
   @@map("servicos_profissionais")
+}
+
+enum StatusAgendamento {
+  AGENDADO
+  CONFIRMADO
+  CONCLUIDO
+  CANCELADO
+  FALTOU
+}
+
+enum OrigemAgendamento {
+  /// Criado pela equipe no painel
+  SALAO
+  /// Criado pelo cliente no app (marketplace / página do salão)
+  APP_CLIENTE
+}
+
+/// Ficha do cliente NO SALÃO. Pode existir sem conta no app (usuarioId nulo);
+/// quem agenda pelo app tem a ficha vinculada à própria conta.
+model Cliente {
+  id           String   @id @default(uuid()) @db.Uuid
+  salaoId      String   @map("salao_id") @db.Uuid
+  usuarioId    String?  @map("usuario_id") @db.Uuid
+  nome         String
+  telefone     String?
+  email        String?
+  observacoes  String?
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  salao        Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  usuario      Usuario?      @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  agendamentos Agendamento[]
+
+  @@unique([salaoId, usuarioId])
+  @@index([salaoId, nome])
+  @@map("clientes")
+}
+
+/// Um serviço, com um profissional, num horário. Preço e duração são gravados
+/// no momento do agendamento (mudanças futuras no serviço não afetam este).
+model Agendamento {
+  id             String            @id @default(uuid()) @db.Uuid
+  salaoId        String            @map("salao_id") @db.Uuid
+  clienteId      String            @map("cliente_id") @db.Uuid
+  profissionalId String            @map("profissional_id") @db.Uuid
+  servicoId      String            @map("servico_id") @db.Uuid
+  inicio         DateTime          @db.Timestamptz
+  fim            DateTime          @db.Timestamptz
+  precoCentavos  Int               @map("preco_centavos")
+  status         StatusAgendamento @default(AGENDADO)
+  origem         OrigemAgendamento @default(SALAO)
+  observacoes    String?
+  criadoPorId    String?           @map("criado_por_id") @db.Uuid
+  criadoEm       DateTime          @default(now()) @map("criado_em")
+  atualizadoEm   DateTime          @updatedAt @map("atualizado_em")
+
+  salao        Salao        @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  cliente      Cliente      @relation(fields: [clienteId], references: [id], onDelete: NoAction)
+  profissional Profissional @relation(fields: [profissionalId], references: [id], onDelete: NoAction)
+  servico      Servico      @relation(fields: [servicoId], references: [id], onDelete: NoAction)
+
+  @@index([salaoId, inicio])
+  @@index([profissionalId, inicio])
+  @@index([clienteId, inicio])
+  @@map("agendamentos")
 }

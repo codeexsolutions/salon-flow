@@ -34,6 +34,14 @@ export class ProfissionaisService {
     return profissional;
   }
 
+  /**
+   * Para a agenda: profissionais ativos (todos ou só `ids`) com jornada semanal
+   * e folgas que se sobrepõem a [inicio, fim).
+   */
+  dadosDeAgenda(inicio: Date, fim: Date, ids?: string[]) {
+    return this.repository.dadosDeAgenda(this.contexto.salaoId, inicio, fim, ids);
+  }
+
   /** Quantos dos ids são profissionais ATIVOS do salão atual (usado por outros módulos). */
   contarAtivos(ids: string[]) {
     if (ids.length === 0) return Promise.resolve(0);

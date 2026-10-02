@@ -11,6 +11,7 @@ import {
 } from '../../shared/errors/domain.error.js';
 import { ContextoSalao } from '../../shared/tenant/contexto-salao.js';
 import { ProfissionaisService } from '../profissionais/profissionais.service.js';
+import { valoresDoProfissional } from './domain/valores.js';
 import { ServicosRepository } from './servicos.repository.js';
 
 @Injectable()
@@ -58,6 +59,34 @@ export class ServicosService {
       );
     }
     return this.repository.substituirProfissionais(this.contexto.salaoId, id, dados);
+  }
+
+  /**
+   * Para a agenda: quem pode fazer o serviço e com que preço/duração.
+   * Com `profissionalId`, exige que esse profissional faça o serviço.
+   */
+  async opcoesDeAgendamento(servicoId: string, profissionalId?: string) {
+    const servico = await this.repository.paraAgendamento(
+      this.contexto.salaoId,
+      servicoId,
+      profissionalId,
+    );
+    if (!servico) throw new NaoEncontradoError('Serviço');
+    if (profissionalId && servico.profissionais.length === 0) {
+      throw new RegraDeNegocioError(
+        'PROFISSIONAL_NAO_FAZ_SERVICO',
+        'Este profissional não faz o serviço escolhido.',
+      );
+    }
+
+    return {
+      servico: { id: servico.id, nome: servico.nome },
+      profissionais: servico.profissionais.map((sp) => ({
+        profissionalId: sp.profissionalId,
+        nome: sp.profissional.nome,
+        ...valoresDoProfissional(servico, sp),
+      })),
+    };
   }
 
   private nomeDuplicado() {

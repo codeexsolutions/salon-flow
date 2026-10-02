@@ -37,6 +37,20 @@ export class ServicosRepository {
     });
   }
 
+  /** Serviço ativo + profissionais ATIVOS que o fazem (com valores próprios). */
+  paraAgendamento(salaoId: string, id: string, profissionalId?: string) {
+    return this.prisma.servico.findFirst({
+      where: { id, salaoId, ativo: true },
+      include: {
+        profissionais: {
+          where: { profissional: { ativo: true }, ...(profissionalId && { profissionalId }) },
+          include: { profissional: { select: { nome: true } } },
+          orderBy: { profissional: { nome: 'asc' } },
+        },
+      },
+    });
+  }
+
   async nomeEmUso(salaoId: string, nome: string, ignorarId?: string) {
     const total = await this.prisma.servico.count({
       where: {

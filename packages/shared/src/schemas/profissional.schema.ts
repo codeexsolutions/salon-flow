@@ -1,11 +1,7 @@
 import { z } from 'zod';
+import { dataHoraLocalSchema as dataHoraLocal } from './comum.schema.js';
 
 const hora = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$|^24:00$/, 'Use o formato HH:MM');
-
-/** Data e hora locais do salão, como vem de <input type="datetime-local">. */
-const dataHoraLocal = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Use o formato AAAA-MM-DDTHH:MM');
 
 export const criarProfissionalSchema = z.object({
   nome: z.string().trim().min(2).max(120),

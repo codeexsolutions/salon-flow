@@ -23,6 +23,21 @@ export class ProfissionaisRepository {
     return this.prisma.profissional.findFirst({ where: { id, salaoId }, include: comJornada });
   }
 
+  /** Profissionais ativos com jornada completa e as folgas que tocam o período. */
+  dadosDeAgenda(salaoId: string, inicio: Date, fim: Date, ids?: string[]) {
+    return this.prisma.profissional.findMany({
+      where: { salaoId, ativo: true, ...(ids && { id: { in: ids } }) },
+      select: {
+        id: true,
+        nome: true,
+        corAgenda: true,
+        jornada: { orderBy: [{ diaSemana: 'asc' }, { inicioMin: 'asc' }] },
+        bloqueios: { where: { inicio: { lt: fim }, fim: { gt: inicio } } },
+      },
+      orderBy: { nome: 'asc' },
+    });
+  }
+
   contarAtivos(salaoId: string, ids: string[]) {
     return this.prisma.profissional.count({ where: { salaoId, ativo: true, id: { in: ids } } });
   }

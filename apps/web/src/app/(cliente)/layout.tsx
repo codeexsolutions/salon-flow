@@ -16,6 +16,9 @@ export default function ClienteLayout({ children }: { children: React.ReactNode 
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <Marca />
           <nav className="flex items-center gap-4 text-sm">
+            <Link href="/saloes" className="font-medium hover:text-primaria">
+              Salões
+            </Link>
             <Suspense>
               <MenuUsuario />
             </Suspense>

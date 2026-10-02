@@ -93,3 +93,21 @@ export interface SalaoConfiguracao extends SalaoPublico {
 
 /** Bucket do Supabase Storage com as imagens dos salões (pasta = id do salão). */
 export const BUCKET_IMAGENS_SALAO = 'saloes';
+
+/** Busca do diretório de salões (/saloes). */
+export const buscaSaloesSchema = z.object({
+  busca: z.string().trim().max(80).optional(),
+  cidade: z.string().trim().max(80).optional(),
+  /** Categoria de serviço (ex.: "Cabelo", "Unhas"). */
+  categoria: z.string().trim().max(60).optional(),
+  pagina: z.coerce.number().int().min(1).max(500).default(1),
+});
+export type BuscaSaloesInput = z.infer<typeof buscaSaloesSchema>;
+
+/** Opções de filtro do diretório: só o que existe em salões visíveis. */
+export interface FiltrosDiretorio {
+  cidades: { cidade: string; uf: string | null; total: number }[];
+  categorias: string[];
+}
+
+export const SALOES_POR_PAGINA = 12;

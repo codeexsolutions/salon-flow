@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { AtualizarSalaoInput, CriarSalaoInput } from '@salonflow/shared';
+import type { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../shared/database/prisma.service.js';
 
 /** Camada de INFRAESTRUTURA: único lugar do módulo que conhece o Prisma. */
@@ -16,21 +17,60 @@ export class SaloesRepository {
     return this.prisma.salao.findUnique({ where: { id } });
   }
 
-  /** Busca do marketplace: salões ativos e visíveis, por nome ou cidade. */
-  buscarMarketplace(termo: string, limite: number) {
-    const contem = { contains: termo, mode: 'insensitive' as const };
-    return this.prisma.salao.findMany({
-      where: {
-        ativo: true,
-        visivelNoMarketplace: true,
-        ...(termo && { OR: [{ nome: contem }, { cidade: contem }] }),
-      },
-      include: {
-        _count: { select: { servicos: { where: { ativo: true, visivelOnline: true } } } },
-      },
-      orderBy: { nome: 'asc' },
-      take: limite,
-    });
+  /** Diretório: salões ativos e visíveis, filtrados por texto, cidade e categoria de serviço. */
+  buscarMarketplace(
+    filtros: { busca?: string; cidade?: string; categoria?: string },
+    pagina: number,
+    porPagina: number,
+  ) {
+    const insensivel = (v: string) => ({ equals: v, mode: 'insensitive' as const });
+    const contem = (v: string) => ({ contains: v, mode: 'insensitive' as const });
+    const where: Prisma.SalaoWhereInput = {
+      ativo: true,
+      visivelNoMarketplace: true,
+      ...(filtros.busca && {
+        OR: [{ nome: contem(filtros.busca) }, { cidade: contem(filtros.busca) }, { bairro: contem(filtros.busca) }],
+      }),
+      ...(filtros.cidade && { cidade: insensivel(filtros.cidade) }),
+      ...(filtros.categoria && {
+        servicos: { some: { ativo: true, visivelOnline: true, categoria: insensivel(filtros.categoria) } },
+      }),
+    };
+    return this.prisma.$transaction([
+      this.prisma.salao.count({ where }),
+      this.prisma.salao.findMany({
+        where,
+        include: {
+          _count: { select: { servicos: { where: { ativo: true, visivelOnline: true } } } },
+        },
+        orderBy: { nome: 'asc' },
+        skip: (pagina - 1) * porPagina,
+        take: porPagina,
+      }),
+    ]);
+  }
+
+  /** Cidades e categorias de serviço existentes em salões visíveis (opções de filtro). */
+  async filtrosMarketplace() {
+    const visivel = { ativo: true, visivelNoMarketplace: true };
+    const [cidades, categorias] = await Promise.all([
+      this.prisma.salao.groupBy({
+        by: ['cidade', 'uf'],
+        where: { ...visivel, cidade: { not: null } },
+        _count: { _all: true },
+        orderBy: { cidade: 'asc' },
+      }),
+      this.prisma.servico.findMany({
+        where: { ativo: true, visivelOnline: true, categoria: { not: null }, salao: visivel },
+        distinct: ['categoria'],
+        select: { categoria: true },
+        orderBy: { categoria: 'asc' },
+      }),
+    ]);
+    return {
+      cidades: cidades.map((c) => ({ cidade: c.cidade!, uf: c.uf, total: c._count._all })),
+      categorias: categorias.map((c) => c.categoria!),
+    };
   }
 
   buscarAtivoPorSlug(slug: string) {

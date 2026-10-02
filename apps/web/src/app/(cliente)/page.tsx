@@ -3,13 +3,13 @@ import {
   ArrowRight,
   CalendarDays,
   HandCoins,
-  MapPin,
   Package,
   Search,
   Store,
   Wallet,
 } from 'lucide-react';
-import type { SalaoMarketplace } from '@salonflow/shared';
+import type { Paginado, SalaoMarketplace } from '@salonflow/shared';
+import { CartaoSalao } from '@/components/cliente/cartao-salao';
 import { EstadoVazio } from '@/components/ui/estado-vazio';
 import { classeBotaoPrimario } from '@/components/ui/campo';
 import { api } from '@/lib/api/client';
@@ -29,13 +29,12 @@ const RECURSOS_SALAO = [
   { icone: Wallet, titulo: 'Caixa', texto: 'Comandas, formas de pagamento e conferência.' },
 ];
 
-export default async function InicioPage({ searchParams }: PageProps<'/'>) {
-  const consulta = await searchParams;
-  const busca = typeof consulta.busca === 'string' ? consulta.busca.trim() : '';
-  const saloes = await api<SalaoMarketplace[]>(
-    `/saloes${busca ? `?busca=${encodeURIComponent(busca)}` : ''}`,
-    { cache: 'no-store' },
-  ).catch(() => [] as SalaoMarketplace[]);
+const DESTAQUES = 6;
+
+export default async function InicioPage() {
+  const destaques = await api<Paginado<SalaoMarketplace>>('/saloes', { cache: 'no-store' })
+    .then((r) => r.itens.slice(0, DESTAQUES))
+    .catch(() => [] as SalaoMarketplace[]);
 
   return (
     <div className="flex flex-col gap-14">
@@ -49,12 +48,14 @@ export default async function InicioPage({ searchParams }: PageProps<'/'>) {
         <p className="max-w-xl text-suave">
           Escolha o serviço, o profissional e o horário. Sem ligação, sem espera.
         </p>
-        <form className="flex w-full max-w-xl items-center gap-2 rounded-2xl border border-borda bg-superficie p-2 shadow-sm focus-within:border-primaria">
+        <form
+          action="/saloes"
+          className="flex w-full max-w-xl items-center gap-2 rounded-2xl border border-borda bg-superficie p-2 shadow-sm focus-within:border-primaria"
+        >
           <Search className="ml-2 size-5 shrink-0 text-suave" aria-hidden />
           <input
             name="busca"
-            defaultValue={busca}
-            placeholder="Nome do salão ou cidade"
+            placeholder="Nome do salão, bairro ou cidade"
             aria-label="Buscar salão"
             className="min-w-0 flex-1 bg-transparent px-1 py-2 outline-none placeholder:text-suave/70"
           />
@@ -65,51 +66,28 @@ export default async function InicioPage({ searchParams }: PageProps<'/'>) {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-2xl">
-          {busca ? `Resultados para “${busca}”` : 'Salões no SalonFlow'}
-        </h2>
-        {saloes.length === 0 ? (
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="font-display text-2xl">Salões no SalonFlow</h2>
+          {destaques.length > 0 && (
+            <Link
+              href="/saloes"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primaria hover:underline"
+            >
+              Ver todos os salões <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          )}
+        </div>
+        {destaques.length === 0 ? (
           <EstadoVazio
             icone={Store}
-            titulo={busca ? 'Nenhum salão encontrado' : 'Nenhum salão disponível ainda'}
-            descricao={
-              busca ? 'Tente outro nome ou cidade.' : 'Os salões cadastrados aparecem aqui.'
-            }
+            titulo="Nenhum salão disponível ainda"
+            descricao="Os salões cadastrados aparecem aqui."
           />
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {saloes.map((s) => (
+            {destaques.map((s) => (
               <li key={s.id}>
-                <Link
-                  href={`/s/${s.slug}`}
-                  className="group flex h-full flex-col gap-3 rounded-2xl border border-borda bg-superficie p-5 transition hover:-translate-y-0.5 hover:border-primaria/40 hover:shadow-md"
-                >
-                  <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-nude font-display text-xl text-primaria">
-                    {s.logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.logoUrl} alt="" className="size-full rounded-full object-cover" />
-                    ) : (
-                      s.nome.charAt(0).toUpperCase()
-                    )}
-                  </span>
-                  <span className="flex flex-col gap-1">
-                    <span className="font-medium">{s.nome}</span>
-                    {s.cidade && (
-                      <span className="inline-flex items-center gap-1 text-sm text-suave">
-                        <MapPin className="size-3.5" aria-hidden />
-                        {s.cidade}
-                        {s.uf && ` - ${s.uf}`}
-                      </span>
-                    )}
-                  </span>
-                  <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-primaria">
-                    {s.totalServicos > 0 ? `${s.totalServicos} serviço(s) · Agendar` : 'Ver salão'}
-                    <ArrowRight
-                      className="size-4 transition group-hover:translate-x-0.5"
-                      aria-hidden
-                    />
-                  </span>
-                </Link>
+                <CartaoSalao salao={s} />
               </li>
             ))}
           </ul>

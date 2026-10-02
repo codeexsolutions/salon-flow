@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import type { AtualizarSalaoInput, CriarSalaoInput } from '@salonflow/shared';
+import {
+  SALOES_POR_PAGINA,
+  type AtualizarSalaoInput,
+  type BuscaSaloesInput,
+  type CriarSalaoInput,
+} from '@salonflow/shared';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { ConflitoError, NaoEncontradoError } from '../../shared/errors/domain.error.js';
 import { ContextoSalao } from '../../shared/tenant/contexto-salao.js';
@@ -29,8 +34,14 @@ export class SaloesService {
     return this.repository.criarComDono({ ...dados, slug }, usuario.id);
   }
 
-  buscarMarketplace(termo = '') {
-    return this.repository.buscarMarketplace(termo.trim().slice(0, 80), 30);
+  /** Diretório público de salões (paginado). */
+  async buscarMarketplace({ pagina, ...filtros }: BuscaSaloesInput) {
+    const [total, itens] = await this.repository.buscarMarketplace(filtros, pagina, SALOES_POR_PAGINA);
+    return { itens, total, pagina, porPagina: SALOES_POR_PAGINA };
+  }
+
+  filtrosMarketplace() {
+    return this.repository.filtrosMarketplace();
   }
 
   async buscarPublico(slug: string) {

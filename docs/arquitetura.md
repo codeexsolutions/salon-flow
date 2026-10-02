@@ -76,7 +76,7 @@ Toda chamada à API passa por `src/lib/api/client.ts`.
 | --------------------------------------------------------------------------- | -------------------- |
 | health, usuarios, saloes                                                    | ✅ base              |
 | profissionais (jornada, folgas, convite por e-mail)                         | ✅                   |
-| servicos (preço, duração, profissionais; ficha técnica ⏳)                  | ✅                   |
+| servicos (preço, duração, profissionais, ficha técnica)                     | ✅                   |
 | clientes (busca e cadastro rápido; ficha completa ⏳)                       | 🟡                   |
 | agenda (painel, app do cliente, app do profissional)                        | ✅                   |
 | comandas (itens, desconto, pagamentos divididos, fechamento)                | ✅ (caixa diário ⏳) |

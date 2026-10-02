@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { FormNovoSalao } from '@/components/admin/form-novo-salao';
+import { Marca } from '@/components/ui/marca';
 import { obterPerfil } from '@/lib/auth/sessao';
 
 export const metadata = { title: 'Cadastrar salão' };
@@ -10,8 +11,8 @@ export default async function NovoSalaoPage() {
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-10">
-      <p className="text-lg font-bold text-primaria">SalonFlow</p>
-      <h1 className="mt-4 text-2xl font-bold">Cadastre seu salão</h1>
+      <Marca />
+      <h1 className="mt-6 text-3xl">Cadastre seu salão</h1>
       <p className="mt-1 mb-6 text-sm text-suave">
         Você será o dono e poderá convidar sua equipe depois.
       </p>

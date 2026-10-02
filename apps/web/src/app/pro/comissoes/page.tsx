@@ -40,7 +40,7 @@ export default async function ProComissoesPage({ searchParams }: PageProps<'/pro
     <section className="flex flex-col gap-4">
       <div>
         <p className="text-sm text-suave">{salao.nome}</p>
-        <h1 className="text-2xl font-bold">Minhas comissões</h1>
+        <h1 className="text-3xl">Minhas comissões</h1>
       </div>
 
       <form className="flex items-end gap-2 text-sm">
@@ -76,7 +76,7 @@ export default async function ProComissoesPage({ searchParams }: PageProps<'/pro
         </div>
         <div className="rounded-xl border border-borda p-4">
           <p className="text-xs text-suave">Atendimentos</p>
-          <p className="text-2xl font-bold">{meu?.quantidade ?? 0}</p>
+          <p className="text-3xl">{meu?.quantidade ?? 0}</p>
           <p className="text-xs text-suave">
             {formatarPreco(meu?.totalServicosCentavos ?? 0)} em serviços
           </p>

@@ -132,7 +132,7 @@ export function Agendar({
   return (
     <div className="flex flex-col gap-6">
       <Etapa numero={1} titulo="Escolha o serviço">
-        <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda">
+        <ul className="flex flex-col divide-y divide-borda rounded-2xl border border-borda bg-superficie">
           {servicos.map((s) => (
             <li key={s.id}>
               <button

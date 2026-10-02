@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { AbasPro } from '@/components/pro/abas-pro';
+import { Marca } from '@/components/ui/marca';
 
 /** App do PROFISSIONAL comissionado — pensado para celular. */
 export const metadata: Metadata = {
@@ -7,29 +8,21 @@ export const metadata: Metadata = {
   manifest: '/manifests/pro.webmanifest',
 };
 
-const abas = [
-  { rotulo: 'Agenda', href: '/pro' },
-  { rotulo: 'Comissões', href: '/pro/comissoes' },
-  { rotulo: 'Perfil' },
-];
-
 export default function ProLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-      <main className="flex-1 p-4 pb-20">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md justify-around border-t border-borda bg-background py-3 text-sm print:hidden">
-        {abas.map((aba) =>
-          aba.href ? (
-            <Link key={aba.rotulo} href={aba.href} className="font-medium text-primaria">
-              {aba.rotulo}
-            </Link>
-          ) : (
-            <span key={aba.rotulo} className="text-suave" title="Em breve">
-              {aba.rotulo}
-            </span>
-          ),
-        )}
-      </nav>
+    <div className="flex flex-1 flex-col">
+      <header className="sticky top-0 z-30 border-b border-borda bg-superficie/95 backdrop-blur print:hidden">
+        <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
+          <Marca href="/pro" />
+          <span className="rounded-full bg-nude px-2.5 py-0.5 text-xs font-medium text-primaria">
+            Pro
+          </span>
+        </div>
+      </header>
+      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-5 pb-24 print:max-w-none print:p-0">
+        {children}
+      </main>
+      <AbasPro />
     </div>
   );
 }

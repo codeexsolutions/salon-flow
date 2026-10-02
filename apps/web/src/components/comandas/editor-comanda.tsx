@@ -155,7 +155,7 @@ export function EditorComanda({
         {comanda.itens.length === 0 ? (
           <p className="text-sm text-suave">Nenhum item na comanda.</p>
         ) : (
-          <ul className="flex flex-col divide-y divide-borda rounded-lg border border-borda text-sm">
+          <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda bg-superficie text-sm">
             {comanda.itens.map((item) => (
               <li key={item.id} className="flex items-center gap-3 px-3 py-2">
                 <span className="flex min-w-0 flex-1 flex-col">

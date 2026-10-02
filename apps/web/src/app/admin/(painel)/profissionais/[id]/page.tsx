@@ -39,7 +39,7 @@ export default async function ProfissionalPage({ params }: PageProps<'/admin/pro
           ← Profissionais
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold">{profissional.nome}</h1>
+          <h1 className="text-3xl">{profissional.nome}</h1>
           {profissional.ativo ? (
             <SeloAcesso acesso={profissional.acessoApp} />
           ) : (

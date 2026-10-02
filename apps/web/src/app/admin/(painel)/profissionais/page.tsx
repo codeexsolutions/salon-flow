@@ -17,7 +17,7 @@ export default async function ProfissionaisPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Profissionais</h1>
+        <h1 className="text-3xl">Profissionais</h1>
         {ehDono && (
           <Link href="/admin/profissionais/novo" className={classeBotaoPrimario}>
             Novo profissional
@@ -31,7 +31,7 @@ export default async function ProfissionaisPage() {
           {ehDono && ' Cadastre sua equipe para montar a agenda.'}
         </p>
       ) : (
-        <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda">
+        <ul className="flex flex-col divide-y divide-borda rounded-2xl border border-borda bg-superficie">
           {profissionais.map((p) => (
             <li key={p.id}>
               <Link

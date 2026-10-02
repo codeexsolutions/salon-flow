@@ -20,7 +20,7 @@ export default async function CaixaPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <h1 className="text-2xl font-bold">Caixa</h1>
+      <h1 className="text-3xl">Caixa</h1>
 
       {caixa ? <CaixaAberto key={caixa.id} caixa={caixa} fusoHorario={fuso} /> : <AbrirCaixa />}
 

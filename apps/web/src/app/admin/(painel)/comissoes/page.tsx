@@ -45,7 +45,7 @@ export default async function ComissoesPage({ searchParams }: PageProps<'/admin/
 
   return (
     <div className="flex max-w-4xl flex-col gap-8">
-      <h1 className="text-2xl font-bold">Comissões</h1>
+      <h1 className="text-3xl">Comissões</h1>
 
       <Secao titulo="Extrato" descricao="Comissões das comandas fechadas no período.">
         <form className="flex flex-wrap items-end gap-2 text-sm">

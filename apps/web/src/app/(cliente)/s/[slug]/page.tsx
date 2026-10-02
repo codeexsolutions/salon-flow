@@ -41,7 +41,7 @@ export default async function SalaoPage({ params, searchParams }: PageProps<'/s/
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h1 className="text-2xl font-bold">{salao.nome}</h1>
+        <h1 className="text-3xl">{salao.nome}</h1>
         <p className="text-sm text-suave">
           {[salao.cidade && `${salao.cidade}${salao.uf ? ` - ${salao.uf}` : ''}`, salao.telefone]
             .filter(Boolean)

@@ -12,7 +12,7 @@ export default async function NovoProdutoPage() {
         <Link href="/admin/estoque" className="text-sm text-suave">
           ← Estoque
         </Link>
-        <h1 className="mt-2 text-2xl font-bold">Novo produto</h1>
+        <h1 className="mt-2 text-3xl">Novo produto</h1>
       </div>
       {salao.papel === 'DONO' ? (
         <FormProduto />

@@ -46,7 +46,7 @@ export default async function ProAgendaPage({ searchParams }: PageProps<'/pro'>)
     <section className="flex flex-col gap-4">
       <div>
         <p className="text-sm text-suave">{salao.nome}</p>
-        <h1 className="text-2xl font-bold">Minha agenda</h1>
+        <h1 className="text-3xl">Minha agenda</h1>
       </div>
 
       <nav className="flex items-center justify-between gap-2" aria-label="Navegar entre dias">

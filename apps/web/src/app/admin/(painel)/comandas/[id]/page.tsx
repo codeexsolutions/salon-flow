@@ -36,7 +36,7 @@ export default async function ComandaPage({ params }: PageProps<'/admin/comandas
         <Link href="/admin/comandas" className="text-sm text-suave">
           ← Comandas
         </Link>
-        <h1 className="mt-2 text-2xl font-bold">Comanda #{comanda.numero}</h1>
+        <h1 className="mt-2 text-3xl">Comanda #{comanda.numero}</h1>
         <p className="text-sm text-suave">
           Aberta em {dataPorExtenso(dataLocal(comanda.abertaEm, fuso))},{' '}
           {horaLocal(comanda.abertaEm, fuso)}
@@ -80,7 +80,7 @@ function ComandaEncerrada({ comanda, ehDono }: { comanda: ComandaDetalhe; ehDono
   return (
     <>
       <Secao titulo={comanda.cliente?.nome ?? 'Sem cliente'}>
-        <ul className="flex flex-col divide-y divide-borda rounded-lg border border-borda text-sm">
+        <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda bg-superficie text-sm">
           {comanda.itens.map((i) => (
             <li key={i.id} className="flex items-center gap-3 px-3 py-2">
               <span className="flex min-w-0 flex-1 flex-col">

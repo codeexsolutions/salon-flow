@@ -332,7 +332,7 @@ export function EscolhaCliente({
         className={classeInput}
       />
       {visiveis.length > 0 && (
-        <ul className="flex flex-col divide-y divide-borda rounded-lg border border-borda">
+        <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda bg-superficie">
           {visiveis.map((c) => (
             <li key={c.id}>
               <button

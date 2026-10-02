@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { criarSalao, type EstadoNovoSalao } from '@/app/admin/novo-salao/actions';
+import { classeBotaoPrimario } from '@/components/ui/campo';
 
 /** Sugestão de endereço a partir do nome (a API normaliza de novo ao salvar). */
 function sugerirSlug(nome: string) {
@@ -39,7 +40,7 @@ export function FormNovoSalao() {
         erro={estado.erros?.slug}
         ajuda="É o link que você vai divulgar para os clientes agendarem."
       >
-        <div className="flex items-center rounded-lg border border-borda">
+        <div className="flex items-center rounded-xl border border-borda bg-superficie">
           <span className="pl-3 text-sm text-suave">salonflow.com.br/s/</span>
           <input
             name="slug"
@@ -85,18 +86,15 @@ export function FormNovoSalao() {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={enviando}
-        className="rounded-lg bg-primaria px-4 py-3 font-medium text-primaria-contraste disabled:opacity-60"
-      >
+      <button type="submit" disabled={enviando} className={classeBotaoPrimario}>
         {enviando ? 'Cadastrando…' : 'Cadastrar salão'}
       </button>
     </form>
   );
 }
 
-const classeInput = 'w-full rounded-lg border border-borda bg-transparent px-3 py-2';
+const classeInput =
+  'w-full rounded-xl border border-borda bg-superficie px-3.5 py-2.5 transition focus:border-primaria focus:ring-2 focus:ring-primaria/20 focus:outline-none';
 
 function Campo({
   rotulo,

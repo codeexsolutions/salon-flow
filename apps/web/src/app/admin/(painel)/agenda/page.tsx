@@ -22,7 +22,7 @@ export default async function AgendaPage({ searchParams }: PageProps<'/admin/age
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold">Agenda</h1>
+        <h1 className="text-3xl">Agenda</h1>
         <nav className="flex items-center gap-1" aria-label="Navegar entre dias">
           <Link
             href={`/admin/agenda?data=${somarDias(data, -1)}`}

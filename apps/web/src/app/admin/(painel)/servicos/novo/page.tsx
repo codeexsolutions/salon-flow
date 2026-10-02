@@ -19,7 +19,7 @@ export default async function NovoServicoPage() {
         <Link href="/admin/servicos" className="text-sm text-suave">
           ← Serviços
         </Link>
-        <h1 className="mt-2 text-2xl font-bold">Novo serviço</h1>
+        <h1 className="mt-2 text-3xl">Novo serviço</h1>
       </div>
       {salao.papel === 'DONO' ? (
         <FormServico categorias={categoriasDe(servicos)} />

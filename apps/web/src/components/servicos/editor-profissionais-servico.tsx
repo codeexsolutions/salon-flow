@@ -82,7 +82,7 @@ export function EditorProfissionaisServico({
         {formatarDuracao(duracaoMin)}).
       </p>
 
-      <ul className="flex flex-col divide-y divide-borda rounded-lg border border-borda">
+      <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda bg-superficie">
         {profissionais.map((p) => {
           const linha = linhas[p.id];
           return (

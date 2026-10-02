@@ -39,7 +39,7 @@ export default async function ProdutoPage({ params }: PageProps<'/admin/estoque/
         <Link href="/admin/estoque" className="text-sm text-suave">
           ← Estoque
         </Link>
-        <h1 className="mt-2 text-2xl font-bold">{produto.nome}</h1>
+        <h1 className="mt-2 text-3xl">{produto.nome}</h1>
         <p className={`text-sm ${produto.estoqueBaixo ? 'text-alerta' : 'text-suave'}`}>
           Saldo: <strong>{formatarQuantidade(produto.estoqueAtual, produto.unidade)}</strong>{' '}
           {emEmbalagens(produto.estoqueAtual, produto.tamanhoEmbalagem)}

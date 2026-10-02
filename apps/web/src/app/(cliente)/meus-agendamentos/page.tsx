@@ -27,7 +27,7 @@ export default async function MeusAgendamentosPage() {
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
-        <h1 className="text-2xl font-bold">Meus agendamentos</h1>
+        <h1 className="text-3xl">Meus agendamentos</h1>
         {proximos.length === 0 ? (
           <p className="rounded-xl border border-dashed border-borda p-6 text-center text-sm text-suave">
             Você não tem agendamentos marcados.{' '}

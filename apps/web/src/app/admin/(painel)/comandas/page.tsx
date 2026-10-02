@@ -26,7 +26,7 @@ export default async function ComandasPage({ searchParams }: PageProps<'/admin/c
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Comandas</h1>
+        <h1 className="text-3xl">Comandas</h1>
         <form action={novaComanda}>
           <button type="submit" className={classeBotaoPrimario}>
             Nova comanda
@@ -96,7 +96,7 @@ function ListaComandas({
     );
   }
   return (
-    <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda">
+    <ul className="flex flex-col divide-y divide-borda rounded-2xl border border-borda bg-superficie">
       {comandas.map((c) => (
         <li key={c.id}>
           <Link

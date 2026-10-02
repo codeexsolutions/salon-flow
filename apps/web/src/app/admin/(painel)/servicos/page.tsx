@@ -26,7 +26,7 @@ export default async function ServicosPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Serviços</h1>
+        <h1 className="text-3xl">Serviços</h1>
         {ehDono && (
           <Link href="/admin/servicos/novo" className={classeBotaoPrimario}>
             Novo serviço
@@ -43,7 +43,7 @@ export default async function ServicosPage() {
         agruparPorCategoria(servicos).map(([categoria, lista]) => (
           <section key={categoria} className="flex flex-col gap-2">
             <h2 className="text-sm font-semibold text-suave">{categoria || 'Sem categoria'}</h2>
-            <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda">
+            <ul className="flex flex-col divide-y divide-borda rounded-2xl border border-borda bg-superficie">
               {lista.map((s) => (
                 <li key={s.id}>
                   <Link

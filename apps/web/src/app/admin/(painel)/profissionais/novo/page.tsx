@@ -13,7 +13,7 @@ export default async function NovoProfissionalPage() {
         <Link href="/admin/profissionais" className="text-sm text-suave">
           ← Profissionais
         </Link>
-        <h1 className="mt-2 text-2xl font-bold">Novo profissional</h1>
+        <h1 className="mt-2 text-3xl">Novo profissional</h1>
       </div>
       {salao.papel === 'DONO' ? (
         <FormProfissional />

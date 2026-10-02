@@ -49,7 +49,7 @@ export default async function ServicoPage({ params }: PageProps<'/admin/servicos
         <Link href="/admin/servicos" className="text-sm text-suave">
           ← Serviços
         </Link>
-        <h1 className="mt-2 text-2xl font-bold">{servico.nome}</h1>
+        <h1 className="mt-2 text-3xl">{servico.nome}</h1>
         <p className="text-sm text-suave">
           {formatarPreco(servico.precoCentavos)} · {formatarDuracao(servico.duracaoMin)}
           {!servico.ativo && ' · desativado'}

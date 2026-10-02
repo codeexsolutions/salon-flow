@@ -17,7 +17,7 @@ export default async function EstoquePage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Estoque</h1>
+        <h1 className="text-3xl">Estoque</h1>
         {salao.papel === 'DONO' && (
           <Link href="/admin/estoque/novo" className={classeBotaoPrimario}>
             Novo produto
@@ -36,7 +36,7 @@ export default async function EstoquePage() {
           Nenhum produto cadastrado. Cadastre os produtos usados nos serviços e os de revenda.
         </p>
       ) : (
-        <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda">
+        <ul className="flex flex-col divide-y divide-borda rounded-2xl border border-borda bg-superficie">
           {produtos.map((p) => (
             <li key={p.id}>
               <Link

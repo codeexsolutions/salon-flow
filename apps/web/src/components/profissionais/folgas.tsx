@@ -37,7 +37,7 @@ export function Folgas({
       {bloqueios.length === 0 ? (
         <p className="text-sm text-suave">Nenhuma folga programada.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-borda rounded-lg border border-borda">
+        <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda bg-superficie">
           {bloqueios.map((b) => (
             <li key={b.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
               <span>

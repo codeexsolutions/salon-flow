@@ -1,14 +1,15 @@
 import type { EmailOtpType } from '@supabase/supabase-js';
-import { NextResponse, type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { caminhoSeguro } from '@/lib/auth/destino';
+import { redirecionar } from '@/lib/http/redirecionar';
 import { criarSupabaseServer } from '@/lib/supabase/server';
 
 /**
- * Retorno do link mágico (e-mail) e do login com Google.
+ * Retorno dos links do Supabase (recuperar senha, confirmar e-mail) e do Google.
  * Troca o código recebido por uma sessão (cookies) e segue para /auth/continuar.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl;
+  const { searchParams } = request.nextUrl;
   const code = searchParams.get('code');
   const tokenHash = searchParams.get('token_hash');
   const tipo = searchParams.get('type') as EmailOtpType | null;
@@ -25,11 +26,8 @@ export async function GET(request: NextRequest) {
     erro = new Error('Callback sem código');
   }
 
-  if (erro) {
-    return NextResponse.redirect(new URL('/entrar?erro=link', origin));
-  }
-
-  const continuar = new URL('/auth/continuar', origin);
-  if (next) continuar.searchParams.set('next', next);
-  return NextResponse.redirect(continuar);
+  if (erro) return redirecionar('/entrar?erro=link');
+  return redirecionar(
+    next ? `/auth/continuar?next=${encodeURIComponent(next)}` : '/auth/continuar',
+  );
 }

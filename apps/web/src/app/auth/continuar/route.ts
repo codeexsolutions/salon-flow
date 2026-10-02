@@ -1,6 +1,7 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { caminhoSeguro, destinoPorPapel } from '@/lib/auth/destino';
 import { obterPerfil } from '@/lib/auth/sessao';
+import { redirecionar } from '@/lib/http/redirecionar';
 import { criarSupabaseServer } from '@/lib/supabase/server';
 
 /**
@@ -11,10 +12,9 @@ export async function GET(request: NextRequest) {
   const next = caminhoSeguro(request.nextUrl.searchParams.get('next'));
   const perfil = await obterPerfil(next ?? '/');
 
-  // Perfil escolhido ao criar a conta ("Tenho um salão", "Sou profissional"...).
+  // Perfil escolhido ao criar a conta (ex.: cadastro de salão ainda não concluído).
   const { data } = await (await criarSupabaseServer()).auth.getClaims();
   const metadados = data?.claims.user_metadata as { tipo_conta?: string } | undefined;
 
-  const destino = next ?? destinoPorPapel(perfil, metadados?.tipo_conta);
-  return NextResponse.redirect(new URL(destino, request.nextUrl.origin));
+  return redirecionar(next ?? destinoPorPapel(perfil, metadados?.tipo_conta));
 }

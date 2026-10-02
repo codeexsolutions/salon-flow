@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { env } from '../env';
 
 /** Áreas que exigem login. A checagem de PAPEL é feita nas páginas (lib/auth). */
-const ROTAS_PROTEGIDAS = ['/admin', '/pro', '/meus-agendamentos'];
+const ROTAS_PROTEGIDAS = ['/admin', '/pro', '/meus-agendamentos', '/conta'];
 
 /**
  * Roda a cada requisição (via src/proxy.ts):

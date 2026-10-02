@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { sair, trocarSalao } from '@/lib/auth/actions';
 import { obterContextoAdmin } from '@/lib/auth/contexto';
+import { env } from '@/lib/env';
 
 const menu = [
   { rotulo: 'Início', href: '/admin' },
@@ -70,6 +71,11 @@ export default async function PainelLayout({ children }: { children: React.React
           <p className="truncate text-xs text-suave" title={perfil.email}>
             {perfil.nome ?? perfil.email}
           </p>
+          {env.loginComSenha && (
+            <Link href="/conta/senha" className="text-xs text-amber-700 underline">
+              Definir senha (dev)
+            </Link>
+          )}
           <form action={sair}>
             <button type="submit" className="text-suave underline">
               Sair

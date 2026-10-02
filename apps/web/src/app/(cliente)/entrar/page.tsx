@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import { FormEntrar } from '@/components/auth/form-entrar';
+import { FormSenha } from '@/components/auth/form-senha';
+import { env } from '@/lib/env';
 import { caminhoSeguro } from '@/lib/auth/destino';
 import { obterSessao } from '@/lib/auth/sessao';
 import { provedoresAtivos } from '@/lib/supabase/provedores';
@@ -29,6 +31,11 @@ export default async function EntrarPage({ searchParams }: PageProps<'/entrar'>)
         </p>
       )}
       <FormEntrar next={next} google={provedores.google} />
+      {env.loginComSenha && (
+        <div className="mt-6">
+          <FormSenha next={next} />
+        </div>
+      )}
     </section>
   );
 }

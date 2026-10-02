@@ -11,6 +11,7 @@ import {
   type ProfissionalResumo,
 } from '@salonflow/shared';
 import { estadoDeErro, type EstadoForm } from '@/lib/api/estado-form';
+import { falha, falhaDeValidacao, sucesso, type Resultado } from '@/lib/api/resultado';
 import { apiSalao } from '@/lib/api/salao';
 
 const ERROS_DE_CAMPO = { EMAIL_EM_USO: 'email', EMAIL_VINCULADO: 'email' };
@@ -108,4 +109,17 @@ export async function criarBloqueio(
 export async function removerBloqueio(id: string, bloqueioId: string) {
   await apiSalao(`/profissionais/${id}/bloqueios/${bloqueioId}`, { method: 'DELETE' });
   revalidatePath(`/admin/profissionais/${id}`);
+}
+
+/** Define o e-mail do profissional antes de criar o acesso dele ao app. */
+export async function definirEmailProfissional(id: string, email: string): Promise<Resultado> {
+  const validacao = z.email('E-mail inválido').safeParse(email);
+  if (!validacao.success) return falhaDeValidacao(validacao.error);
+  try {
+    await apiSalao(`/profissionais/${id}`, { method: 'PATCH', body: { email: validacao.data } });
+  } catch (erro) {
+    return falha(erro);
+  }
+  revalidatePath(`/admin/profissionais/${id}`);
+  return sucesso(undefined);
 }

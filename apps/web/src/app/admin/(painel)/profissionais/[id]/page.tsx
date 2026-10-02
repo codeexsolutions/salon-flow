@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { BloqueioAgenda, ProfissionalDetalhe } from '@salonflow/shared';
+import { CriarAcesso } from '@/components/profissionais/criar-acesso';
 import { EditorJornada } from '@/components/profissionais/editor-jornada';
 import { Folgas } from '@/components/profissionais/folgas';
 import { FormProfissional } from '@/components/profissionais/form-profissional';
@@ -51,6 +52,19 @@ export default async function ProfissionalPage({ params }: PageProps<'/admin/pro
       {ehDono && (
         <Secao titulo="Dados">
           <FormProfissional profissional={profissional} />
+        </Secao>
+      )}
+
+      {ehDono && profissional.ativo && (
+        <Secao
+          titulo="Acesso ao app"
+          descricao={
+            profissional.acessoApp === 'ATIVO'
+              ? 'Já usa o app com o e-mail cadastrado. Para trocar a senha, ele usa "Conta" no app.'
+              : 'Crie o login do profissional e entregue a ele. No primeiro acesso, ele troca a senha.'
+          }
+        >
+          {profissional.acessoApp !== 'ATIVO' && <CriarAcesso profissional={profissional} />}
         </Secao>
       )}
 

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { AbasPro } from '@/components/pro/abas-pro';
+import { AvisoSenhaProvisoria } from '@/components/pro/aviso-senha-provisoria';
 import { Marca } from '@/components/ui/marca';
 
 /** App do PROFISSIONAL comissionado — pensado para celular. */
@@ -20,6 +22,9 @@ export default function ProLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="mx-auto w-full max-w-md flex-1 px-4 pt-5 pb-24 print:max-w-none print:p-0">
+        <Suspense>
+          <AvisoSenhaProvisoria />
+        </Suspense>
         {children}
       </main>
       <AbasPro />

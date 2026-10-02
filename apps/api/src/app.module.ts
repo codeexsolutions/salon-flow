@@ -5,6 +5,7 @@ import { AuthModule } from './shared/auth/auth.module.js';
 import { DatabaseModule } from './shared/database/database.module.js';
 import { TenantModule } from './shared/tenant/tenant.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { ProfissionaisModule } from './modules/profissionais/profissionais.module.js';
 import { SaloesModule } from './modules/saloes/saloes.module.js';
 import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
 
@@ -20,6 +21,7 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
     HealthModule,
     UsuariosModule,
     SaloesModule,
+    ProfissionaisModule,
   ],
 })
 export class AppModule {}

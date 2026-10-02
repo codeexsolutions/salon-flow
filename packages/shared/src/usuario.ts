@@ -5,6 +5,8 @@ export interface VinculoSalao {
   id: string;
   nome: string;
   slug: string;
+  /** Fuso IANA do salão (ex.: America/Sao_Paulo), para exibir horários. */
+  fusoHorario: string;
   papel: Papel;
 }
 

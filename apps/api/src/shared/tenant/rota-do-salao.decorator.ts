@@ -9,3 +9,9 @@ import { PAPEIS_PERMITIDOS } from './tenant.constants.js';
  */
 export const RotaDoSalao = (...papeis: Papel[]) =>
   applyDecorators(SetMetadata(PAPEIS_PERMITIDOS, papeis), UseGuards(SalaoAtivoGuard));
+
+/**
+ * Restringe UM método de um controller que já usa @RotaDoSalao na classe
+ * (não registra o guard de novo, só sobrescreve os papéis permitidos).
+ */
+export const SomentePapeis = (...papeis: Papel[]) => SetMetadata(PAPEIS_PERMITIDOS, papeis);

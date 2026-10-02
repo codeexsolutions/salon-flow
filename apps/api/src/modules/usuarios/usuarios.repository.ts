@@ -23,7 +23,10 @@ export class UsuariosRepository {
   buscarVinculosAtivos(usuarioId: string) {
     return this.prisma.membroSalao.findMany({
       where: { usuarioId, ativo: true, salao: { ativo: true } },
-      select: { papel: true, salao: { select: { id: true, nome: true, slug: true } } },
+      select: {
+        papel: true,
+        salao: { select: { id: true, nome: true, slug: true, fusoHorario: true } },
+      },
       orderBy: { criadoEm: 'asc' },
     });
   }

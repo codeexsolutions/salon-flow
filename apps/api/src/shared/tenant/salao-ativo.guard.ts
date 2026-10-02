@@ -27,8 +27,9 @@ export class SalaoAtivoGuard implements CanActivate {
       throw new AcessoNegadoError('Salão não informado');
     }
 
-    const papel = await this.vinculos.buscarPapelAtivo(req.usuario.id, salaoId.data);
-    if (!papel) throw new AcessoNegadoError('Você não faz parte deste salão');
+    const vinculo = await this.vinculos.buscarVinculoAtivo(req.usuario.id, salaoId.data);
+    if (!vinculo) throw new AcessoNegadoError('Você não faz parte deste salão');
+    const { papel, fusoHorario } = vinculo;
 
     const permitidos = this.reflector.getAllAndOverride<Papel[]>(PAPEIS_PERMITIDOS, [
       ctx.getHandler(),
@@ -38,7 +39,7 @@ export class SalaoAtivoGuard implements CanActivate {
       throw new AcessoNegadoError();
     }
 
-    this.contexto.definir(salaoId.data, papel);
+    this.contexto.definir(salaoId.data, papel, fusoHorario);
     return true;
   }
 }

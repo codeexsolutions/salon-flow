@@ -6,6 +6,7 @@ import { AcessoNegadoError } from '../errors/domain.error.js';
 export interface SalaoClsStore extends ClsStore {
   salaoId?: string;
   papel?: Papel;
+  fusoHorario?: string;
 }
 
 /**
@@ -30,8 +31,16 @@ export class ContextoSalao {
     return papel;
   }
 
-  definir(salaoId: string, papel: Papel) {
+  /** Fuso IANA do salão, para converter horários locais (agenda, folgas) em UTC. */
+  get fusoHorario(): string {
+    const fuso = this.cls.get('fusoHorario');
+    if (!fuso) throw new AcessoNegadoError();
+    return fuso;
+  }
+
+  definir(salaoId: string, papel: Papel, fusoHorario: string) {
     this.cls.set('salaoId', salaoId);
     this.cls.set('papel', papel);
+    this.cls.set('fusoHorario', fusoHorario);
   }
 }

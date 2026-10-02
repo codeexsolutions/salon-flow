@@ -75,7 +75,7 @@ Toda chamada à API passa por `src/lib/api/client.ts`.
 | Módulo                                                   | Status  |
 | -------------------------------------------------------- | ------- |
 | health, usuarios, saloes                                 | ✅ base |
-| profissionais (jornada, folgas)                          | ⏳      |
+| profissionais (jornada, folgas, convite por e-mail)      | ✅      |
 | servicos (preço, duração, ficha técnica)                 | ⏳      |
 | clientes (ficha do cliente por salão)                    | ⏳      |
 | agendamentos (disponibilidade, conflito)                 | ⏳      |

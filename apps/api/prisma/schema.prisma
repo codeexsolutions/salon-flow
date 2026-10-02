@@ -7,8 +7,8 @@
 // - IDs são UUID gerados pelo banco.
 
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/generated/prisma"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
   moduleFormat        = "esm"
   importFileExtension = "js"
 }
@@ -32,7 +32,8 @@ model Usuario {
   avatarUrl String?  @map("avatar_url")
   criadoEm  DateTime @default(now()) @map("criado_em")
 
-  vinculos MembroSalao[]
+  vinculos      MembroSalao[]
+  profissionais Profissional[]
 
   @@map("usuarios")
 }
@@ -45,11 +46,16 @@ model Salao {
   cidade               String?
   uf                   String?  @db.Char(2)
   visivelNoMarketplace Boolean  @default(true) @map("visivel_no_marketplace")
+  /// Fuso horário IANA usado para interpretar horários de agenda, jornada e folgas.
+  fusoHorario          String   @default("America/Sao_Paulo") @map("fuso_horario")
   ativo                Boolean  @default(true)
   criadoEm             DateTime @default(now()) @map("criado_em")
   atualizadoEm         DateTime @updatedAt @map("atualizado_em")
 
-  membros MembroSalao[]
+  membros           MembroSalao[]
+  profissionais     Profissional[]
+  jornadaIntervalos JornadaIntervalo[]
+  bloqueiosAgenda   BloqueioAgenda[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -70,4 +76,65 @@ model MembroSalao {
   @@unique([salaoId, usuarioId])
   @@index([usuarioId])
   @@map("membros_salao")
+}
+
+/// Profissional que atende no salão. Pode existir sem acesso ao app (usuarioId nulo).
+/// Se tiver e-mail, a conta é vinculada automaticamente quando ele entra com esse e-mail.
+model Profissional {
+  id           String   @id @default(uuid()) @db.Uuid
+  salaoId      String   @map("salao_id") @db.Uuid
+  usuarioId    String?  @map("usuario_id") @db.Uuid
+  nome         String
+  email        String?
+  telefone     String?
+  corAgenda    String   @default("#7c3aed") @map("cor_agenda")
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  salao     Salao              @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  usuario   Usuario?           @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  jornada   JornadaIntervalo[]
+  bloqueios BloqueioAgenda[]
+
+  @@unique([salaoId, email])
+  @@unique([salaoId, usuarioId])
+  @@index([salaoId, ativo])
+  @@index([email])
+  @@map("profissionais")
+}
+
+/// Um intervalo de trabalho num dia da semana. Vários por dia = pausas (ex.: almoço).
+model JornadaIntervalo {
+  id             String @id @default(uuid()) @db.Uuid
+  salaoId        String @map("salao_id") @db.Uuid
+  profissionalId String @map("profissional_id") @db.Uuid
+  /// 0 = domingo ... 6 = sábado
+  diaSemana      Int    @map("dia_semana") @db.SmallInt
+  /// Minutos desde 00:00 (ex.: 540 = 09:00), no fuso do salão.
+  inicioMin      Int    @map("inicio_min") @db.SmallInt
+  fimMin         Int    @map("fim_min") @db.SmallInt
+
+  salao        Salao        @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissional Profissional @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+
+  @@index([profissionalId, diaSemana])
+  @@map("jornada_intervalos")
+}
+
+/// Período em que o profissional não atende: folga, férias, compromisso.
+model BloqueioAgenda {
+  id             String   @id @default(uuid()) @db.Uuid
+  salaoId        String   @map("salao_id") @db.Uuid
+  profissionalId String   @map("profissional_id") @db.Uuid
+  inicio         DateTime @db.Timestamptz
+  fim            DateTime @db.Timestamptz
+  motivo         String?
+  criadoEm       DateTime @default(now()) @map("criado_em")
+
+  salao        Salao        @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissional Profissional @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+
+  @@index([profissionalId, inicio])
+  @@map("bloqueios_agenda")
 }

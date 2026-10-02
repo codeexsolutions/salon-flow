@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import type { PerfilUsuario } from '@salonflow/shared';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
+import { ProfissionaisService } from '../profissionais/profissionais.service.js';
 import { UsuariosRepository } from './usuarios.repository.js';
 
 @Injectable()
 export class UsuariosService {
-  constructor(private readonly repository: UsuariosRepository) {}
+  constructor(
+    private readonly repository: UsuariosRepository,
+    private readonly profissionais: ProfissionaisService,
+  ) {}
 
   /** Garante que o usuário do Supabase existe no nosso banco. */
   garantirCadastro(usuario: UsuarioAutenticado) {
@@ -15,6 +19,8 @@ export class UsuariosService {
   /** Perfil + salões em que o usuário atua. Sem salões = usuário apenas cliente. */
   async perfil(usuario: UsuarioAutenticado): Promise<PerfilUsuario> {
     const cadastro = await this.garantirCadastro(usuario);
+    // Profissional cadastrado com este e-mail ganha acesso ao app ao entrar.
+    await this.profissionais.vincularConvitesPendentes(cadastro.id, cadastro.email);
     const vinculos = await this.repository.buscarVinculosAtivos(usuario.id);
 
     return {

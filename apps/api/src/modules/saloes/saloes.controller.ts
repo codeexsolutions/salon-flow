@@ -9,7 +9,7 @@ import { Publica, UsuarioAtual } from '../../shared/auth/decorators.js';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe.js';
 import { RotaDoSalao } from '../../shared/tenant/rota-do-salao.decorator.js';
-import { paraSalaoPublico } from './saloes.mapper.js';
+import { paraSalaoConfiguracao, paraSalaoPublico } from './saloes.mapper.js';
 import { SaloesService } from './saloes.service.js';
 
 /**
@@ -32,14 +32,14 @@ export class SaloesController {
   /** Salão ativo (header x-salao-id). Declarado antes de ':slug' para não conflitar. */
   @RotaDoSalao()
   @Get('atual')
-  atual() {
-    return this.service.atual();
+  async atual() {
+    return paraSalaoConfiguracao(await this.service.atual());
   }
 
   @RotaDoSalao('DONO')
   @Patch('atual')
-  atualizar(@Body(new ZodValidationPipe(atualizarSalaoSchema)) dados: AtualizarSalaoInput) {
-    return this.service.atualizar(dados);
+  async atualizar(@Body(new ZodValidationPipe(atualizarSalaoSchema)) dados: AtualizarSalaoInput) {
+    return paraSalaoConfiguracao(await this.service.atualizar(dados));
   }
 
   /** GET /saloes?busca=texto — busca pública do marketplace (nome ou cidade). */

@@ -64,6 +64,7 @@ Testes e2e da API (precisam do banco no ar): `npm run test:e2e -w @salonflow/api
 1. Crie o projeto (região: a mesma da API no Railway).
 2. Authentication > Providers: habilite Google e Email (magic link).
 3. Pegue as connection strings (pooler "Session" e direta) e a Publishable key.
+4. No SQL Editor, rode `apps/api/prisma/supabase/storage.sql` (bucket de imagens dos salões e políticas: só o dono envia).
 
 **Railway (API)**
 

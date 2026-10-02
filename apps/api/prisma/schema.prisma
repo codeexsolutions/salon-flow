@@ -46,6 +46,16 @@ model Salao {
   telefone                 String?
   cidade                   String?
   uf                       String?  @db.Char(2)
+  /// Rua, número e complemento (texto livre, exibido na página pública).
+  endereco                 String?
+  bairro                   String?
+  /// Texto "sobre o salão" da página pública.
+  descricao                String?
+  /// Usuário do Instagram, sem @.
+  instagram                String?
+  /// URLs públicas (Supabase Storage, bucket "saloes").
+  logoUrl                  String?  @map("logo_url")
+  capaUrl                  String?  @map("capa_url")
   visivelNoMarketplace     Boolean  @default(true) @map("visivel_no_marketplace")
   /// Fuso horário IANA usado para interpretar horários de agenda, jornada e folgas.
   fusoHorario              String   @default("America/Sao_Paulo") @map("fuso_horario")

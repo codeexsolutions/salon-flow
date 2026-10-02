@@ -84,8 +84,13 @@ export default async function InicioPage({ searchParams }: PageProps<'/'>) {
                   href={`/s/${s.slug}`}
                   className="group flex h-full flex-col gap-3 rounded-2xl border border-borda bg-superficie p-5 transition hover:-translate-y-0.5 hover:border-primaria/40 hover:shadow-md"
                 >
-                  <span className="flex size-12 items-center justify-center rounded-full bg-nude font-display text-xl text-primaria">
-                    {s.nome.charAt(0).toUpperCase()}
+                  <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-nude font-display text-xl text-primaria">
+                    {s.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={s.logoUrl} alt="" className="size-full rounded-full object-cover" />
+                    ) : (
+                      s.nome.charAt(0).toUpperCase()
+                    )}
                   </span>
                   <span className="flex flex-col gap-1">
                     <span className="font-medium">{s.nome}</span>

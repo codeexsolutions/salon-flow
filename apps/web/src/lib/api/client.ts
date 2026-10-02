@@ -21,9 +21,7 @@ const ESPERA_MS = 1500;
 /** A API recusou a conexão (fora do ar ou reiniciando): o pedido nem chegou lá. */
 function conexaoRecusada(erro: unknown): boolean {
   const causa = (erro as { cause?: { code?: string; errors?: { code?: string }[] } })?.cause;
-  return (
-    causa?.code === 'ECONNREFUSED' || !!causa?.errors?.some((e) => e.code === 'ECONNREFUSED')
-  );
+  return causa?.code === 'ECONNREFUSED' || !!causa?.errors?.some((e) => e.code === 'ECONNREFUSED');
 }
 
 /**

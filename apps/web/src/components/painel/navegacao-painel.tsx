@@ -15,6 +15,7 @@ import {
   Package,
   Receipt,
   Scissors,
+  Settings,
   Users,
   Wallet,
   X,
@@ -41,6 +42,7 @@ const ITENS: Item[] = [
   { rotulo: 'Serviços', href: '/admin/servicos', icone: Scissors },
   { rotulo: 'Estoque', href: '/admin/estoque', icone: Package },
   { rotulo: 'Comissões', href: '/admin/comissoes', icone: HandCoins, papeis: ['DONO'] },
+  { rotulo: 'Configurações', href: '/admin/configuracoes', icone: Settings, papeis: ['DONO'] },
 ];
 
 interface Props {

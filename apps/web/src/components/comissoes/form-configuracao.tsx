@@ -17,6 +17,7 @@ const paraTexto = (bps: number) => String(bps / 100).replace('.', ',');
 export function FormConfiguracao({ configuracao }: { configuracao: ConfiguracaoComissao }) {
   const [padrao, setPadrao] = useState(paraTexto(configuracao.comissaoPadraoBps));
   const [sobreLiquido, setSobreLiquido] = useState(configuracao.comissaoSobreLiquido);
+  const [descontaProdutos, setDescontaProdutos] = useState(configuracao.comissaoDescontaProdutos);
   const [taxas, setTaxas] = useState<Record<FormaPagamento, string>>(
     () =>
       Object.fromEntries(
@@ -43,6 +44,7 @@ export function FormConfiguracao({ configuracao }: { configuracao: ConfiguracaoC
       const r = await salvarConfiguracaoComissao({
         comissaoPadraoBps: padraoBps,
         comissaoSobreLiquido: sobreLiquido,
+        comissaoDescontaProdutos: descontaProdutos,
         taxas: taxasBps,
       });
       setRetorno(
@@ -98,6 +100,22 @@ export function FormConfiguracao({ configuracao }: { configuracao: ConfiguracaoC
           Calcular comissão sobre o valor <strong>líquido</strong> (descontando a taxa do pagamento)
           <span className="block text-xs text-suave">
             Ex.: corte de R$ 100 no crédito com taxa de 3% → comissão calculada sobre R$ 97.
+          </span>
+        </span>
+      </label>
+
+      <label className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          checked={descontaProdutos}
+          onChange={(e) => setDescontaProdutos(e.target.checked)}
+          className="mt-1"
+        />
+        <span>
+          Descontar o <strong>custo dos produtos</strong> (ficha técnica) antes de calcular a
+          comissão
+          <span className="block text-xs text-suave">
+            Ex.: escova de R$ 50 que usa R$ 3,50 em produtos → comissão calculada sobre R$ 46,50.
           </span>
         </span>
       </label>

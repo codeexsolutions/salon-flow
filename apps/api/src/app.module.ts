@@ -9,6 +9,7 @@ import { ClientesModule } from './modules/clientes/clientes.module.js';
 import { ComandasModule } from './modules/comandas/comandas.module.js';
 import { ComissoesModule } from './modules/comissoes/comissoes.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { ProdutosModule } from './modules/produtos/produtos.module.js';
 import { ProfissionaisModule } from './modules/profissionais/profissionais.module.js';
 import { SaloesModule } from './modules/saloes/saloes.module.js';
 import { ServicosModule } from './modules/servicos/servicos.module.js';
@@ -31,6 +32,7 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
     ClientesModule,
     AgendaModule,
     ComissoesModule,
+    ProdutosModule,
     ComandasModule,
   ],
 })

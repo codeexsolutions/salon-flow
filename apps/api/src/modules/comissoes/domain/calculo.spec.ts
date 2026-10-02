@@ -49,8 +49,20 @@ describe('percentualAplicavel', () => {
 describe('calcularFechamento', () => {
   const base: EntradaFechamento = {
     itens: [
-      { id: 'i1', profissionalId: 'ana', servicoId: 'corte', valorCentavos: 6000 },
-      { id: 'i2', profissionalId: 'bia', servicoId: 'escova', valorCentavos: 4000 },
+      {
+        id: 'i1',
+        profissionalId: 'ana',
+        servicoId: 'corte',
+        valorCentavos: 6000,
+        custoProdutosCentavos: 500,
+      },
+      {
+        id: 'i2',
+        profissionalId: 'bia',
+        servicoId: 'escova',
+        valorCentavos: 4000,
+        custoProdutosCentavos: 400,
+      },
     ],
     descontoCentavos: 0,
     pagamentos: [{ forma: 'PIX', valorCentavos: 10000 }],
@@ -58,6 +70,7 @@ describe('calcularFechamento', () => {
     regras: [],
     padraoBps: 5000,
     sobreLiquido: false,
+    descontaProdutos: false,
   };
 
   it('fecha sem desconto nem taxa: comissão sobre o valor cheio', () => {
@@ -127,5 +140,48 @@ describe('calcularFechamento', () => {
   it('recusa comanda vazia e desconto maior que o subtotal', () => {
     expect(() => calcularFechamento({ ...base, itens: [] })).toThrow(RegraDeNegocioError);
     expect(() => calcularFechamento({ ...base, descontoCentavos: 10001 })).toThrow(/desconto/);
+  });
+
+  it('com "descontar produtos", o custo da ficha técnica sai da base', () => {
+    const f = calcularFechamento({ ...base, descontaProdutos: true });
+    expect(f.itens.map((i) => i.baseComissaoCentavos)).toEqual([5500, 3600]);
+    expect(f.itens.map((i) => i.comissaoCentavos)).toEqual([2750, 1800]);
+    expect(f.itens.map((i) => i.custoProdutosCentavos)).toEqual([500, 400]);
+  });
+
+  it('combina desconto, taxa e produtos na base', () => {
+    const f = calcularFechamento({
+      ...base,
+      descontaProdutos: true,
+      sobreLiquido: true,
+      descontoCentavos: 1000,
+      pagamentos: [{ forma: 'CREDITO', valorCentavos: 9000 }],
+    });
+    // taxa 3% de 9000 = 270 -> rateada 162/108 sobre 5400/3600
+    expect(f.itens.map((i) => i.baseComissaoCentavos)).toEqual([
+      5400 - 162 - 500,
+      3600 - 108 - 400,
+    ]);
+  });
+
+  it('venda de produto não gera comissão, mas entra no total e no rateio', () => {
+    const f = calcularFechamento({
+      ...base,
+      itens: [
+        ...base.itens,
+        {
+          id: 'p1',
+          profissionalId: null,
+          servicoId: null,
+          valorCentavos: 5000,
+          custoProdutosCentavos: 0,
+        },
+      ],
+      descontoCentavos: 1500,
+      pagamentos: [{ forma: 'PIX', valorCentavos: 13500 }],
+    });
+    expect(f.totalCentavos).toBe(13500);
+    expect(f.itens.map((i) => i.descontoRateadoCentavos)).toEqual([600, 400, 500]);
+    expect(f.itens[2]).toMatchObject({ comissaoBps: 0, comissaoCentavos: 0 });
   });
 });

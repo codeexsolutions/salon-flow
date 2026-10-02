@@ -61,9 +61,12 @@ export function percentualAplicavel(
 
 export interface ItemParaFechar {
   id: string;
-  profissionalId: string;
-  servicoId: string;
+  /** null em item de produto (venda): não gera comissão. */
+  profissionalId: string | null;
+  servicoId: string | null;
   valorCentavos: number;
+  /** Custo dos produtos da ficha técnica consumidos neste item. */
+  custoProdutosCentavos: number;
 }
 
 export interface PagamentoParaFechar {
@@ -81,6 +84,8 @@ export interface EntradaFechamento {
   padraoBps: number;
   /** Comissão sobre o valor líquido das taxas de pagamento. */
   sobreLiquido: boolean;
+  /** Desconta o custo dos produtos da ficha técnica antes do percentual. */
+  descontaProdutos: boolean;
 }
 
 export interface ItemFechado {
@@ -90,6 +95,7 @@ export interface ItemFechado {
   baseComissaoCentavos: number;
   comissaoBps: number;
   comissaoCentavos: number;
+  custoProdutosCentavos: number;
 }
 
 export interface Fechamento {
@@ -138,7 +144,22 @@ export function calcularFechamento(entrada: EntradaFechamento): Fechamento {
     totalCentavos,
     pagamentos: pagamentosComTaxa,
     itens: itens.map((item, k) => {
-      const base = liquidosDoDesconto[k] - (entrada.sobreLiquido ? taxas[k] : 0);
+      const comum = {
+        id: item.id,
+        descontoRateadoCentavos: descontos[k],
+        taxaRateadaCentavos: taxas[k],
+        custoProdutosCentavos: item.custoProdutosCentavos,
+      };
+      // Venda de produto (sem profissional/serviço): não gera comissão.
+      if (!item.profissionalId || !item.servicoId) {
+        return { ...comum, baseComissaoCentavos: 0, comissaoBps: 0, comissaoCentavos: 0 };
+      }
+      const base = Math.max(
+        0,
+        liquidosDoDesconto[k] -
+          (entrada.sobreLiquido ? taxas[k] : 0) -
+          (entrada.descontaProdutos ? item.custoProdutosCentavos : 0),
+      );
       const comissaoBps = percentualAplicavel(
         entrada.regras,
         item.profissionalId,
@@ -146,12 +167,10 @@ export function calcularFechamento(entrada: EntradaFechamento): Fechamento {
         entrada.padraoBps,
       );
       return {
-        id: item.id,
-        descontoRateadoCentavos: descontos[k],
-        taxaRateadaCentavos: taxas[k],
-        baseComissaoCentavos: Math.max(0, base),
+        ...comum,
+        baseComissaoCentavos: base,
         comissaoBps,
-        comissaoCentavos: aplicarBps(Math.max(0, base), comissaoBps),
+        comissaoCentavos: aplicarBps(base, comissaoBps),
       };
     }),
   };

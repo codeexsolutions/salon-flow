@@ -63,6 +63,7 @@ export class ComissoesService {
     return {
       padraoBps: config.comissaoPadraoBps,
       sobreLiquido: config.comissaoSobreLiquido,
+      descontaProdutos: config.comissaoDescontaProdutos,
       taxas: Object.fromEntries(config.taxas.map((t) => [t.forma, t.taxaBps])),
       regras,
     };
@@ -88,9 +89,11 @@ export class ComissoesService {
 
     const porProfissional = new Map<string, ExtratoProfissional>();
     for (const item of itens) {
-      const grupo = porProfissional.get(item.profissionalId) ?? {
-        profissionalId: item.profissionalId,
-        nome: item.profissional.nome,
+      // A consulta só traz itens de serviço (com profissional).
+      const profissionalId = item.profissionalId!;
+      const grupo = porProfissional.get(profissionalId) ?? {
+        profissionalId,
+        nome: item.profissional!.nome,
         quantidade: 0,
         totalServicosCentavos: 0,
         totalComissaoCentavos: 0,
@@ -109,8 +112,9 @@ export class ComissoesService {
         baseComissaoCentavos: item.baseComissaoCentavos ?? 0,
         comissaoBps: item.comissaoBps ?? 0,
         comissaoCentavos: item.comissaoCentavos ?? 0,
+        custoProdutosCentavos: item.custoProdutosCentavos ?? 0,
       });
-      porProfissional.set(item.profissionalId, grupo);
+      porProfissional.set(profissionalId, grupo);
     }
 
     const profissionais = [...porProfissional.values()].sort((a, b) =>

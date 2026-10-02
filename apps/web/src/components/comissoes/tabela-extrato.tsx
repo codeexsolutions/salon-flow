@@ -31,6 +31,7 @@ export function TabelaExtrato({ extrato, fuso }: { extrato: ExtratoComissoes; fu
                   <th className="px-3 py-2 font-medium">Serviço</th>
                   <th className="px-3 py-2 font-medium">Cliente</th>
                   <th className="px-3 py-2 text-right font-medium">Valor</th>
+                  <th className="px-3 py-2 text-right font-medium">Produtos</th>
                   <th className="px-3 py-2 text-right font-medium">Base</th>
                   <th className="px-3 py-2 text-right font-medium">%</th>
                   <th className="px-3 py-2 text-right font-medium">Comissão</th>
@@ -47,6 +48,9 @@ export function TabelaExtrato({ extrato, fuso }: { extrato: ExtratoComissoes; fu
                     <td className="px-3 py-2">{i.descricao}</td>
                     <td className="px-3 py-2">{i.cliente ?? '—'}</td>
                     <td className="px-3 py-2 text-right">{formatarPreco(i.valorCentavos)}</td>
+                    <td className="px-3 py-2 text-right text-suave">
+                      {i.custoProdutosCentavos ? formatarPreco(i.custoProdutosCentavos) : '—'}
+                    </td>
                     <td className="px-3 py-2 text-right">
                       {formatarPreco(i.baseComissaoCentavos)}
                     </td>

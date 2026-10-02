@@ -40,22 +40,24 @@ model Usuario {
 }
 
 model Salao {
-  id                   String   @id @default(uuid()) @db.Uuid
-  nome                 String
-  slug                 String   @unique
-  telefone             String?
-  cidade               String?
-  uf                   String?  @db.Char(2)
-  visivelNoMarketplace Boolean  @default(true) @map("visivel_no_marketplace")
+  id                       String   @id @default(uuid()) @db.Uuid
+  nome                     String
+  slug                     String   @unique
+  telefone                 String?
+  cidade                   String?
+  uf                       String?  @db.Char(2)
+  visivelNoMarketplace     Boolean  @default(true) @map("visivel_no_marketplace")
   /// Fuso horário IANA usado para interpretar horários de agenda, jornada e folgas.
-  fusoHorario          String   @default("America/Sao_Paulo") @map("fuso_horario")
+  fusoHorario              String   @default("America/Sao_Paulo") @map("fuso_horario")
   /// Comissão padrão em pontos-base (5000 = 50,00%), usada quando não há regra específica.
-  comissaoPadraoBps    Int      @default(5000) @map("comissao_padrao_bps")
+  comissaoPadraoBps        Int      @default(5000) @map("comissao_padrao_bps")
   /// Se true, a comissão é calculada sobre o valor líquido (descontadas as taxas de pagamento).
-  comissaoSobreLiquido Boolean  @default(false) @map("comissao_sobre_liquido")
-  ativo                Boolean  @default(true)
-  criadoEm             DateTime @default(now()) @map("criado_em")
-  atualizadoEm         DateTime @updatedAt @map("atualizado_em")
+  comissaoSobreLiquido     Boolean  @default(false) @map("comissao_sobre_liquido")
+  /// Se true, o custo dos produtos da ficha técnica é descontado antes de calcular a comissão.
+  comissaoDescontaProdutos Boolean  @default(false) @map("comissao_desconta_produtos")
+  ativo                    Boolean  @default(true)
+  criadoEm                 DateTime @default(now()) @map("criado_em")
+  atualizadoEm             DateTime @updatedAt @map("atualizado_em")
 
   membros              MembroSalao[]
   profissionais        Profissional[]
@@ -70,6 +72,9 @@ model Salao {
   comandas             Comanda[]
   comandaItens         ComandaItem[]
   pagamentos           Pagamento[]
+  produtos             Produto[]
+  movimentosEstoque    MovimentoEstoque[]
+  fichaTecnicaItens    FichaTecnicaItem[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -177,6 +182,7 @@ model Servico {
   agendamentos   Agendamento[]
   regrasComissao RegraComissao[]
   comandaItens   ComandaItem[]
+  fichaTecnica   FichaTecnicaItem[]
 
   @@unique([salaoId, nome])
   @@index([salaoId, ativo])
@@ -342,25 +348,32 @@ model Comanda {
 
 /// Item da comanda (por enquanto, serviços). Rateios e comissão gravados no fechamento.
 model ComandaItem {
-  id                      String  @id @default(uuid()) @db.Uuid
-  comandaId               String  @map("comanda_id") @db.Uuid
-  salaoId                 String  @map("salao_id") @db.Uuid
-  servicoId               String  @map("servico_id") @db.Uuid
-  profissionalId          String  @map("profissional_id") @db.Uuid
-  agendamentoId           String? @unique @map("agendamento_id") @db.Uuid
+  id                      String          @id @default(uuid()) @db.Uuid
+  comandaId               String          @map("comanda_id") @db.Uuid
+  salaoId                 String          @map("salao_id") @db.Uuid
+  tipo                    TipoItemComanda @default(SERVICO)
+  servicoId               String?         @map("servico_id") @db.Uuid
+  produtoId               String?         @map("produto_id") @db.Uuid
+  profissionalId          String?         @map("profissional_id") @db.Uuid
+  agendamentoId           String?         @unique @map("agendamento_id") @db.Uuid
   descricao               String
-  valorCentavos           Int     @map("valor_centavos")
-  descontoRateadoCentavos Int?    @map("desconto_rateado_centavos")
-  taxaRateadaCentavos     Int?    @map("taxa_rateada_centavos")
-  baseComissaoCentavos    Int?    @map("base_comissao_centavos")
-  comissaoBps             Int?    @map("comissao_bps")
-  comissaoCentavos        Int?    @map("comissao_centavos")
+  quantidade              Int             @default(1)
+  valorCentavos           Int             @map("valor_centavos")
+  descontoRateadoCentavos Int?            @map("desconto_rateado_centavos")
+  taxaRateadaCentavos     Int?            @map("taxa_rateada_centavos")
+  baseComissaoCentavos    Int?            @map("base_comissao_centavos")
+  comissaoBps             Int?            @map("comissao_bps")
+  comissaoCentavos        Int?            @map("comissao_centavos")
+  /// Custo dos produtos da ficha técnica consumidos (gravado ao fechar).
+  custoProdutosCentavos   Int?            @map("custo_produtos_centavos")
 
-  comanda      Comanda      @relation(fields: [comandaId], references: [id], onDelete: Cascade)
-  salao        Salao        @relation(fields: [salaoId], references: [id], onDelete: Cascade)
-  servico      Servico      @relation(fields: [servicoId], references: [id], onDelete: NoAction)
-  profissional Profissional @relation(fields: [profissionalId], references: [id], onDelete: NoAction)
-  agendamento  Agendamento? @relation(fields: [agendamentoId], references: [id], onDelete: SetNull)
+  comanda      Comanda            @relation(fields: [comandaId], references: [id], onDelete: Cascade)
+  salao        Salao              @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  servico      Servico?           @relation(fields: [servicoId], references: [id], onDelete: NoAction)
+  produto      Produto?           @relation(fields: [produtoId], references: [id], onDelete: NoAction)
+  movimentos   MovimentoEstoque[]
+  profissional Profissional?      @relation(fields: [profissionalId], references: [id], onDelete: NoAction)
+  agendamento  Agendamento?       @relation(fields: [agendamentoId], references: [id], onDelete: SetNull)
 
   @@index([comandaId])
   @@index([salaoId, profissionalId])
@@ -382,4 +395,95 @@ model Pagamento {
 
   @@index([comandaId])
   @@map("pagamentos")
+}
+
+enum TipoItemComanda {
+  SERVICO
+  PRODUTO
+}
+
+/// Unidade em que o estoque e o consumo são medidos.
+enum UnidadeProduto {
+  UN
+  ML
+  G
+}
+
+enum TipoMovimentoEstoque {
+  /// Compra / reposição
+  ENTRADA
+  /// Correção manual (contagem, perda, vencimento)
+  AJUSTE
+  /// Consumo pela ficha técnica de um serviço
+  CONSUMO
+  /// Venda ao cliente na comanda
+  VENDA
+}
+
+/// Produto do salão: de uso nos serviços e/ou de revenda.
+model Produto {
+  id                     String         @id @default(uuid()) @db.Uuid
+  salaoId                String         @map("salao_id") @db.Uuid
+  nome                   String
+  marca                  String?
+  unidade                UnidadeProduto @default(UN)
+  /// Quantas unidades (ml, g ou un) vêm numa embalagem. Ex.: frasco de 1000 ml.
+  tamanhoEmbalagem       Int            @map("tamanho_embalagem")
+  /// Custo de UMA embalagem, em centavos.
+  custoEmbalagemCentavos Int            @map("custo_embalagem_centavos")
+  /// Preço de venda da embalagem ao cliente (null = só uso interno).
+  precoVendaCentavos     Int?           @map("preco_venda_centavos")
+  /// Saldo na unidade de consumo (pode ficar negativo se faltar lançar uma entrada).
+  estoqueAtual           Int            @default(0) @map("estoque_atual")
+  estoqueMinimo          Int?           @map("estoque_minimo")
+  ativo                  Boolean        @default(true)
+  criadoEm               DateTime       @default(now()) @map("criado_em")
+  atualizadoEm           DateTime       @updatedAt @map("atualizado_em")
+
+  salao        Salao              @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  movimentos   MovimentoEstoque[]
+  fichaTecnica FichaTecnicaItem[]
+  comandaItens ComandaItem[]
+
+  @@unique([salaoId, nome])
+  @@index([salaoId, ativo])
+  @@map("produtos")
+}
+
+/// Histórico de cada entrada e saída de estoque.
+model MovimentoEstoque {
+  id            String               @id @default(uuid()) @db.Uuid
+  salaoId       String               @map("salao_id") @db.Uuid
+  produtoId     String               @map("produto_id") @db.Uuid
+  tipo          TipoMovimentoEstoque
+  /// Positivo = entrada; negativo = saída (na unidade de consumo).
+  quantidade    Int
+  observacao    String?
+  comandaItemId String?              @map("comanda_item_id") @db.Uuid
+  criadoPorId   String?              @map("criado_por_id") @db.Uuid
+  criadoEm      DateTime             @default(now()) @map("criado_em")
+
+  salao       Salao        @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  produto     Produto      @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  comandaItem ComandaItem? @relation(fields: [comandaItemId], references: [id], onDelete: SetNull)
+
+  @@index([produtoId, criadoEm])
+  @@map("movimentos_estoque")
+}
+
+/// Ficha técnica: quanto de cada produto um serviço consome.
+model FichaTecnicaItem {
+  servicoId  String @map("servico_id") @db.Uuid
+  produtoId  String @map("produto_id") @db.Uuid
+  salaoId    String @map("salao_id") @db.Uuid
+  /// Na unidade do produto (ml, g ou un).
+  quantidade Int
+
+  servico Servico @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  salao   Salao   @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@id([servicoId, produtoId])
+  @@index([produtoId])
+  @@map("fichas_tecnicas")
 }

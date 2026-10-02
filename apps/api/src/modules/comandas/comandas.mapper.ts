@@ -3,7 +3,7 @@ import type { Comanda, ComandaItem, Pagamento } from '../../generated/prisma/cli
 
 type ComandaCompleta = Comanda & {
   cliente: { id: string; nome: string } | null;
-  itens: (ComandaItem & { profissional: { id: string; nome: string } })[];
+  itens: (ComandaItem & { profissional: { id: string; nome: string } | null })[];
   pagamentos: Pagamento[];
 };
 
@@ -32,8 +32,11 @@ export function paraComandaDetalhe(c: ComandaCompleta): ComandaDetalhe {
     observacoes: c.observacoes,
     itens: c.itens.map((i) => ({
       id: i.id,
+      tipo: i.tipo,
       descricao: i.descricao,
       servicoId: i.servicoId,
+      produtoId: i.produtoId,
+      quantidade: i.quantidade,
       profissional: i.profissional,
       agendamentoId: i.agendamentoId,
       valorCentavos: i.valorCentavos,
@@ -42,6 +45,7 @@ export function paraComandaDetalhe(c: ComandaCompleta): ComandaDetalhe {
       baseComissaoCentavos: i.baseComissaoCentavos,
       comissaoBps: i.comissaoBps,
       comissaoCentavos: i.comissaoCentavos,
+      custoProdutosCentavos: i.custoProdutosCentavos,
     })),
     pagamentos: c.pagamentos.map((p) => ({
       id: p.id,

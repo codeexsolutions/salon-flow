@@ -21,6 +21,8 @@ const bps = z.number().int().min(0, 'Mínimo 0%').max(10_000, 'Máximo 100%');
 export const configuracaoComissaoSchema = z.object({
   comissaoPadraoBps: bps,
   comissaoSobreLiquido: z.boolean(),
+  /** Desconta o custo dos produtos da ficha técnica antes do percentual. */
+  comissaoDescontaProdutos: z.boolean(),
   taxas: z
     .array(z.object({ forma: z.enum(FORMAS_PAGAMENTO), taxaBps: bps }))
     .max(FORMAS_PAGAMENTO.length),
@@ -65,12 +67,23 @@ export const criarComandaSchema = z.object({
 });
 export type CriarComandaInput = z.infer<typeof criarComandaSchema>;
 
-export const adicionarItemComandaSchema = z.object({
-  servicoId: z.uuid('Escolha o serviço'),
-  profissionalId: z.uuid('Escolha o profissional'),
-  /** Sem valor = preço do profissional para o serviço. */
-  valorCentavos: centavos.optional(),
-});
+export const adicionarItemComandaSchema = z.discriminatedUnion('tipo', [
+  z.object({
+    tipo: z.literal('SERVICO'),
+    servicoId: z.uuid('Escolha o serviço'),
+    profissionalId: z.uuid('Escolha o profissional'),
+    /** Sem valor = preço do profissional para o serviço. */
+    valorCentavos: centavos.optional(),
+  }),
+  z.object({
+    tipo: z.literal('PRODUTO'),
+    produtoId: z.uuid('Escolha o produto'),
+    /** Quantas embalagens. */
+    quantidade: z.number().int().min(1).max(100),
+    /** Preço de UMA embalagem; sem valor = preço de venda do produto. */
+    valorUnitarioCentavos: centavos.optional(),
+  }),
+]);
 export type AdicionarItemComandaInput = z.infer<typeof adicionarItemComandaSchema>;
 
 export const atualizarComandaSchema = z.object({
@@ -106,9 +119,13 @@ export interface ComandaResumo {
 
 export interface ItemComanda {
   id: string;
+  tipo: 'SERVICO' | 'PRODUTO';
   descricao: string;
-  servicoId: string;
-  profissional: { id: string; nome: string };
+  servicoId: string | null;
+  produtoId: string | null;
+  quantidade: number;
+  /** null em venda de produto. */
+  profissional: { id: string; nome: string } | null;
   agendamentoId: string | null;
   valorCentavos: number;
   /** Preenchidos quando a comanda é fechada. */
@@ -117,6 +134,8 @@ export interface ItemComanda {
   baseComissaoCentavos: number | null;
   comissaoBps: number | null;
   comissaoCentavos: number | null;
+  /** Custo dos produtos consumidos (ficha técnica), gravado ao fechar. */
+  custoProdutosCentavos: number | null;
 }
 
 export interface PagamentoComanda {
@@ -147,6 +166,7 @@ export interface ItemExtrato {
   baseComissaoCentavos: number;
   comissaoBps: number;
   comissaoCentavos: number;
+  custoProdutosCentavos: number;
 }
 
 export interface ExtratoProfissional {

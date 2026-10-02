@@ -3,6 +3,7 @@ import type { StatusComanda } from '@salonflow/shared';
 import type { FormaPagamento, Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../shared/database/prisma.service.js';
 import type { Fechamento } from '../comissoes/domain/calculo.js';
+import type { SaidaEstoque } from '../produtos/produtos.service.js';
 
 export const comDetalhes = {
   cliente: { select: { id: true, nome: true } },
@@ -14,10 +15,13 @@ export const comDetalhes = {
 } satisfies Prisma.ComandaInclude;
 
 export interface NovoItem {
-  servicoId: string;
-  profissionalId: string;
+  tipo: 'SERVICO' | 'PRODUTO';
+  servicoId?: string;
+  profissionalId?: string;
+  produtoId?: string;
   agendamentoId?: string;
   descricao: string;
+  quantidade?: number;
   valorCentavos: number;
 }
 
@@ -84,10 +88,21 @@ export class ComandasRepository {
   }
 
   /**
-   * Grava o fechamento (rateios, comissões e pagamentos). Só fecha se ainda estiver
-   * ABERTA — dois cliques simultâneos não fecham duas vezes. Null se não fechou.
+   * Grava o fechamento (rateios, comissões, pagamentos e baixa de estoque) numa única
+   * transação. Só fecha se ainda estiver ABERTA — dois cliques simultâneos não fecham
+   * duas vezes. Null se não fechou.
+   *
+   * Exceção à regra de módulos: a baixa de estoque é gravada aqui (e não pelo
+   * ProdutosService) para ficar na MESMA transação do fechamento. O que baixar é
+   * calculado pelo ProdutosService.consumoDaComanda.
    */
-  fechar(salaoId: string, id: string, fechamento: Fechamento, fechadaPorId: string) {
+  fechar(
+    salaoId: string,
+    id: string,
+    fechamento: Fechamento,
+    saidas: SaidaEstoque[],
+    fechadaPorId: string,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const { count } = await tx.comanda.updateMany({
         where: { id, salaoId, status: 'ABERTA' },
@@ -115,6 +130,22 @@ export class ComandasRepository {
           taxaCentavos: p.taxaCentavos,
         })),
       });
+      for (const saida of saidas) {
+        await tx.movimentoEstoque.create({
+          data: {
+            salaoId,
+            produtoId: saida.produtoId,
+            tipo: saida.tipo,
+            quantidade: -saida.quantidade,
+            comandaItemId: saida.comandaItemId,
+            criadoPorId: fechadaPorId,
+          },
+        });
+        await tx.produto.update({
+          where: { id: saida.produtoId, salaoId },
+          data: { estoqueAtual: { decrement: saida.quantidade } },
+        });
+      }
       return tx.comanda.findUniqueOrThrow({ where: { id }, include: comDetalhes });
     });
   }

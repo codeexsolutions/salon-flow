@@ -11,7 +11,11 @@ export class ComissoesRepository {
     const [salao, taxas] = await Promise.all([
       this.prisma.salao.findUniqueOrThrow({
         where: { id: salaoId },
-        select: { comissaoPadraoBps: true, comissaoSobreLiquido: true },
+        select: {
+          comissaoPadraoBps: true,
+          comissaoSobreLiquido: true,
+          comissaoDescontaProdutos: true,
+        },
       }),
       this.prisma.taxaPagamento.findMany({
         where: { salaoId },
@@ -50,7 +54,8 @@ export class ComissoesRepository {
     return this.prisma.comandaItem.findMany({
       where: {
         salaoId,
-        ...(profissionalId && { profissionalId }),
+        tipo: 'SERVICO',
+        profissionalId: profissionalId ?? { not: null },
         comanda: { status: 'FECHADA', fechadaEm: { gte: inicio, lt: fim } },
       },
       include: {

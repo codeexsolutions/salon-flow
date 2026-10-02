@@ -16,6 +16,7 @@ import { AgendaService } from '../agenda/agenda.service.js';
 import { ClientesService } from '../clientes/clientes.service.js';
 import { calcularFechamento } from '../comissoes/domain/calculo.js';
 import { ComissoesService } from '../comissoes/comissoes.service.js';
+import { ProdutosService } from '../produtos/produtos.service.js';
 import { ServicosService } from '../servicos/servicos.service.js';
 import { ComandasRepository, type NovoItem } from './comandas.repository.js';
 
@@ -27,6 +28,7 @@ export class ComandasService {
     private readonly clientes: ClientesService,
     private readonly servicos: ServicosService,
     private readonly comissoes: ComissoesService,
+    private readonly produtos: ProdutosService,
     private readonly contexto: ContextoSalao,
   ) {}
 
@@ -57,6 +59,7 @@ export class ComandasService {
       }
       cliente = agendamentos[0].clienteId;
       itens = agendamentos.map((a) => ({
+        tipo: 'SERVICO' as const,
         servicoId: a.servicoId,
         profissionalId: a.profissionalId,
         agendamentoId: a.id,
@@ -76,13 +79,33 @@ export class ComandasService {
 
   async adicionarItem(id: string, dados: AdicionarItemComandaInput) {
     await this.buscarAberta(id);
-    const opcoes = await this.servicos.opcoesDeAgendamento(dados.servicoId, dados.profissionalId);
-    await this.repository.adicionarItem(this.contexto.salaoId, id, {
-      servicoId: dados.servicoId,
-      profissionalId: dados.profissionalId,
-      descricao: opcoes.servico.nome,
-      valorCentavos: dados.valorCentavos ?? opcoes.profissionais[0].precoCentavos,
-    });
+
+    if (dados.tipo === 'SERVICO') {
+      const opcoes = await this.servicos.opcoesDeAgendamento(dados.servicoId, dados.profissionalId);
+      await this.repository.adicionarItem(this.contexto.salaoId, id, {
+        tipo: 'SERVICO',
+        servicoId: dados.servicoId,
+        profissionalId: dados.profissionalId,
+        descricao: opcoes.servico.nome,
+        valorCentavos: dados.valorCentavos ?? opcoes.profissionais[0].precoCentavos,
+      });
+    } else {
+      const produto = await this.produtos.buscar(dados.produtoId);
+      const unitario = dados.valorUnitarioCentavos ?? produto.precoVendaCentavos;
+      if (!produto.ativo || unitario === null) {
+        throw new RegraDeNegocioError(
+          'PRODUTO_NAO_VENDAVEL',
+          'Este produto não está à venda. Defina um preço de venda no cadastro ou informe o valor.',
+        );
+      }
+      await this.repository.adicionarItem(this.contexto.salaoId, id, {
+        tipo: 'PRODUTO',
+        produtoId: produto.id,
+        descricao: produto.nome,
+        quantidade: dados.quantidade,
+        valorCentavos: unitario * dados.quantidade,
+      });
+    }
     return this.buscar(id);
   }
 
@@ -100,19 +123,34 @@ export class ComandasService {
     return this.repository.atualizar(this.contexto.salaoId, id, dados);
   }
 
-  /** Fecha: confere pagamentos, calcula e GRAVA as comissões, conclui os agendamentos. */
+  /**
+   * Fecha: confere pagamentos, calcula e GRAVA as comissões (com custo da ficha
+   * técnica), baixa o estoque e conclui os agendamentos.
+   */
   async fechar(id: string, { pagamentos }: FecharComandaInput, usuarioId: string) {
     const comanda = await this.buscarAberta(id);
-    const parametros = await this.comissoes.parametrosDeCalculo();
+    const [parametros, consumo] = await Promise.all([
+      this.comissoes.parametrosDeCalculo(),
+      this.produtos.consumoDaComanda(comanda.itens),
+    ]);
 
     const fechamento = calcularFechamento({
-      itens: comanda.itens,
+      itens: comanda.itens.map((i) => ({
+        ...i,
+        custoProdutosCentavos: consumo.custoPorItem.get(i.id) ?? 0,
+      })),
       descontoCentavos: comanda.descontoCentavos,
       pagamentos,
       ...parametros,
     });
 
-    const fechada = await this.repository.fechar(this.contexto.salaoId, id, fechamento, usuarioId);
+    const fechada = await this.repository.fechar(
+      this.contexto.salaoId,
+      id,
+      fechamento,
+      consumo.saidas,
+      usuarioId,
+    );
     if (!fechada) throw this.naoEstaAberta();
 
     await this.agenda.concluirDaComanda(

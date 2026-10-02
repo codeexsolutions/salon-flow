@@ -11,6 +11,7 @@ import {
   type ComandaDetalhe,
   type FormaPagamento,
   type ProfissionalResumo,
+  type ProdutoResumo,
   type ServicoResumo,
 } from '@salonflow/shared';
 import {
@@ -35,10 +36,13 @@ export function EditorComanda({
   comanda,
   servicos,
   profissionais,
+  produtos,
 }: {
   comanda: ComandaDetalhe;
   servicos: ServicoResumo[];
   profissionais: ProfissionalResumo[];
+  /** Produtos à venda (ativos e com preço de venda). */
+  produtos: ProdutoResumo[];
 }) {
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
@@ -47,6 +51,8 @@ export function EditorComanda({
   const [novoServico, setNovoServico] = useState('');
   const [novoProfissional, setNovoProfissional] = useState('');
   const [novoValor, setNovoValor] = useState('');
+  const [novoProduto, setNovoProduto] = useState('');
+  const [quantidadeProduto, setQuantidadeProduto] = useState('1');
   const [desconto, setDesconto] = useState(centavosParaTexto(comanda.descontoCentavos));
   const [pagamentos, setPagamentos] = useState<LinhaPagamento[]>([
     { forma: 'PIX', valor: centavosParaTexto(comanda.totalCentavos) },
@@ -75,6 +81,7 @@ export function EditorComanda({
     executar(
       () =>
         adicionarItem(comanda.id, {
+          tipo: 'SERVICO',
           servicoId: novoServico,
           profissionalId: novoProfissional,
           valorCentavos,
@@ -82,6 +89,21 @@ export function EditorComanda({
       () => {
         setNovoServico('');
         setNovoValor('');
+      },
+    );
+  }
+
+  function venderProduto() {
+    executar(
+      () =>
+        adicionarItem(comanda.id, {
+          tipo: 'PRODUTO',
+          produtoId: novoProduto,
+          quantidade: Number(quantidadeProduto),
+        }),
+      () => {
+        setNovoProduto('');
+        setQuantidadeProduto('1');
       },
     );
   }
@@ -129,17 +151,20 @@ export function EditorComanda({
         )}
       </Secao>
 
-      <Secao titulo="Serviços">
+      <Secao titulo="Itens">
         {comanda.itens.length === 0 ? (
-          <p className="text-sm text-suave">Nenhum serviço na comanda.</p>
+          <p className="text-sm text-suave">Nenhum item na comanda.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-borda rounded-lg border border-borda text-sm">
             {comanda.itens.map((item) => (
               <li key={item.id} className="flex items-center gap-3 px-3 py-2">
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="font-medium">{item.descricao}</span>
+                  <span className="font-medium">
+                    {item.tipo === 'PRODUTO' && item.quantidade > 1 && `${item.quantidade}× `}
+                    {item.descricao}
+                  </span>
                   <span className="text-xs text-suave">
-                    {item.profissional.nome}
+                    {item.tipo === 'PRODUTO' ? 'Venda de produto' : item.profissional?.nome}
                     {item.agendamentoId && ' · do agendamento'}
                   </span>
                 </span>
@@ -203,6 +228,41 @@ export function EditorComanda({
             Adicionar
           </button>
         </div>
+
+        {produtos.length > 0 && (
+          <div className="grid gap-2 sm:grid-cols-[1fr_5rem_auto]">
+            <select
+              value={novoProduto}
+              onChange={(e) => setNovoProduto(e.target.value)}
+              aria-label="Produto à venda"
+              className={classeInput}
+            >
+              <option value="">Vender produto…</option>
+              {produtos.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome} · {formatarPreco(p.precoVendaCentavos ?? 0)}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={quantidadeProduto}
+              onChange={(e) => setQuantidadeProduto(e.target.value)}
+              aria-label="Quantidade"
+              className={classeInput}
+            />
+            <button
+              type="button"
+              disabled={pendente || !novoProduto || Number(quantidadeProduto) < 1}
+              onClick={venderProduto}
+              className={classeBotaoSecundario}
+            >
+              Adicionar
+            </button>
+          </div>
+        )}
       </Secao>
 
       <Secao titulo="Pagamento">

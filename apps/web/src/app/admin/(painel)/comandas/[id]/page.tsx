@@ -5,6 +5,7 @@ import {
   formatarPreco,
   ROTULO_FORMA_PAGAMENTO,
   type ComandaDetalhe,
+  type ProdutoResumo,
   type ProfissionalResumo,
   type ServicoResumo,
 } from '@salonflow/shared';
@@ -54,9 +55,10 @@ export default async function ComandaPage({ params }: PageProps<'/admin/comandas
 }
 
 async function EditorAberta({ comanda }: { comanda: ComandaDetalhe }) {
-  const [servicos, profissionais] = await Promise.all([
+  const [servicos, profissionais, produtos] = await Promise.all([
     apiSalao<ServicoResumo[]>('/servicos'),
     apiSalao<ProfissionalResumo[]>('/profissionais'),
+    apiSalao<ProdutoResumo[]>('/produtos'),
   ]);
   // A chave recria o editor quando o total muda (pagamento sugerido acompanha).
   return (
@@ -65,6 +67,7 @@ async function EditorAberta({ comanda }: { comanda: ComandaDetalhe }) {
       comanda={comanda}
       servicos={servicos}
       profissionais={profissionais}
+      produtos={produtos.filter((p) => p.precoVendaCentavos !== null)}
     />
   );
 }
@@ -81,10 +84,16 @@ function ComandaEncerrada({ comanda, ehDono }: { comanda: ComandaDetalhe; ehDono
           {comanda.itens.map((i) => (
             <li key={i.id} className="flex items-center gap-3 px-3 py-2">
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="font-medium">{i.descricao}</span>
+                <span className="font-medium">
+                  {i.tipo === 'PRODUTO' && i.quantidade > 1 && `${i.quantidade}× `}
+                  {i.descricao}
+                </span>
                 <span className="text-xs text-suave">
-                  {i.profissional.nome}
-                  {fechada && ehDono && i.comissaoCentavos !== null && (
+                  {i.tipo === 'PRODUTO' ? 'Venda de produto' : i.profissional?.nome}
+                  {fechada && ehDono && !!i.custoProdutosCentavos && (
+                    <> · produtos {formatarPreco(i.custoProdutosCentavos)}</>
+                  )}
+                  {fechada && ehDono && i.tipo === 'SERVICO' && i.comissaoCentavos !== null && (
                     <>
                       {' · comissão '}
                       {formatarPercentual(i.comissaoBps!)} de{' '}

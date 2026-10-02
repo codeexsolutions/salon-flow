@@ -5,8 +5,11 @@ import {
   formatarPreco,
   type ProfissionalResumo,
   type ServicoDetalhe,
+  type FichaTecnica,
+  type ProdutoResumo,
   type ServicoResumo,
 } from '@salonflow/shared';
+import { EditorFichaTecnica } from '@/components/servicos/editor-ficha-tecnica';
 import { EditorProfissionaisServico } from '@/components/servicos/editor-profissionais-servico';
 import { FormServico } from '@/components/servicos/form-servico';
 import { classeBotaoSecundario } from '@/components/ui/campo';
@@ -23,6 +26,8 @@ async function carregar(id: string) {
       apiSalao<ServicoDetalhe>(`/servicos/${id}`),
       apiSalao<ServicoResumo[]>('/servicos?incluirInativos=true'),
       apiSalao<ProfissionalResumo[]>('/profissionais'),
+      apiSalao<FichaTecnica>(`/servicos/${id}/ficha-tecnica`),
+      apiSalao<ProdutoResumo[]>('/produtos'),
     ]);
   } catch (erro) {
     if (erro instanceof ApiError && [400, 404].includes(erro.erro.statusCode)) notFound();
@@ -32,7 +37,7 @@ async function carregar(id: string) {
 
 export default async function ServicoPage({ params }: PageProps<'/admin/servicos/[id]'>) {
   const { id } = await params;
-  const [{ salao }, [servico, todos, profissionais]] = await Promise.all([
+  const [{ salao }, [servico, todos, profissionais, ficha, produtos]] = await Promise.all([
     obterContextoAdmin(),
     carregar(id),
   ]);
@@ -68,6 +73,13 @@ export default async function ServicoPage({ params }: PageProps<'/admin/servicos
               profissionais={profissionais}
               vinculados={servico.profissionais}
             />
+          </Secao>
+
+          <Secao
+            titulo="Ficha técnica"
+            descricao="Produtos usados em cada atendimento. Saem do estoque ao fechar a comanda e podem ser descontados da comissão."
+          >
+            <EditorFichaTecnica servicoId={servico.id} ficha={ficha} produtos={produtos} />
           </Secao>
 
           <Secao

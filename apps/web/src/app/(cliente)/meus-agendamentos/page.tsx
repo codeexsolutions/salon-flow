@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { MeuAgendamento } from '@salonflow/shared';
 import { CartaoAgendamento } from '@/components/cliente/cartao-agendamento';
+import { ConviteInstalarApp } from '@/components/pwa/convite-instalar-app';
 import { api } from '@/lib/api/client';
 import { exigirSessao } from '@/lib/auth/sessao';
 
@@ -28,10 +29,12 @@ export default async function MeusAgendamentosPage() {
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
         <h1 className="text-3xl">Meus agendamentos</h1>
+        {/* Convite para instalar o app só depois do primeiro agendamento. */}
+        {(proximos.length > 0 || historico.length > 0) && <ConviteInstalarApp />}
         {proximos.length === 0 ? (
           <p className="rounded-xl border border-dashed border-borda p-6 text-center text-sm text-suave">
             Você não tem agendamentos marcados.{' '}
-            <Link href="/" className="text-primaria underline">
+            <Link href="/saloes" className="text-primaria underline">
               Encontre um salão
             </Link>
           </p>

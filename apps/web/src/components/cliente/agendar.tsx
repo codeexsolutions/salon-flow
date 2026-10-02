@@ -12,6 +12,7 @@ import {
 import { agendarNoSalao, horariosPublicos } from '@/app/(cliente)/s/[slug]/actions';
 import { dataPorExtenso, hojeNoFuso, somarDias } from '@/lib/data-hora';
 import { classeBotaoPrimario } from '@/components/ui/campo';
+import { ConviteInstalarApp } from '@/components/pwa/convite-instalar-app';
 
 const QUALQUER = 'qualquer';
 
@@ -119,6 +120,7 @@ export function Agendar({
         <Link href="/meus-agendamentos" className={`${classeBotaoPrimario} self-center`}>
           Ver meus agendamentos
         </Link>
+        <ConviteInstalarApp className="mt-2" />
       </div>
     );
   }

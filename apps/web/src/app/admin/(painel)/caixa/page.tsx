@@ -40,7 +40,7 @@ export default async function CaixaPage() {
                   </span>
                   <span>{formatarPreco(c.totalRecebidoCentavos)}</span>
                   <span
-                    className={`w-28 text-right ${c.diferencaCentavos ? 'text-amber-700' : 'text-green-700'}`}
+                    className={`w-28 text-right ${c.diferencaCentavos ? 'text-alerta' : 'text-sucesso'}`}
                   >
                     {c.diferencaCentavos
                       ? `dif. ${formatarPreco(c.diferencaCentavos)}`

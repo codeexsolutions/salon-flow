@@ -82,7 +82,7 @@ export default async function ProfissionalPage({ params }: PageProps<'/admin/pro
             <button
               type="submit"
               className={
-                profissional.ativo ? `${classeBotaoSecundario} text-red-600` : classeBotaoSecundario
+                profissional.ativo ? `${classeBotaoSecundario} text-perigo` : classeBotaoSecundario
               }
             >
               {profissional.ativo ? 'Desativar' : 'Reativar'}

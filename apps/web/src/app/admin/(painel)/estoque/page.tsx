@@ -26,10 +26,7 @@ export default async function EstoquePage() {
       </div>
 
       {baixos.length > 0 && (
-        <p
-          role="status"
-          className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200"
-        >
+        <p role="status" className="rounded-xl bg-alerta-suave p-4 text-sm text-alerta">
           <strong>Estoque baixo:</strong> {baixos.map((p) => p.nome).join(', ')}.
         </p>
       )}
@@ -60,7 +57,7 @@ export default async function EstoquePage() {
                 </span>
                 <span className="text-right">
                   <span
-                    className={`block font-medium ${p.estoqueBaixo || p.estoqueAtual < 0 ? 'text-amber-700' : ''}`}
+                    className={`block font-medium ${p.estoqueBaixo || p.estoqueAtual < 0 ? 'text-alerta' : ''}`}
                   >
                     {formatarQuantidade(p.estoqueAtual, p.unidade)}
                   </span>

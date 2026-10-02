@@ -31,9 +31,7 @@ export function TabelaExtrato({
               {p.quantidade} atendimento(s) · {formatarPreco(p.totalServicosCentavos)}
             </span>
             <span className="font-semibold">{formatarPreco(p.totalComissaoCentavos)}</span>
-            <span
-              className={`text-xs ${p.pendenteCentavos > 0 ? 'text-amber-700' : 'text-green-700'}`}
-            >
+            <span className={`text-xs ${p.pendenteCentavos > 0 ? 'text-alerta' : 'text-sucesso'}`}>
               {p.pendenteCentavos > 0
                 ? `${formatarPreco(p.pendenteCentavos)} pendente`
                 : 'tudo pago'}
@@ -74,7 +72,7 @@ export function TabelaExtrato({
                     </td>
                     <td className="px-3 py-2">
                       #{i.comandaNumero}
-                      {i.repasseId && <span className="ml-1 text-green-700">· pago</span>}
+                      {i.repasseId && <span className="ml-1 text-sucesso">· pago</span>}
                     </td>
                     <td className="px-3 py-2">{i.descricao}</td>
                     <td className="px-3 py-2">{i.cliente ?? '—'}</td>

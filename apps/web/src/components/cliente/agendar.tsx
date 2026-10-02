@@ -110,7 +110,7 @@ export function Agendar({
 
   if (concluido && escolha && servico) {
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-green-300 bg-green-50 p-6 text-center dark:bg-green-950">
+      <div className="flex flex-col gap-3 rounded-xl border border-sucesso/40 bg-sucesso-suave p-6 text-center">
         <p className="text-lg font-semibold">Agendamento confirmado!</p>
         <p className="text-sm">
           {servico.nome} com {profissionalEscolhido?.nome} —{' '}
@@ -140,7 +140,7 @@ export function Agendar({
                 onClick={() => trocarServico(s.id)}
                 aria-pressed={s.id === servicoId}
                 className={`flex w-full items-center gap-3 px-4 py-3 text-left ${
-                  s.id === servicoId ? 'bg-violet-50 dark:bg-violet-950' : ''
+                  s.id === servicoId ? 'bg-nude' : ''
                 }`}
               >
                 <span className="flex min-w-0 flex-1 flex-col">
@@ -252,7 +252,7 @@ export function Agendar({
             {formatarPreco(profissionalEscolhido?.precoCentavos ?? servico.precoCentavos)}
           </p>
           {erro && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-perigo">
               {erro}
             </p>
           )}

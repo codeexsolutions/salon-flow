@@ -122,7 +122,7 @@ export function GradeAgenda({
                 </div>
 
                 <div
-                  className="relative cursor-copy bg-neutral-100 dark:bg-neutral-900"
+                  className="relative cursor-copy bg-nude"
                   style={{ height: altura }}
                   onClick={(e) => clicarNaColuna(p.id, e)}
                   title="Clique para agendar neste horário"
@@ -200,7 +200,7 @@ export function GradeAgenda({
 
                   {agoraMin !== null && agoraMin >= inicio && agoraMin <= fim && (
                     <div
-                      className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-red-500"
+                      className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-perigo"
                       style={{ top: topo(agoraMin) }}
                     />
                   )}

@@ -1,25 +1,20 @@
-import { notFound } from 'next/navigation';
 import { FormDefinirSenha } from '@/components/auth/form-definir-senha';
+import { CabecalhoPagina } from '@/components/ui/cabecalho-pagina';
+import { Secao } from '@/components/ui/secao';
 import { exigirSessao } from '@/lib/auth/sessao';
-import { env } from '@/lib/env';
 
-export const metadata = { title: 'Definir senha' };
+export const metadata = { title: 'Alterar senha' };
 
-/** Só existe em desenvolvimento (NEXT_PUBLIC_LOGIN_SENHA=true). */
-export default async function DefinirSenhaPage() {
-  if (!env.loginComSenha) notFound();
+/** Alterar a senha (também é o destino do link "Esqueci minha senha"). */
+export default async function SenhaPage() {
   const sessao = await exigirSessao('/conta/senha');
 
   return (
-    <section className="mx-auto flex max-w-sm flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-bold">Definir senha</h1>
-        <p className="mt-1 text-sm text-suave">
-          Para <strong>{sessao.email}</strong> entrar sem esperar o link por e-mail (modo
-          desenvolvimento).
-        </p>
-      </div>
-      <FormDefinirSenha />
-    </section>
+    <div className="mx-auto flex max-w-md flex-col gap-6">
+      <CabecalhoPagina titulo="Alterar senha" subtitulo={sessao.email} />
+      <Secao titulo="Nova senha">
+        <FormDefinirSenha />
+      </Secao>
+    </div>
   );
 }

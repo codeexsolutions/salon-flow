@@ -36,7 +36,7 @@ export default async function RepassePage({ params }: PageProps<'/admin/comissoe
           <BotaoImprimir />
           {repasse.status === 'PAGO' && (
             <form action={cancelarRepasse.bind(null, repasse.id)}>
-              <button type="submit" className={`${classeBotaoSecundario} text-red-600`}>
+              <button type="submit" className={`${classeBotaoSecundario} text-perigo`}>
                 Cancelar repasse
               </button>
             </form>

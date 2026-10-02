@@ -1,16 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { DM_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+const corpo = DM_Sans({ variable: '--font-corpo', subsets: ['latin'] });
+const titulo = Playfair_Display({ variable: '--font-titulo', subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: { default: 'SalonFlow', template: '%s · SalonFlow' },
@@ -19,13 +12,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#7c3aed',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fbf7f5' },
+    { media: '(prefers-color-scheme: dark)', color: '#1b1415' },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="pt-BR" className={`${corpo.variable} ${titulo.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

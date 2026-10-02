@@ -105,7 +105,7 @@ export default async function ProComissoesPage({ searchParams }: PageProps<'/pro
               </span>
               <span className="flex flex-col items-end">
                 <span className="font-semibold">{formatarPreco(i.comissaoCentavos)}</span>
-                <span className={`text-xs ${i.repasseId ? 'text-green-700' : 'text-amber-700'}`}>
+                <span className={`text-xs ${i.repasseId ? 'text-sucesso' : 'text-alerta'}`}>
                   {i.repasseId ? 'pago' : 'a receber'}
                 </span>
               </span>

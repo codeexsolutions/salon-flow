@@ -55,7 +55,7 @@ export default async function ServicosPage() {
                       <span className="text-xs text-suave">
                         {formatarDuracao(s.duracaoMin)} ·{' '}
                         {s.totalProfissionais === 0 ? (
-                          <span className="text-amber-700">nenhum profissional</span>
+                          <span className="text-alerta">nenhum profissional</span>
                         ) : (
                           `${s.totalProfissionais} profissional(is)`
                         )}

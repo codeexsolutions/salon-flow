@@ -16,6 +16,23 @@ export class SaloesRepository {
     return this.prisma.salao.findUnique({ where: { id } });
   }
 
+  /** Busca do marketplace: salões ativos e visíveis, por nome ou cidade. */
+  buscarMarketplace(termo: string, limite: number) {
+    const contem = { contains: termo, mode: 'insensitive' as const };
+    return this.prisma.salao.findMany({
+      where: {
+        ativo: true,
+        visivelNoMarketplace: true,
+        ...(termo && { OR: [{ nome: contem }, { cidade: contem }] }),
+      },
+      include: {
+        _count: { select: { servicos: { where: { ativo: true, visivelOnline: true } } } },
+      },
+      orderBy: { nome: 'asc' },
+      take: limite,
+    });
+  }
+
   buscarAtivoPorSlug(slug: string) {
     return this.prisma.salao.findFirst({ where: { slug, ativo: true } });
   }

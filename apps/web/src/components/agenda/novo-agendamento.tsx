@@ -131,7 +131,7 @@ export function NovoAgendamento({
           <span className="font-medium">Profissional e horário</span>
           {carregando && <p className="text-suave">Carregando horários…</p>}
           {!carregando && opcoes?.length === 0 && (
-            <p className="text-amber-700">Nenhum profissional faz este serviço.</p>
+            <p className="text-alerta">Nenhum profissional faz este serviço.</p>
           )}
           {!carregando &&
             !encaixe &&
@@ -223,7 +223,7 @@ export function NovoAgendamento({
       </Campo>
 
       {erro && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-perigo">
           {erro}
         </p>
       )}
@@ -299,7 +299,7 @@ export function EscolhaCliente({
           inputMode="tel"
           className={classeInput}
         />
-        {erro && <p className="text-red-600">{erro}</p>}
+        {erro && <p className="text-perigo">{erro}</p>}
         <div className="flex gap-2">
           <button
             type="button"

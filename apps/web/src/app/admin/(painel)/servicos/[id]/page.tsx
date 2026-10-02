@@ -94,7 +94,7 @@ export default async function ServicoPage({ params }: PageProps<'/admin/servicos
               <button
                 type="submit"
                 className={
-                  servico.ativo ? `${classeBotaoSecundario} text-red-600` : classeBotaoSecundario
+                  servico.ativo ? `${classeBotaoSecundario} text-perigo` : classeBotaoSecundario
                 }
               >
                 {servico.ativo ? 'Desativar' : 'Reativar'}

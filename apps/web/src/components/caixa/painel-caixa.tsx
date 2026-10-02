@@ -137,7 +137,7 @@ export function CaixaAberto({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
             className={`${classeInput} w-32`}
           />
           {diferenca !== null && (
-            <span className={diferenca === 0 ? 'text-green-700' : 'text-amber-700'}>
+            <span className={diferenca === 0 ? 'text-sucesso' : 'text-alerta'}>
               {diferenca === 0
                 ? 'Confere com o esperado'
                 : diferenca > 0

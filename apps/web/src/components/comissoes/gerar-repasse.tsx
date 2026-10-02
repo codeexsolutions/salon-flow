@@ -111,7 +111,7 @@ export function GerarRepasse({
         </p>
       )}
       {erro && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-perigo">
           {erro}
         </p>
       )}

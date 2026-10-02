@@ -40,7 +40,7 @@ export function CartaoAgendamento({ agendamento: a }: { agendamento: MeuAgendame
             · {formatarPreco(a.precoCentavos)}
           </p>
         </div>
-        <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-0.5 text-xs dark:bg-neutral-800">
+        <span className="shrink-0 rounded-full bg-nude px-2 py-0.5 text-xs">
           {ROTULO_STATUS[a.status]}
         </span>
       </div>
@@ -48,21 +48,21 @@ export function CartaoAgendamento({ agendamento: a }: { agendamento: MeuAgendame
       {!encerrado && (
         <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
           {a.podeCancelar ? (
-            <button type="button" onClick={cancelar} disabled={pendente} className="text-red-600">
+            <button type="button" onClick={cancelar} disabled={pendente} className="text-perigo">
               {pendente ? 'Cancelando…' : 'Cancelar'}
             </button>
           ) : (
             <span className="text-xs text-suave">Para cancelar agora, fale com o salão.</span>
           )}
           {whatsapp && (
-            <a href={whatsapp} target="_blank" rel="noreferrer" className="text-green-700">
+            <a href={whatsapp} target="_blank" rel="noreferrer" className="text-sucesso">
               Falar com o salão
             </a>
           )}
         </div>
       )}
       {erro && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-perigo">
           {erro}
         </p>
       )}

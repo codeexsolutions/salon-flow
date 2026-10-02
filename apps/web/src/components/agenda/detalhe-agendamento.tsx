@@ -82,7 +82,7 @@ export function DetalheAgendamento({
                   href={whatsapp}
                   target="_blank"
                   rel="noreferrer"
-                  className="ml-2 text-green-700 underline"
+                  className="ml-2 text-sucesso underline"
                 >
                   WhatsApp
                 </a>
@@ -137,7 +137,7 @@ export function DetalheAgendamento({
               onClick={() => mudarStatus(a.status)}
               className={
                 a.status === 'CANCELADO' || a.status === 'FALTOU'
-                  ? `${classeBotaoSecundario} text-red-600`
+                  ? `${classeBotaoSecundario} text-perigo`
                   : a.status === 'CONCLUIDO'
                     ? classeBotaoPrimario
                     : classeBotaoSecundario
@@ -201,7 +201,7 @@ export function DetalheAgendamento({
       )}
 
       {erro && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="text-perigo">
           {erro}
         </p>
       )}

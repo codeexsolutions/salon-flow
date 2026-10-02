@@ -38,7 +38,7 @@ export function FormDefinirSenha() {
         {enviando ? 'Salvando…' : 'Definir senha'}
       </button>
       {resultado && (
-        <p className={`text-sm ${resultado.ok ? 'text-green-700' : 'text-red-600'}`}>
+        <p className={`text-sm ${resultado.ok ? 'text-sucesso' : 'text-perigo'}`}>
           {resultado.texto}
         </p>
       )}

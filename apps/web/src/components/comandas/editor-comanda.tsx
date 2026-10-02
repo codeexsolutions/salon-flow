@@ -349,7 +349,7 @@ export function EditorComanda({
             + dividir em outra forma de pagamento
           </button>
           {somaPagos !== total && (
-            <p className="text-sm text-amber-700">
+            <p className="text-sm text-alerta">
               {somaPagos < total
                 ? `Faltam ${formatarPreco(total - somaPagos)}`
                 : `Pagamentos passam do total em ${formatarPreco(somaPagos - total)}`}
@@ -359,7 +359,7 @@ export function EditorComanda({
       </Secao>
 
       {erro && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-perigo">
           {erro}
         </p>
       )}
@@ -384,7 +384,7 @@ export function EditorComanda({
               );
             }
           }}
-          className={`${classeBotaoSecundario} text-red-600`}
+          className={`${classeBotaoSecundario} text-perigo`}
         >
           Cancelar comanda
         </button>

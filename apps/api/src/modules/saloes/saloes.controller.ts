@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import {
   atualizarSalaoSchema,
   criarSalaoSchema,
@@ -40,6 +40,14 @@ export class SaloesController {
   @Patch('atual')
   atualizar(@Body(new ZodValidationPipe(atualizarSalaoSchema)) dados: AtualizarSalaoInput) {
     return this.service.atualizar(dados);
+  }
+
+  /** GET /saloes?busca=texto — busca pública do marketplace (nome ou cidade). */
+  @Publica()
+  @Get()
+  async buscarMarketplace(@Query('busca') busca?: string) {
+    const saloes = await this.service.buscarMarketplace(busca);
+    return saloes.map((s) => ({ ...paraSalaoPublico(s), totalServicos: s._count.servicos }));
   }
 
   /** Página pública do salão (app do cliente / marketplace). */

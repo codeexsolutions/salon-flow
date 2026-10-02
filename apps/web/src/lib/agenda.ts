@@ -11,10 +11,10 @@ export const ROTULO_STATUS: Record<StatusAgendamento, string> = {
 /** Aparência do bloco do atendimento na grade, conforme o status. */
 export const ESTILO_STATUS: Record<StatusAgendamento, string> = {
   AGENDADO: 'bg-background',
-  CONFIRMADO: 'bg-violet-50 dark:bg-violet-950',
-  CONCLUIDO: 'bg-green-50 dark:bg-green-950 opacity-80',
-  CANCELADO: 'bg-neutral-100 line-through opacity-50',
-  FALTOU: 'bg-red-50 dark:bg-red-950 opacity-70',
+  CONFIRMADO: 'bg-nude',
+  CONCLUIDO: 'bg-sucesso-suave opacity-80',
+  CANCELADO: 'bg-nude line-through opacity-50',
+  FALTOU: 'bg-perigo-suave opacity-70',
 };
 
 /** Ações possíveis a partir de cada status (espelha a regra da API). */

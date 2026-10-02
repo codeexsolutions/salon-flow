@@ -20,7 +20,7 @@ export function ComprovanteRepasse({ repasse: r }: { repasse: RepasseDetalhe }) 
         <h1 className="text-xl font-bold">{r.salao.nome}</h1>
         {local && <p className="text-suave">{local}</p>}
         {r.status === 'CANCELADO' && (
-          <p className="mt-2 rounded-md bg-red-50 p-2 font-medium text-red-700">
+          <p className="mt-2 rounded-md bg-perigo-suave p-2 font-medium text-perigo">
             REPASSE CANCELADO
           </p>
         )}

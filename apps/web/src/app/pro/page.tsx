@@ -85,10 +85,7 @@ export default async function ProAgendaPage({ searchParams }: PageProps<'/pro'>)
       </p>
 
       {agenda.bloqueios.map((b) => (
-        <p
-          key={b.id}
-          className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200"
-        >
+        <p key={b.id} className="rounded-lg bg-alerta-suave p-3 text-sm text-alerta">
           {b.motivo ?? 'Folga'}: {horaLocal(b.inicio, agenda.fusoHorario)}–
           {horaLocal(b.fim, agenda.fusoHorario)}
         </p>

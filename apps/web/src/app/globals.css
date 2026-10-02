@@ -1,38 +1,93 @@
 @import 'tailwindcss';
 
+/*
+ * Identidade SalonFlow — elegante, rosé e nude.
+ * Todas as cores da interface vêm destes tokens (claro e escuro).
+ * Contraste: primária (#a35866) com texto branco ≈ 5:1 (WCAG AA).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primaria: #7c3aed;
+  --background: #fbf7f5;
+  --superficie: #ffffff;
+  --nude: #f4e9e4;
+  --foreground: #3a2a2b;
+  --suave: #806b68;
+  --borda: #eadcd6;
+  --primaria: #a35866;
+  --primaria-hover: #8c4855;
   --primaria-contraste: #ffffff;
-  --borda: #e5e5e5;
-  --suave: #737373;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primaria: var(--primaria);
-  --color-primaria-contraste: var(--primaria-contraste);
-  --color-borda: var(--borda);
-  --color-suave: var(--suave);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --dourado: #b08a4e;
+  --sucesso: #2f7a52;
+  --sucesso-suave: #e7f3ec;
+  --alerta: #9a6212;
+  --alerta-suave: #fbf0dc;
+  --perigo: #b4363f;
+  --perigo-suave: #fbe8e8;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primaria: #a78bfa;
-    --primaria-contraste: #0a0a0a;
-    --borda: #262626;
-    --suave: #a3a3a3;
+    --background: #1b1415;
+    --superficie: #241b1c;
+    --nude: #2f2324;
+    --foreground: #f4e8e5;
+    --suave: #b9a3a0;
+    --borda: #3d2e2f;
+    --primaria: #dc9aa5;
+    --primaria-hover: #e8b2bb;
+    --primaria-contraste: #1b1415;
+    --dourado: #d2ad6f;
+    --sucesso: #7fcf9f;
+    --sucesso-suave: #1c3127;
+    --alerta: #e7b45f;
+    --alerta-suave: #3a2c15;
+    --perigo: #f08a90;
+    --perigo-suave: #3d1d20;
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-superficie: var(--superficie);
+  --color-nude: var(--nude);
+  --color-foreground: var(--foreground);
+  --color-suave: var(--suave);
+  --color-borda: var(--borda);
+  --color-primaria: var(--primaria);
+  --color-primaria-hover: var(--primaria-hover);
+  --color-primaria-contraste: var(--primaria-contraste);
+  --color-dourado: var(--dourado);
+  --color-sucesso: var(--sucesso);
+  --color-sucesso-suave: var(--sucesso-suave);
+  --color-alerta: var(--alerta);
+  --color-alerta-suave: var(--alerta-suave);
+  --color-perigo: var(--perigo);
+  --color-perigo-suave: var(--perigo-suave);
+  --font-sans: var(--font-corpo);
+  --font-display: var(--font-titulo);
+  --font-mono: ui-monospace, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-corpo), system-ui, sans-serif;
+}
+
+/* Títulos de página na fonte de destaque. */
+h1 {
+  font-family: var(--font-titulo), Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primaria);
+  outline-offset: 2px;
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
 }

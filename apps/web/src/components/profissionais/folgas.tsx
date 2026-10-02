@@ -47,7 +47,7 @@ export function Folgas({
               <button
                 type="button"
                 onClick={() => removerBloqueio(profissionalId, b.id)}
-                className="text-xs text-red-600"
+                className="text-xs text-perigo"
               >
                 Remover
               </button>

@@ -40,7 +40,7 @@ export default async function ProdutoPage({ params }: PageProps<'/admin/estoque/
           ← Estoque
         </Link>
         <h1 className="mt-2 text-2xl font-bold">{produto.nome}</h1>
-        <p className={`text-sm ${produto.estoqueBaixo ? 'text-amber-700' : 'text-suave'}`}>
+        <p className={`text-sm ${produto.estoqueBaixo ? 'text-alerta' : 'text-suave'}`}>
           Saldo: <strong>{formatarQuantidade(produto.estoqueAtual, produto.unidade)}</strong>{' '}
           {emEmbalagens(produto.estoqueAtual, produto.tamanhoEmbalagem)}
           {produto.estoqueBaixo && ' · abaixo do mínimo'}
@@ -73,7 +73,7 @@ export default async function ProdutoPage({ params }: PageProps<'/admin/estoque/
                   )}
                   {m.observacao && <span className="text-suave"> · {m.observacao}</span>}
                 </span>
-                <span className={m.quantidade < 0 ? 'text-red-600' : 'text-green-700'}>
+                <span className={m.quantidade < 0 ? 'text-perigo' : 'text-sucesso'}>
                   {m.quantidade > 0 ? '+' : ''}
                   {formatarQuantidade(m.quantidade, produto.unidade)}
                 </span>
@@ -100,7 +100,7 @@ export default async function ProdutoPage({ params }: PageProps<'/admin/estoque/
               <button
                 type="submit"
                 className={
-                  produto.ativo ? `${classeBotaoSecundario} text-red-600` : classeBotaoSecundario
+                  produto.ativo ? `${classeBotaoSecundario} text-perigo` : classeBotaoSecundario
                 }
               >
                 {produto.ativo ? 'Desativar' : 'Reativar'}

@@ -52,7 +52,7 @@ export function ResumoCaixa({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
               <dt>Contado</dt>
               <dd>{formatarPreco(caixa.contadoDinheiroCentavos)}</dd>
               <dt>Diferença</dt>
-              <dd className={caixa.diferencaCentavos === 0 ? 'text-green-700' : 'text-amber-700'}>
+              <dd className={caixa.diferencaCentavos === 0 ? 'text-sucesso' : 'text-alerta'}>
                 {formatarPreco(caixa.diferencaCentavos ?? 0)}
               </dd>
             </>
@@ -68,7 +68,7 @@ export function ResumoCaixa({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
                 <span className="text-suave">{horaLocal(m.criadoEm, fusoHorario)}</span>{' '}
                 {m.tipo === 'SANGRIA' ? 'Sangria' : 'Reforço'} · {m.motivo}
               </span>
-              <span className={m.tipo === 'SANGRIA' ? 'text-red-600' : 'text-green-700'}>
+              <span className={m.tipo === 'SANGRIA' ? 'text-perigo' : 'text-sucesso'}>
                 {m.tipo === 'SANGRIA' ? '−' : '+'} {formatarPreco(m.valorCentavos)}
               </span>
             </li>

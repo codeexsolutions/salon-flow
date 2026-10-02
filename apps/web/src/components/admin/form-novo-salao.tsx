@@ -80,7 +80,7 @@ export function FormNovoSalao() {
       </div>
 
       {estado.mensagem && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-perigo">
           {estado.mensagem}
         </p>
       )}
@@ -114,7 +114,7 @@ function Campo({
       <span className="font-medium">{rotulo}</span>
       {children}
       {ajuda && !erro && <span className="text-xs text-suave">{ajuda}</span>}
-      {erro && <span className="text-xs text-red-600">{erro[0]}</span>}
+      {erro && <span className="text-xs text-perigo">{erro[0]}</span>}
     </label>
   );
 }

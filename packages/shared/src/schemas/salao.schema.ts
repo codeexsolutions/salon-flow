@@ -28,3 +28,9 @@ export interface SalaoPublico {
   telefone: string | null;
   fusoHorario: string;
 }
+
+/** Salão na busca do marketplace. */
+export interface SalaoMarketplace extends SalaoPublico {
+  /** Serviços disponíveis para agendamento online. */
+  totalServicos: number;
+}

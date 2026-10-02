@@ -29,6 +29,10 @@ export class SaloesService {
     return this.repository.criarComDono({ ...dados, slug }, usuario.id);
   }
 
+  buscarMarketplace(termo = '') {
+    return this.repository.buscarMarketplace(termo.trim().slice(0, 80), 30);
+  }
+
   async buscarPublico(slug: string) {
     const salao = await this.repository.buscarAtivoPorSlug(slug);
     if (!salao) throw new NaoEncontradoError('Salão');

@@ -51,7 +51,7 @@ export default async function SalaoPage({ params, searchParams }: PageProps<'/s/
               href={whatsapp}
               target="_blank"
               rel="noreferrer"
-              className="ml-2 text-green-700 underline"
+              className="ml-2 text-sucesso underline"
             >
               WhatsApp
             </a>

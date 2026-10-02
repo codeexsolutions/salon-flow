@@ -40,3 +40,22 @@ describe('formatação', () => {
     expect(formatarDuracao(125)).toBe('2h05');
   });
 });
+
+describe('percentuais', () => {
+  it('formata pontos-base', async () => {
+    const { formatarPercentual } = await import('./dinheiro.js');
+    expect(formatarPercentual(5000)).toBe('50%');
+    expect(formatarPercentual(3750)).toBe('37,5%');
+    expect(formatarPercentual(299)).toBe('2,99%');
+  });
+
+  it('converte texto em pontos-base', async () => {
+    const { textoParaBps } = await import('./dinheiro.js');
+    expect(textoParaBps('50')).toBe(5000);
+    expect(textoParaBps('37,5')).toBe(3750);
+    expect(textoParaBps('2.99%')).toBe(299);
+    expect(textoParaBps('100')).toBe(10000);
+    expect(textoParaBps('101')).toBeNull();
+    expect(textoParaBps('abc')).toBeNull();
+  });
+});

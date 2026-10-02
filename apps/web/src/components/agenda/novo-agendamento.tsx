@@ -241,7 +241,7 @@ export function NovoAgendamento({
 }
 
 /** Busca o cliente pelo nome/telefone ou cadastra um novo na hora. */
-function EscolhaCliente({
+export function EscolhaCliente({
   cliente,
   aoEscolher,
 }: {

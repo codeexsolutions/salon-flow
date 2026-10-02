@@ -44,3 +44,16 @@ export function formatarDuracao(minutos: number): string {
   if (h === 0) return `${m} min`;
   return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`;
 }
+
+/** 5000 -> "50%", 3750 -> "37,5%" (pontos-base: 10000 = 100%) */
+export function formatarPercentual(bps: number): string {
+  return `${(bps / 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`;
+}
+
+/** "37,5" ou "37.5" -> 3750; null se inválido ou fora de 0–100. */
+export function textoParaBps(texto: string): number | null {
+  const limpo = texto.replace('%', '').trim().replace(',', '.');
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(limpo)) return null;
+  const bps = Math.round(Number(limpo) * 100);
+  return bps <= 10_000 ? bps : null;
+}

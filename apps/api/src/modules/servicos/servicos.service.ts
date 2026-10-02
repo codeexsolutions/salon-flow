@@ -91,6 +91,12 @@ export class ServicosService {
     };
   }
 
+  /** Quantos dos ids são serviços deste salão (ativos ou não). */
+  contarDoSalao(ids: string[]) {
+    if (ids.length === 0) return Promise.resolve(0);
+    return this.repository.contarDoSalao(this.contexto.salaoId, ids);
+  }
+
   /** Página pública do salão: serviços que o cliente pode agendar, com valores por profissional. */
   async catalogoOnline(): Promise<ServicoOnline[]> {
     const servicos = await this.repository.catalogoOnline(this.contexto.salaoId);

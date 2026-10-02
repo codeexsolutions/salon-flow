@@ -71,6 +71,10 @@ export class ServicosRepository {
     });
   }
 
+  contarDoSalao(salaoId: string, ids: string[]) {
+    return this.prisma.servico.count({ where: { salaoId, id: { in: ids } } });
+  }
+
   async nomeEmUso(salaoId: string, nome: string, ignorarId?: string) {
     const total = await this.prisma.servico.count({
       where: {

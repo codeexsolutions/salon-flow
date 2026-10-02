@@ -9,8 +9,7 @@ export const metadata: Metadata = {
 
 const abas = [
   { rotulo: 'Agenda', href: '/pro' },
-  { rotulo: 'Comissões' },
-  { rotulo: 'Extrato' },
+  { rotulo: 'Comissões', href: '/pro/comissoes' },
   { rotulo: 'Perfil' },
 ];
 

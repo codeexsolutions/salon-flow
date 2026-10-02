@@ -49,6 +49,10 @@ model Salao {
   visivelNoMarketplace Boolean  @default(true) @map("visivel_no_marketplace")
   /// Fuso horário IANA usado para interpretar horários de agenda, jornada e folgas.
   fusoHorario          String   @default("America/Sao_Paulo") @map("fuso_horario")
+  /// Comissão padrão em pontos-base (5000 = 50,00%), usada quando não há regra específica.
+  comissaoPadraoBps    Int      @default(5000) @map("comissao_padrao_bps")
+  /// Se true, a comissão é calculada sobre o valor líquido (descontadas as taxas de pagamento).
+  comissaoSobreLiquido Boolean  @default(false) @map("comissao_sobre_liquido")
   ativo                Boolean  @default(true)
   criadoEm             DateTime @default(now()) @map("criado_em")
   atualizadoEm         DateTime @updatedAt @map("atualizado_em")
@@ -61,6 +65,11 @@ model Salao {
   servicoProfissionais ServicoProfissional[]
   clientes             Cliente[]
   agendamentos         Agendamento[]
+  taxasPagamento       TaxaPagamento[]
+  regrasComissao       RegraComissao[]
+  comandas             Comanda[]
+  comandaItens         ComandaItem[]
+  pagamentos           Pagamento[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -97,12 +106,14 @@ model Profissional {
   criadoEm     DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
-  salao        Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
-  usuario      Usuario?              @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
-  jornada      JornadaIntervalo[]
-  bloqueios    BloqueioAgenda[]
-  servicos     ServicoProfissional[]
-  agendamentos Agendamento[]
+  salao          Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  usuario        Usuario?              @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  jornada        JornadaIntervalo[]
+  bloqueios      BloqueioAgenda[]
+  servicos       ServicoProfissional[]
+  agendamentos   Agendamento[]
+  regrasComissao RegraComissao[]
+  comandaItens   ComandaItem[]
 
   @@unique([salaoId, email])
   @@unique([salaoId, usuarioId])
@@ -161,9 +172,11 @@ model Servico {
   criadoEm      DateTime @default(now()) @map("criado_em")
   atualizadoEm  DateTime @updatedAt @map("atualizado_em")
 
-  salao         Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
-  profissionais ServicoProfissional[]
-  agendamentos  Agendamento[]
+  salao          Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissionais  ServicoProfissional[]
+  agendamentos   Agendamento[]
+  regrasComissao RegraComissao[]
+  comandaItens   ComandaItem[]
 
   @@unique([salaoId, nome])
   @@index([salaoId, ativo])
@@ -218,6 +231,7 @@ model Cliente {
   salao        Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
   usuario      Usuario?      @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
   agendamentos Agendamento[]
+  comandas     Comanda[]
 
   @@unique([salaoId, usuarioId])
   @@index([salaoId, nome])
@@ -246,9 +260,126 @@ model Agendamento {
   cliente      Cliente      @relation(fields: [clienteId], references: [id], onDelete: NoAction)
   profissional Profissional @relation(fields: [profissionalId], references: [id], onDelete: NoAction)
   servico      Servico      @relation(fields: [servicoId], references: [id], onDelete: NoAction)
+  comandaItem  ComandaItem?
 
   @@index([salaoId, inicio])
   @@index([profissionalId, inicio])
   @@index([clienteId, inicio])
   @@map("agendamentos")
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  PIX
+  DEBITO
+  CREDITO
+  OUTRO
+}
+
+enum StatusComanda {
+  ABERTA
+  FECHADA
+  CANCELADA
+}
+
+/// Taxa cobrada pela forma de pagamento (ex.: maquininha), em pontos-base.
+model TaxaPagamento {
+  id      String         @id @default(uuid()) @db.Uuid
+  salaoId String         @map("salao_id") @db.Uuid
+  forma   FormaPagamento
+  taxaBps Int            @map("taxa_bps")
+
+  salao Salao @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@unique([salaoId, forma])
+  @@map("taxas_pagamento")
+}
+
+/// Regra de comissão. Prioridade: profissional+serviço > serviço > profissional > padrão do salão.
+model RegraComissao {
+  id             String  @id @default(uuid()) @db.Uuid
+  salaoId        String  @map("salao_id") @db.Uuid
+  profissionalId String? @map("profissional_id") @db.Uuid
+  servicoId      String? @map("servico_id") @db.Uuid
+  percentualBps  Int     @map("percentual_bps")
+
+  salao        Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissional Profissional? @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+  servico      Servico?      @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+
+  @@index([salaoId])
+  @@map("regras_comissao")
+}
+
+/// Comanda: o que o cliente consumiu e como pagou. Ao fechar, as comissões são gravadas nos itens.
+model Comanda {
+  id               String        @id @default(uuid()) @db.Uuid
+  salaoId          String        @map("salao_id") @db.Uuid
+  /// Número sequencial por salão (para a equipe falar "comanda 42").
+  numero           Int
+  clienteId        String?       @map("cliente_id") @db.Uuid
+  status           StatusComanda @default(ABERTA)
+  descontoCentavos Int           @default(0) @map("desconto_centavos")
+  /// Preenchidos ao fechar.
+  subtotalCentavos Int?          @map("subtotal_centavos")
+  totalCentavos    Int?          @map("total_centavos")
+  observacoes      String?
+  abertaEm         DateTime      @default(now()) @map("aberta_em")
+  abertaPorId      String?       @map("aberta_por_id") @db.Uuid
+  fechadaEm        DateTime?     @map("fechada_em")
+  fechadaPorId     String?       @map("fechada_por_id") @db.Uuid
+
+  salao      Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  cliente    Cliente?      @relation(fields: [clienteId], references: [id], onDelete: NoAction)
+  itens      ComandaItem[]
+  pagamentos Pagamento[]
+
+  @@unique([salaoId, numero])
+  @@index([salaoId, status])
+  @@index([salaoId, fechadaEm])
+  @@map("comandas")
+}
+
+/// Item da comanda (por enquanto, serviços). Rateios e comissão gravados no fechamento.
+model ComandaItem {
+  id                      String  @id @default(uuid()) @db.Uuid
+  comandaId               String  @map("comanda_id") @db.Uuid
+  salaoId                 String  @map("salao_id") @db.Uuid
+  servicoId               String  @map("servico_id") @db.Uuid
+  profissionalId          String  @map("profissional_id") @db.Uuid
+  agendamentoId           String? @unique @map("agendamento_id") @db.Uuid
+  descricao               String
+  valorCentavos           Int     @map("valor_centavos")
+  descontoRateadoCentavos Int?    @map("desconto_rateado_centavos")
+  taxaRateadaCentavos     Int?    @map("taxa_rateada_centavos")
+  baseComissaoCentavos    Int?    @map("base_comissao_centavos")
+  comissaoBps             Int?    @map("comissao_bps")
+  comissaoCentavos        Int?    @map("comissao_centavos")
+
+  comanda      Comanda      @relation(fields: [comandaId], references: [id], onDelete: Cascade)
+  salao        Salao        @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  servico      Servico      @relation(fields: [servicoId], references: [id], onDelete: NoAction)
+  profissional Profissional @relation(fields: [profissionalId], references: [id], onDelete: NoAction)
+  agendamento  Agendamento? @relation(fields: [agendamentoId], references: [id], onDelete: SetNull)
+
+  @@index([comandaId])
+  @@index([salaoId, profissionalId])
+  @@map("comanda_itens")
+}
+
+/// Pagamento da comanda (uma comanda pode ter várias formas). Taxa gravada no fechamento.
+model Pagamento {
+  id            String         @id @default(uuid()) @db.Uuid
+  comandaId     String         @map("comanda_id") @db.Uuid
+  salaoId       String         @map("salao_id") @db.Uuid
+  forma         FormaPagamento
+  valorCentavos Int            @map("valor_centavos")
+  taxaBps       Int            @default(0) @map("taxa_bps")
+  taxaCentavos  Int            @default(0) @map("taxa_centavos")
+
+  comanda Comanda @relation(fields: [comandaId], references: [id], onDelete: Cascade)
+  salao   Salao   @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@index([comandaId])
+  @@map("pagamentos")
 }

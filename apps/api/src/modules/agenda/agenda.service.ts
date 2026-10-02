@@ -223,6 +223,33 @@ export class AgendaService {
     return criado;
   }
 
+  /**
+   * Para abrir comanda: os agendamentos pedidos, todos do mesmo cliente, válidos e
+   * ainda sem comanda.
+   */
+  async paraComanda(ids: string[]) {
+    const unicos = [...new Set(ids)];
+    const agendamentos = await this.repository.paraComanda(this.contexto.salaoId, unicos);
+    if (agendamentos.length !== unicos.length) {
+      throw new RegraDeNegocioError(
+        'AGENDAMENTO_INDISPONIVEL',
+        'Algum agendamento não existe, foi cancelado ou já está em outra comanda.',
+      );
+    }
+    if (new Set(agendamentos.map((a) => a.clienteId)).size > 1) {
+      throw new RegraDeNegocioError(
+        'CLIENTES_DIFERENTES',
+        'Uma comanda só pode ter agendamentos do mesmo cliente.',
+      );
+    }
+    return agendamentos;
+  }
+
+  /** Chamado ao fechar a comanda: os atendimentos dela ficam concluídos. */
+  async concluirDaComanda(ids: string[]) {
+    if (ids.length > 0) await this.repository.concluir(this.contexto.salaoId, ids);
+  }
+
   /** "Meus agendamentos" do cliente, em todos os salões (sem contexto de salão). */
   async meusAgendamentos(usuarioId: string): Promise<MeuAgendamento[]> {
     const agora = new Date();

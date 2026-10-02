@@ -9,3 +9,4 @@ export * from './schemas/profissional.schema.js';
 export * from './schemas/servico.schema.js';
 export * from './schemas/cliente.schema.js';
 export * from './schemas/agendamento.schema.js';
+export * from './schemas/comanda.schema.js';

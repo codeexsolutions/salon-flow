@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import {
   formatarPreco,
@@ -7,6 +8,7 @@ import {
   type ProfissionalNaAgenda,
 } from '@salonflow/shared';
 import { alterarStatusAgendamento, remarcarAgendamento } from '@/app/admin/(painel)/agenda/actions';
+import { abrirComandaDoAgendamento } from '@/app/admin/(painel)/comandas/actions';
 import { ACOES_STATUS, linkWhatsApp, ROTULO_STATUS } from '@/lib/agenda';
 import { dataLocal, dataPorExtenso, horaLocal } from '@/lib/data-hora';
 import { classeBotaoPrimario, classeBotaoSecundario, classeInput } from '@/components/ui/campo';
@@ -23,6 +25,7 @@ export function DetalheAgendamento({
   fusoHorario: string;
   aoConcluir: () => void;
 }) {
+  const router = useRouter();
   const [pendente, iniciar] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
   const [remarcando, setRemarcando] = useState(false);
@@ -40,6 +43,17 @@ export function DetalheAgendamento({
       else setErro(r.erro);
     });
   }
+
+  function abrirComanda() {
+    setErro(null);
+    iniciar(async () => {
+      const r = await abrirComandaDoAgendamento(agendamento.id);
+      if (r.ok) router.push(`/admin/comandas/${r.dados}`);
+      else setErro(r.erro);
+    });
+  }
+
+  const podeAbrirComanda = ['AGENDADO', 'CONFIRMADO', 'CONCLUIDO'].includes(agendamento.status);
 
   function remarcar(formData: FormData) {
     setErro(null);
@@ -101,6 +115,17 @@ export function DetalheAgendamento({
           </>
         )}
       </dl>
+
+      {podeAbrirComanda && (
+        <button
+          type="button"
+          disabled={pendente}
+          onClick={abrirComanda}
+          className={`${classeBotaoPrimario} self-start`}
+        >
+          Abrir comanda
+        </button>
+      )}
 
       {acoes.length > 0 && (
         <div className="flex flex-wrap gap-2">

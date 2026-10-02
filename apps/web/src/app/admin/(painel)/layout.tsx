@@ -6,12 +6,12 @@ import { env } from '@/lib/env';
 const menu = [
   { rotulo: 'Início', href: '/admin' },
   { rotulo: 'Agenda', href: '/admin/agenda' },
-  { rotulo: 'Comandas' },
+  { rotulo: 'Comandas', href: '/admin/comandas' },
   { rotulo: 'Clientes' },
   { rotulo: 'Profissionais', href: '/admin/profissionais' },
   { rotulo: 'Serviços', href: '/admin/servicos' },
   { rotulo: 'Estoque' },
-  { rotulo: 'Comissões' },
+  { rotulo: 'Comissões', href: '/admin/comissoes' },
   { rotulo: 'Financeiro' },
   { rotulo: 'Configurações' },
 ];

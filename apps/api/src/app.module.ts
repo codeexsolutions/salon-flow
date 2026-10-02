@@ -6,6 +6,8 @@ import { DatabaseModule } from './shared/database/database.module.js';
 import { TenantModule } from './shared/tenant/tenant.module.js';
 import { AgendaModule } from './modules/agenda/agenda.module.js';
 import { ClientesModule } from './modules/clientes/clientes.module.js';
+import { ComandasModule } from './modules/comandas/comandas.module.js';
+import { ComissoesModule } from './modules/comissoes/comissoes.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { ProfissionaisModule } from './modules/profissionais/profissionais.module.js';
 import { SaloesModule } from './modules/saloes/saloes.module.js';
@@ -28,6 +30,8 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
     ServicosModule,
     ClientesModule,
     AgendaModule,
+    ComissoesModule,
+    ComandasModule,
   ],
 })
 export class AppModule {}

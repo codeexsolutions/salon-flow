@@ -51,6 +51,28 @@ export class AgendamentosRepository {
     });
   }
 
+  /** Agendamentos que ainda podem ir para uma comanda (não cancelados, sem comanda). */
+  paraComanda(salaoId: string, ids: string[]) {
+    return this.prisma.agendamento.findMany({
+      where: {
+        salaoId,
+        id: { in: ids },
+        status: { in: ['AGENDADO', 'CONFIRMADO', 'CONCLUIDO'] },
+        comandaItem: { is: null },
+      },
+      include: { servico: { select: { nome: true } } },
+      orderBy: { inicio: 'asc' },
+    });
+  }
+
+  /** Marca como concluídos os agendamentos ainda em aberto. */
+  concluir(salaoId: string, ids: string[]) {
+    return this.prisma.agendamento.updateMany({
+      where: { salaoId, id: { in: ids }, status: { in: ['AGENDADO', 'CONFIRMADO'] } },
+      data: { status: 'CONCLUIDO' },
+    });
+  }
+
   /** Agendamentos futuros ainda em aberto do cliente neste salão. */
   contarAbertosDoCliente(salaoId: string, clienteId: string, agora: Date) {
     return this.prisma.agendamento.count({

@@ -167,6 +167,8 @@ export interface ItemExtrato {
   comissaoBps: number;
   comissaoCentavos: number;
   custoProdutosCentavos: number;
+  /** Repasse em que foi pago (null = pendente). */
+  repasseId: string | null;
 }
 
 export interface ExtratoProfissional {
@@ -175,6 +177,8 @@ export interface ExtratoProfissional {
   quantidade: number;
   totalServicosCentavos: number;
   totalComissaoCentavos: number;
+  /** Comissões do período ainda não incluídas em repasse. */
+  pendenteCentavos: number;
   itens: ItemExtrato[];
 }
 

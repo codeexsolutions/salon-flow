@@ -13,6 +13,7 @@ import {
 } from '../../shared/errors/domain.error.js';
 import { ContextoSalao } from '../../shared/tenant/contexto-salao.js';
 import { AgendaService } from '../agenda/agenda.service.js';
+import { CaixaService } from '../caixa/caixa.service.js';
 import { ClientesService } from '../clientes/clientes.service.js';
 import { calcularFechamento } from '../comissoes/domain/calculo.js';
 import { ComissoesService } from '../comissoes/comissoes.service.js';
@@ -29,6 +30,7 @@ export class ComandasService {
     private readonly servicos: ServicosService,
     private readonly comissoes: ComissoesService,
     private readonly produtos: ProdutosService,
+    private readonly caixa: CaixaService,
     private readonly contexto: ContextoSalao,
   ) {}
 
@@ -129,9 +131,10 @@ export class ComandasService {
    */
   async fechar(id: string, { pagamentos }: FecharComandaInput, usuarioId: string) {
     const comanda = await this.buscarAberta(id);
-    const [parametros, consumo] = await Promise.all([
+    const [parametros, consumo, caixaId] = await Promise.all([
       this.comissoes.parametrosDeCalculo(),
       this.produtos.consumoDaComanda(comanda.itens),
+      this.caixa.idDoCaixaAberto(),
     ]);
 
     const fechamento = calcularFechamento({
@@ -149,6 +152,7 @@ export class ComandasService {
       id,
       fechamento,
       consumo.saidas,
+      caixaId,
       usuarioId,
     );
     if (!fechada) throw this.naoEstaAberta();

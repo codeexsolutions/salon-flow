@@ -75,6 +75,9 @@ model Salao {
   produtos             Produto[]
   movimentosEstoque    MovimentoEstoque[]
   fichaTecnicaItens    FichaTecnicaItem[]
+  repasses             Repasse[]
+  caixas               Caixa[]
+  movimentosCaixa      MovimentoCaixa[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -119,6 +122,7 @@ model Profissional {
   agendamentos   Agendamento[]
   regrasComissao RegraComissao[]
   comandaItens   ComandaItem[]
+  repasses       Repasse[]
 
   @@unique([salaoId, email])
   @@unique([salaoId, usuarioId])
@@ -366,6 +370,8 @@ model ComandaItem {
   comissaoCentavos        Int?            @map("comissao_centavos")
   /// Custo dos produtos da ficha técnica consumidos (gravado ao fechar).
   custoProdutosCentavos   Int?            @map("custo_produtos_centavos")
+  /// Repasse (pagamento ao profissional) em que este item foi incluído.
+  repasseId               String?         @map("repasse_id") @db.Uuid
 
   comanda      Comanda            @relation(fields: [comandaId], references: [id], onDelete: Cascade)
   salao        Salao              @relation(fields: [salaoId], references: [id], onDelete: Cascade)
@@ -374,9 +380,11 @@ model ComandaItem {
   movimentos   MovimentoEstoque[]
   profissional Profissional?      @relation(fields: [profissionalId], references: [id], onDelete: NoAction)
   agendamento  Agendamento?       @relation(fields: [agendamentoId], references: [id], onDelete: SetNull)
+  repasse      Repasse?           @relation(fields: [repasseId], references: [id], onDelete: SetNull)
 
   @@index([comandaId])
   @@index([salaoId, profissionalId])
+  @@index([repasseId])
   @@map("comanda_itens")
 }
 
@@ -389,11 +397,15 @@ model Pagamento {
   valorCentavos Int            @map("valor_centavos")
   taxaBps       Int            @default(0) @map("taxa_bps")
   taxaCentavos  Int            @default(0) @map("taxa_centavos")
+  /// Caixa aberto no momento do pagamento (se o salão usa caixa).
+  caixaId       String?        @map("caixa_id") @db.Uuid
 
   comanda Comanda @relation(fields: [comandaId], references: [id], onDelete: Cascade)
   salao   Salao   @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  caixa   Caixa?  @relation(fields: [caixaId], references: [id], onDelete: SetNull)
 
   @@index([comandaId])
+  @@index([caixaId])
   @@map("pagamentos")
 }
 
@@ -486,4 +498,91 @@ model FichaTecnicaItem {
   @@id([servicoId, produtoId])
   @@index([produtoId])
   @@map("fichas_tecnicas")
+}
+
+enum StatusRepasse {
+  PAGO
+  CANCELADO
+}
+
+/// Pagamento das comissões de um profissional num período (modelo salão-parceiro).
+model Repasse {
+  id                    String          @id @default(uuid()) @db.Uuid
+  salaoId               String          @map("salao_id") @db.Uuid
+  profissionalId        String          @map("profissional_id") @db.Uuid
+  /// Período (datas locais do salão, inclusivas).
+  de                    String
+  ate                   String
+  status                StatusRepasse   @default(PAGO)
+  totalServicosCentavos Int             @map("total_servicos_centavos")
+  totalComissaoCentavos Int             @map("total_comissao_centavos")
+  /// Vales/adiantamentos descontados do valor a pagar.
+  descontosCentavos     Int             @default(0) @map("descontos_centavos")
+  valorPagoCentavos     Int             @map("valor_pago_centavos")
+  formaPagamento        FormaPagamento? @map("forma_pagamento")
+  observacoes           String?
+  pagoEm                DateTime        @default(now()) @map("pago_em")
+  criadoPorId           String?         @map("criado_por_id") @db.Uuid
+  canceladoEm           DateTime?       @map("cancelado_em")
+
+  salao        Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissional Profissional  @relation(fields: [profissionalId], references: [id], onDelete: NoAction)
+  itens        ComandaItem[]
+
+  @@index([salaoId, profissionalId])
+  @@map("repasses")
+}
+
+enum StatusCaixa {
+  ABERTO
+  FECHADO
+}
+
+enum TipoMovimentoCaixa {
+  /// Retirada de dinheiro da gaveta
+  SANGRIA
+  /// Dinheiro colocado na gaveta
+  REFORCO
+}
+
+/// Caixa diário: abertura com troco, movimentos e fechamento com conferência do dinheiro.
+model Caixa {
+  id                       String      @id @default(uuid()) @db.Uuid
+  salaoId                  String      @map("salao_id") @db.Uuid
+  status                   StatusCaixa @default(ABERTO)
+  trocoInicialCentavos     Int         @map("troco_inicial_centavos")
+  abertoEm                 DateTime    @default(now()) @map("aberto_em")
+  abertoPorId              String?     @map("aberto_por_id") @db.Uuid
+  fechadoEm                DateTime?   @map("fechado_em")
+  fechadoPorId             String?     @map("fechado_por_id") @db.Uuid
+  /// Gravados no fechamento.
+  esperadoDinheiroCentavos Int?        @map("esperado_dinheiro_centavos")
+  contadoDinheiroCentavos  Int?        @map("contado_dinheiro_centavos")
+  diferencaCentavos        Int?        @map("diferenca_centavos")
+  observacoes              String?
+
+  salao      Salao            @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  movimentos MovimentoCaixa[]
+  pagamentos Pagamento[]
+
+  @@index([salaoId, status])
+  @@index([salaoId, abertoEm])
+  @@map("caixas")
+}
+
+model MovimentoCaixa {
+  id            String             @id @default(uuid()) @db.Uuid
+  caixaId       String             @map("caixa_id") @db.Uuid
+  salaoId       String             @map("salao_id") @db.Uuid
+  tipo          TipoMovimentoCaixa
+  valorCentavos Int                @map("valor_centavos")
+  motivo        String
+  criadoPorId   String?            @map("criado_por_id") @db.Uuid
+  criadoEm      DateTime           @default(now()) @map("criado_em")
+
+  caixa Caixa @relation(fields: [caixaId], references: [id], onDelete: Cascade)
+  salao Salao @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@index([caixaId])
+  @@map("movimentos_caixa")
 }

@@ -1,9 +1,13 @@
+import Link from 'next/link';
 import {
   dataLocalSchema,
+  formatarPreco,
+  ROTULO_FORMA_PAGAMENTO,
   type ConfiguracaoComissao,
   type ExtratoComissoes,
   type ProfissionalResumo,
   type RegraComissaoDto,
+  type RepasseResumo,
   type ServicoResumo,
 } from '@salonflow/shared';
 import { EditorRegras } from '@/components/comissoes/editor-regras';
@@ -30,12 +34,13 @@ export default async function ComissoesPage({ searchParams }: PageProps<'/admin/
   const de = valida(consulta.de, `${hoje.slice(0, 8)}01`);
   const ate = valida(consulta.ate, hoje);
 
-  const [extrato, configuracao, regras, profissionais, servicos] = await Promise.all([
+  const [extrato, configuracao, regras, profissionais, servicos, repasses] = await Promise.all([
     apiSalao<ExtratoComissoes>(`/comissoes/extrato?de=${de}&ate=${ate}`),
     apiSalao<ConfiguracaoComissao>('/comissoes/configuracao'),
     apiSalao<RegraComissaoDto[]>('/comissoes/regras'),
     apiSalao<ProfissionalResumo[]>('/profissionais'),
     apiSalao<ServicoResumo[]>('/servicos'),
+    apiSalao<RepasseResumo[]>('/comissoes/repasses'),
   ]);
 
   return (
@@ -66,7 +71,41 @@ export default async function ComissoesPage({ searchParams }: PageProps<'/admin/
             Ver
           </button>
         </form>
-        <TabelaExtrato extrato={extrato} fuso={salao.fusoHorario} />
+        <TabelaExtrato extrato={extrato} fuso={salao.fusoHorario} podePagar />
+      </Secao>
+
+      <Secao
+        titulo="Repasses"
+        descricao="Pagamentos de comissões aos profissionais (comprovante salão-parceiro)."
+      >
+        {repasses.length === 0 ? (
+          <p className="text-sm text-suave">
+            Nenhum repasse ainda. Use &ldquo;Pagar&rdquo; no extrato acima.
+          </p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-borda text-sm">
+            {repasses.map((r) => (
+              <li key={r.id}>
+                <Link
+                  href={'/admin/comissoes/repasses/' + r.id}
+                  className={
+                    'flex items-center gap-3 py-2 ' +
+                    (r.status === 'CANCELADO' ? 'opacity-50 line-through' : '')
+                  }
+                >
+                  <span className="flex-1">
+                    {r.profissional.nome}{' '}
+                    <span className="text-suave">
+                      {r.de.split('-').reverse().join('/')} a {r.ate.split('-').reverse().join('/')}
+                      {r.formaPagamento && ' · ' + ROTULO_FORMA_PAGAMENTO[r.formaPagamento]}
+                    </span>
+                  </span>
+                  <span className="font-medium">{formatarPreco(r.valorPagoCentavos)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </Secao>
 
       <Secao titulo="Configuração">

@@ -101,6 +101,8 @@ export class ComandasRepository {
     id: string,
     fechamento: Fechamento,
     saidas: SaidaEstoque[],
+    /** Caixa aberto no momento (os pagamentos entram nele), se houver. */
+    caixaId: string | null,
     fechadaPorId: string,
   ) {
     return this.prisma.$transaction(async (tx) => {
@@ -128,6 +130,7 @@ export class ComandasRepository {
           valorCentavos: p.valorCentavos,
           taxaBps: p.taxaBps,
           taxaCentavos: p.taxaCentavos,
+          caixaId,
         })),
       });
       for (const saida of saidas) {

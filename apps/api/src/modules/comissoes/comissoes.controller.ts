@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import {
   configuracaoComissaoSchema,
   dataLocalSchema,
   definirRegrasComissaoSchema,
+  gerarRepasseSchema,
   type ConfiguracaoComissao,
   type DefinirRegrasComissaoInput,
+  type GerarRepasseInput,
 } from '@salonflow/shared';
 import { z } from 'zod';
 import { UsuarioAtual } from '../../shared/auth/decorators.js';
@@ -56,6 +58,34 @@ export class ComissoesController {
   extrato(@Query(new ZodValidationPipe(periodoSchema)) { de, ate, profissionalId }: Periodo) {
     return this.service.extrato(de, ate, profissionalId);
   }
+
+  /** Paga as comissões pendentes do período a um profissional. */
+  @Post('repasses')
+  async gerarRepasse(
+    @UsuarioAtual() usuario: UsuarioAutenticado,
+    @Body(new ZodValidationPipe(gerarRepasseSchema)) dados: GerarRepasseInput,
+  ) {
+    const repasse = await this.service.gerarRepasse(dados, usuario.id);
+    return this.service.repasse(repasse.id);
+  }
+
+  @Get('repasses')
+  repasses(
+    @Query('profissionalId', new ZodValidationPipe(z.uuid().optional())) profissionalId?: string,
+  ) {
+    return this.service.repasses(profissionalId);
+  }
+
+  /** Comprovante no formato salão-parceiro. */
+  @Get('repasses/:id')
+  repasse(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.repasse(id);
+  }
+
+  @Post('repasses/:id/cancelar')
+  cancelarRepasse(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.cancelarRepasse(id);
+  }
 }
 
 /** App do profissional: o próprio extrato. */
@@ -71,5 +101,15 @@ export class ProComissoesController {
     { de, ate }: Omit<Periodo, 'profissionalId'>,
   ) {
     return this.service.extratoDoUsuario(usuario.id, de, ate);
+  }
+
+  @Get('repasses')
+  repasses(@UsuarioAtual() usuario: UsuarioAutenticado) {
+    return this.service.repassesDoUsuario(usuario.id);
+  }
+
+  @Get('repasses/:id')
+  repasse(@UsuarioAtual() usuario: UsuarioAutenticado, @Param('id', ParseUUIDPipe) id: string) {
+    return this.service.repasseDoUsuario(usuario.id, id);
   }
 }

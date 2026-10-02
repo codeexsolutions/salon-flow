@@ -7,6 +7,7 @@ const menu = [
   { rotulo: 'Início', href: '/admin' },
   { rotulo: 'Agenda', href: '/admin/agenda' },
   { rotulo: 'Comandas', href: '/admin/comandas' },
+  { rotulo: 'Caixa', href: '/admin/caixa' },
   { rotulo: 'Clientes' },
   { rotulo: 'Profissionais', href: '/admin/profissionais' },
   { rotulo: 'Serviços', href: '/admin/servicos' },
@@ -24,7 +25,7 @@ export default async function PainelLayout({ children }: { children: React.React
 
   return (
     <div className="flex flex-1">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-borda p-4 md:flex">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-borda p-4 md:flex print:hidden">
         <p className="text-lg font-bold text-primaria">SalonFlow</p>
         <p className="mt-1 mb-6 truncate text-sm font-medium" title={salao.nome}>
           {salao.nome}
@@ -85,7 +86,7 @@ export default async function PainelLayout({ children }: { children: React.React
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-borda px-4 py-3 md:hidden">
+        <header className="flex items-center justify-between border-b border-borda px-4 py-3 md:hidden print:hidden">
           <span className="truncate font-semibold">{salao.nome}</span>
           <form action={sair}>
             <button type="submit" className="text-sm text-suave">

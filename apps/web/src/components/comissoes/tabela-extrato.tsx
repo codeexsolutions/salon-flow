@@ -1,8 +1,18 @@
 import { formatarPercentual, formatarPreco, type ExtratoComissoes } from '@salonflow/shared';
 import { dataLocal, horaLocal } from '@/lib/data-hora';
+import { GerarRepasse } from './gerar-repasse';
 
 /** Extrato agrupado por profissional; cada um expande para ver os atendimentos. */
-export function TabelaExtrato({ extrato, fuso }: { extrato: ExtratoComissoes; fuso: string }) {
+export function TabelaExtrato({
+  extrato,
+  fuso,
+  podePagar = false,
+}: {
+  extrato: ExtratoComissoes;
+  fuso: string;
+  /** Mostra o botão de repasse (só o dono). */
+  podePagar?: boolean;
+}) {
   if (extrato.profissionais.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-borda p-6 text-center text-sm text-suave">
@@ -21,7 +31,25 @@ export function TabelaExtrato({ extrato, fuso }: { extrato: ExtratoComissoes; fu
               {p.quantidade} atendimento(s) · {formatarPreco(p.totalServicosCentavos)}
             </span>
             <span className="font-semibold">{formatarPreco(p.totalComissaoCentavos)}</span>
+            <span
+              className={`text-xs ${p.pendenteCentavos > 0 ? 'text-amber-700' : 'text-green-700'}`}
+            >
+              {p.pendenteCentavos > 0
+                ? `${formatarPreco(p.pendenteCentavos)} pendente`
+                : 'tudo pago'}
+            </span>
           </summary>
+          {podePagar && p.pendenteCentavos > 0 && (
+            <div className="border-t border-borda px-4 py-3">
+              <GerarRepasse
+                profissionalId={p.profissionalId}
+                nome={p.nome}
+                pendenteCentavos={p.pendenteCentavos}
+                de={extrato.de}
+                ate={extrato.ate}
+              />
+            </div>
+          )}
           <div className="overflow-x-auto border-t border-borda">
             <table className="w-full text-left text-xs">
               <thead className="text-suave">
@@ -44,7 +72,10 @@ export function TabelaExtrato({ extrato, fuso }: { extrato: ExtratoComissoes; fu
                       {dataLocal(i.fechadaEm, fuso).split('-').reverse().slice(0, 2).join('/')}{' '}
                       {horaLocal(i.fechadaEm, fuso)}
                     </td>
-                    <td className="px-3 py-2">#{i.comandaNumero}</td>
+                    <td className="px-3 py-2">
+                      #{i.comandaNumero}
+                      {i.repasseId && <span className="ml-1 text-green-700">· pago</span>}
+                    </td>
                     <td className="px-3 py-2">{i.descricao}</td>
                     <td className="px-3 py-2">{i.cliente ?? '—'}</td>
                     <td className="px-3 py-2 text-right">{formatarPreco(i.valorCentavos)}</td>

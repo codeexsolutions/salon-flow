@@ -72,16 +72,16 @@ Toda chamada à API passa por `src/lib/api/client.ts`.
 
 ## Módulos planejados
 
-| Módulo                                                                      | Status               |
-| --------------------------------------------------------------------------- | -------------------- |
-| health, usuarios, saloes                                                    | ✅ base              |
-| profissionais (jornada, folgas, convite por e-mail)                         | ✅                   |
-| servicos (preço, duração, profissionais, ficha técnica)                     | ✅                   |
-| clientes (busca e cadastro rápido; ficha completa ⏳)                       | 🟡                   |
-| agenda (painel, app do cliente, app do profissional)                        | ✅                   |
-| comandas (itens, desconto, pagamentos divididos, fechamento)                | ✅ (caixa diário ⏳) |
-| comissoes (regras, taxas, extrato; repasse salão-parceiro ⏳)               | ✅                   |
-| estoque (produtos, entradas/ajustes, ficha técnica, venda; fornecedores ⏳) | ✅                   |
-| financeiro                                                                  | ⏳                   |
-| marketplace (busca, favoritos, avaliações)                                  | ⏳                   |
-| notificacoes (web push, e-mail, lembretes)                                  | ⏳                   |
+| Módulo                                                                      | Status  |
+| --------------------------------------------------------------------------- | ------- |
+| health, usuarios, saloes                                                    | ✅ base |
+| profissionais (jornada, folgas, convite por e-mail)                         | ✅      |
+| servicos (preço, duração, profissionais, ficha técnica)                     | ✅      |
+| clientes (busca e cadastro rápido; ficha completa ⏳)                       | 🟡      |
+| agenda (painel, app do cliente, app do profissional)                        | ✅      |
+| comandas (itens, desconto, pagamentos divididos, fechamento) + caixa diário | ✅      |
+| comissoes (regras, taxas, extrato, repasse salão-parceiro)                  | ✅      |
+| estoque (produtos, entradas/ajustes, ficha técnica, venda; fornecedores ⏳) | ✅      |
+| financeiro                                                                  | ⏳      |
+| marketplace (busca, favoritos, avaliações)                                  | ⏳      |
+| notificacoes (web push, e-mail, lembretes)                                  | ⏳      |

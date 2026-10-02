@@ -3,7 +3,9 @@ import {
   formatarPercentual,
   formatarPreco,
   type ExtratoComissoes,
+  type RepasseResumo,
 } from '@salonflow/shared';
+import Link from 'next/link';
 import { api } from '@/lib/api/client';
 import { obterContextoPro } from '@/lib/auth/contexto';
 import { exigirSessao } from '@/lib/auth/sessao';
@@ -25,11 +27,12 @@ export default async function ProComissoesPage({ searchParams }: PageProps<'/pro
   const ate = valida(consulta.ate, hoje);
 
   const sessao = await exigirSessao('/pro/comissoes');
-  const extrato = await api<ExtratoComissoes>(`/pro/comissoes?de=${de}&ate=${ate}`, {
-    token: sessao.token,
-    salaoId: salao.id,
-    cache: 'no-store',
-  });
+  const opcoes = { token: sessao.token, salaoId: salao.id, cache: 'no-store' as const };
+  const [extrato, repasses] = await Promise.all([
+    api<ExtratoComissoes>(`/pro/comissoes?de=${de}&ate=${ate}`, opcoes),
+    api<RepasseResumo[]>('/pro/comissoes/repasses', opcoes),
+  ]);
+  const pagos = repasses.filter((r) => r.status === 'PAGO');
   const meu = extrato.profissionais[0];
   const fuso = salao.fusoHorario;
 
@@ -100,10 +103,37 @@ export default async function ProComissoesPage({ searchParams }: PageProps<'/pro
                   {formatarPreco(i.baseComissaoCentavos)}
                 </span>
               </span>
-              <span className="font-semibold">{formatarPreco(i.comissaoCentavos)}</span>
+              <span className="flex flex-col items-end">
+                <span className="font-semibold">{formatarPreco(i.comissaoCentavos)}</span>
+                <span className={`text-xs ${i.repasseId ? 'text-green-700' : 'text-amber-700'}`}>
+                  {i.repasseId ? 'pago' : 'a receber'}
+                </span>
+              </span>
             </li>
           ))}
         </ul>
+      )}
+
+      {pagos.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h2 className="font-semibold">Repasses recebidos</h2>
+          <ul className="flex flex-col gap-2">
+            {pagos.map((r) => (
+              <li key={r.id}>
+                <Link
+                  href={`/pro/repasses/${r.id}`}
+                  className="flex items-center gap-3 rounded-xl border border-borda p-3 text-sm"
+                >
+                  <span className="flex-1">
+                    {r.de.split('-').reverse().join('/')} a {r.ate.split('-').reverse().join('/')}
+                    <span className="block text-xs text-suave">Ver comprovante</span>
+                  </span>
+                  <span className="font-semibold">{formatarPreco(r.valorPagoCentavos)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   );

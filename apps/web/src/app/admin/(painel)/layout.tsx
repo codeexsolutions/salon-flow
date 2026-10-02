@@ -9,7 +9,7 @@ const menu = [
   { rotulo: 'Comandas' },
   { rotulo: 'Clientes' },
   { rotulo: 'Profissionais', href: '/admin/profissionais' },
-  { rotulo: 'Serviços' },
+  { rotulo: 'Serviços', href: '/admin/servicos' },
   { rotulo: 'Estoque' },
   { rotulo: 'Comissões' },
   { rotulo: 'Financeiro' },

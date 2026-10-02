@@ -15,7 +15,8 @@
     "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev && prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "postprisma:migrate": "prisma generate",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "postinstall": "prisma generate"

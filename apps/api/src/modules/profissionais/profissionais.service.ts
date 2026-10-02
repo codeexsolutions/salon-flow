@@ -34,6 +34,12 @@ export class ProfissionaisService {
     return profissional;
   }
 
+  /** Quantos dos ids são profissionais ATIVOS do salão atual (usado por outros módulos). */
+  contarAtivos(ids: string[]) {
+    if (ids.length === 0) return Promise.resolve(0);
+    return this.repository.contarAtivos(this.contexto.salaoId, ids);
+  }
+
   async criar(dados: CriarProfissionalInput) {
     const salaoId = this.contexto.salaoId;
     if (dados.email && (await this.repository.emailEmUso(salaoId, dados.email))) {

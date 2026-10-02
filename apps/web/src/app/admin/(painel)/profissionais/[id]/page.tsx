@@ -6,6 +6,7 @@ import { Folgas } from '@/components/profissionais/folgas';
 import { FormProfissional } from '@/components/profissionais/form-profissional';
 import { SeloAcesso } from '@/components/profissionais/selo-acesso';
 import { classeBotaoSecundario } from '@/components/ui/campo';
+import { Secao } from '@/components/ui/secao';
 import { ApiError } from '@/lib/api/client';
 import { apiSalao } from '@/lib/api/salao';
 import { obterContextoAdmin } from '@/lib/auth/contexto';
@@ -90,25 +91,5 @@ export default async function ProfissionalPage({ params }: PageProps<'/admin/pro
         </Secao>
       )}
     </div>
-  );
-}
-
-function Secao({
-  titulo,
-  descricao,
-  children,
-}: {
-  titulo: string;
-  descricao?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-4 rounded-xl border border-borda p-5">
-      <div>
-        <h2 className="text-lg font-semibold">{titulo}</h2>
-        {descricao && <p className="text-sm text-suave">{descricao}</p>}
-      </div>
-      {children}
-    </section>
   );
 }

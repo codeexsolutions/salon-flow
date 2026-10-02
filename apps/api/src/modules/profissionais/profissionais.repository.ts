@@ -23,6 +23,10 @@ export class ProfissionaisRepository {
     return this.prisma.profissional.findFirst({ where: { id, salaoId }, include: comJornada });
   }
 
+  contarAtivos(salaoId: string, ids: string[]) {
+    return this.prisma.profissional.count({ where: { salaoId, ativo: true, id: { in: ids } } });
+  }
+
   async emailEmUso(salaoId: string, email: string, ignorarId?: string) {
     const total = await this.prisma.profissional.count({
       where: { salaoId, email, ...(ignorarId && { id: { not: ignorarId } }) },

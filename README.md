@@ -37,7 +37,7 @@ cp apps/web/.env.example apps/web/.env.local
 
 # banco local
 npm run db:up
-npm run db:migrate          # cria/aplica as migrations
+npm run db:migrate          # aplica as migrations (nova: npm run db:migrate -- --name nome)
 
 # sobe API (http://localhost:3333) e web (http://localhost:3000)
 npm run dev

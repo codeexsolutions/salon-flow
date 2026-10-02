@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Store } from 'lucide-react';
 import { criarSupabaseBrowser } from '@/lib/supabase/client';
@@ -40,7 +39,6 @@ export function FormLogin({
   google: boolean;
   modoInicial?: Modo;
 }) {
-  const router = useRouter();
   const [modo, setModo] = useState<Modo>(modoInicial);
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -98,8 +96,8 @@ export function FormLogin({
         setAviso('Conta criada! Confirme seu e-mail pelo link que enviamos para poder entrar.');
         return;
       }
-      router.push(continuar);
-      router.refresh();
+      // /auth/continuar é uma rota de redirecionamento (não uma página): navegação completa.
+      window.location.assign(continuar);
     });
   }
 

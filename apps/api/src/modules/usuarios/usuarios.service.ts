@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { PerfilUsuario } from '@salonflow/shared';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { UsuariosRepository } from './usuarios.repository.js';
 
@@ -12,7 +13,7 @@ export class UsuariosService {
   }
 
   /** Perfil + salões em que o usuário atua. Sem salões = usuário apenas cliente. */
-  async perfil(usuario: UsuarioAutenticado) {
+  async perfil(usuario: UsuarioAutenticado): Promise<PerfilUsuario> {
     const cadastro = await this.garantirCadastro(usuario);
     const vinculos = await this.repository.buscarVinculosAtivos(usuario.id);
 

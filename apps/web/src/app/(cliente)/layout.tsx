@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Suspense } from 'react';
+import { MenuUsuario } from '@/components/auth/menu-usuario';
 
 /** App do CLIENTE (marketplace): buscar salões, agendar, ver/remarcar/cancelar. */
 export const metadata: Metadata = {
@@ -13,9 +15,10 @@ export default function ClienteLayout({ children }: { children: React.ReactNode 
         <Link href="/" className="text-lg font-bold text-primaria">
           SalonFlow
         </Link>
-        <nav className="flex gap-4 text-sm">
-          <Link href="/meus-agendamentos">Meus agendamentos</Link>
-          <Link href="/entrar">Entrar</Link>
+        <nav className="flex items-center gap-4 text-sm">
+          <Suspense>
+            <MenuUsuario />
+          </Suspense>
         </nav>
       </header>
       <main className="flex-1 px-4 py-6">{children}</main>

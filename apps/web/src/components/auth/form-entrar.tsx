@@ -15,7 +15,7 @@ function urlDeRetorno(next: string | null) {
   return url.toString();
 }
 
-export function FormEntrar({ next }: { next: string | null }) {
+export function FormEntrar({ next, google }: { next: string | null; google: boolean }) {
   const [estado, setEstado] = useState<Estado>({ tipo: 'inicial' });
 
   async function enviarLink(formData: FormData) {
@@ -63,19 +63,23 @@ export function FormEntrar({ next }: { next: string | null }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <button
-        type="button"
-        onClick={entrarComGoogle}
-        className="rounded-lg border border-borda px-4 py-3 font-medium"
-      >
-        Entrar com Google
-      </button>
+      {google && (
+        <>
+          <button
+            type="button"
+            onClick={entrarComGoogle}
+            className="rounded-lg border border-borda px-4 py-3 font-medium"
+          >
+            Entrar com Google
+          </button>
 
-      <div className="flex items-center gap-3 text-xs text-suave">
-        <span className="h-px flex-1 bg-borda" />
-        ou
-        <span className="h-px flex-1 bg-borda" />
-      </div>
+          <div className="flex items-center gap-3 text-xs text-suave">
+            <span className="h-px flex-1 bg-borda" />
+            ou
+            <span className="h-px flex-1 bg-borda" />
+          </div>
+        </>
+      )}
 
       <form action={enviarLink} className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 text-sm">

@@ -1,7 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { convidarRecepcaoSchema, type ResultadoConvite } from '@salonflow/shared';
+import {
+  convidarRecepcaoSchema,
+  redefinirSenhaSchema,
+  type ResultadoConvite,
+} from '@salonflow/shared';
 import { falha, falhaDeValidacao, sucesso, type Resultado } from '@/lib/api/resultado';
 import { apiSalao } from '@/lib/api/salao';
 
@@ -25,6 +29,18 @@ export async function cancelarConvite(id: string): Promise<Resultado> {
   try {
     await apiSalao(`/equipe/convites/${id}`, { method: 'DELETE' });
     revalidatePath('/admin/equipe');
+    return sucesso(undefined);
+  } catch (erro) {
+    return falha(erro);
+  }
+}
+
+/** Senha provisória nova para alguém da equipe que esqueceu a dele. */
+export async function redefinirSenhaMembro(id: string, senha: string): Promise<Resultado> {
+  const validacao = redefinirSenhaSchema.safeParse({ senha });
+  if (!validacao.success) return falhaDeValidacao(validacao.error);
+  try {
+    await apiSalao(`/equipe/membros/${id}/senha`, { method: 'POST', body: validacao.data });
     return sucesso(undefined);
   } catch (erro) {
     return falha(erro);

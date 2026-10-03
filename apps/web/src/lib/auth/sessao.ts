@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
-import type { PerfilUsuario } from '@salonflow/shared';
+import { usuarioDeLogin, type PerfilUsuario } from '@salonflow/shared';
 import { api } from '../api/client';
 import { criarSupabaseServer } from '../supabase/server';
 
@@ -10,6 +10,8 @@ export interface Sessao {
   token: string;
   usuarioId: string;
   email: string;
+  /** Usuário de login (o e-mail é interno). */
+  usuario: string;
 }
 
 /**
@@ -32,6 +34,7 @@ export const obterSessao = cache(async (): Promise<Sessao | null> => {
     token: session.access_token,
     usuarioId: data.claims.sub,
     email: (data.claims.email as string | undefined) ?? '',
+    usuario: usuarioDeLogin((data.claims.email as string | undefined) ?? ''),
   };
 });
 

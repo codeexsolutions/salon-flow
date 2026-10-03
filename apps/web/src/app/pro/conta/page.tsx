@@ -15,7 +15,7 @@ export default async function ProContaPage() {
       <div>
         <h1 className="text-3xl">Minha conta</h1>
         <p className="text-sm text-suave">
-          {perfil.nome ?? perfil.email}
+          {perfil.nome ?? perfil.usuario} · @{perfil.usuario}
           {salao && ` · ${salao.nome}`}
         </p>
       </div>

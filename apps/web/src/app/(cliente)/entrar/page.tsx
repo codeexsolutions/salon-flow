@@ -3,7 +3,6 @@ import { CalendarCheck, HandCoins, Sparkles } from 'lucide-react';
 import { FormLogin, type Modo } from '@/components/auth/form-login';
 import { caminhoSeguro } from '@/lib/auth/destino';
 import { obterSessao } from '@/lib/auth/sessao';
-import { provedoresAtivos } from '@/lib/supabase/provedores';
 
 export const metadata = { title: 'Entrar' };
 
@@ -21,7 +20,7 @@ export default async function EntrarPage({ searchParams }: PageProps<'/entrar'>)
   if (next?.startsWith('/admin/novo-salao')) redirect('/cadastro-salao');
   const modoInicial: Modo = params.modo === 'criar' ? 'criar' : 'entrar';
 
-  const [sessao, provedores] = await Promise.all([obterSessao(), provedoresAtivos()]);
+  const sessao = await obterSessao();
   if (sessao) {
     redirect(next ? `/auth/continuar?next=${encodeURIComponent(next)}` : '/auth/continuar');
   }
@@ -43,12 +42,7 @@ export default async function EntrarPage({ searchParams }: PageProps<'/entrar'>)
       </section>
 
       <section className="p-6 sm:p-10">
-        {params.erro === 'link' && (
-          <p role="alert" className="mb-4 rounded-lg bg-perigo-suave p-3 text-sm text-perigo">
-            O link expirou ou já foi usado. Tente novamente.
-          </p>
-        )}
-        <FormLogin next={next} google={provedores.google} modoInicial={modoInicial} />
+        <FormLogin next={next} modoInicial={modoInicial} />
       </section>
     </div>
   );

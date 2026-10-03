@@ -62,7 +62,9 @@ Testes e2e da API (precisam do banco no ar): `npm run test:e2e -w @salonflow/api
 **Supabase**
 
 1. Crie o projeto (região: a mesma da API no Railway).
-2. Authentication > Providers: habilite Google e Email (magic link).
+2. Authentication > Providers > Email: habilitado, com **Confirm email DESLIGADO**.
+   O login é por **usuário e senha**: cada usuário vira o e-mail interno `usuario@salonflow.invalid`
+   (domínio reservado, nunca recebe mensagens), então não há e-mails a confirmar nem SMTP a configurar.
 3. Pegue as connection strings (pooler "Session" e direta) e a Publishable key.
 4. No SQL Editor, rode `apps/api/prisma/supabase/storage.sql` (bucket de imagens dos salões e políticas: só o dono envia).
 
@@ -70,7 +72,9 @@ Testes e2e da API (precisam do banco no ar): `npm run test:e2e -w @salonflow/api
 
 1. Novo serviço a partir do repositório, **sem** Root Directory (o build precisa do monorepo inteiro).
 2. Config file path: `apps/api/railway.json`.
-3. Variáveis: `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `CORS_ORIGINS`, `NODE_ENV=production`.
+3. Variáveis: `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `CORS_ORIGINS`, `NODE_ENV=production`.
+   `SUPABASE_SECRET_KEY` (sb_secret_...) habilita a troca de senha: recuperação com código e
+   senha nova dada pelo salão. Nunca vai para o front.
 4. Domínio: `api.salonflow.com.br`.
 
 **Vercel (web)**

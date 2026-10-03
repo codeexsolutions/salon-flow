@@ -1,5 +1,9 @@
 import { RegraDeNegocioError } from '../../../shared/errors/domain.error.js';
-import { papelAoAceitarConvite, validarAlteracaoAcesso } from './acesso.js';
+import {
+  papelAoAceitarConvite,
+  validarAlteracaoAcesso,
+  validarRedefinicaoSenha,
+} from './acesso.js';
 
 describe('papelAoAceitarConvite', () => {
   it('novo membro recebe o papel do convite', () => {
@@ -29,6 +33,26 @@ describe('validarAlteracaoAcesso', () => {
 
   it('bloqueia remover um dono', () => {
     expect(() => validarAlteracaoAcesso({ papel: 'DONO', ehVoce: false })).toThrow(
+      RegraDeNegocioError,
+    );
+  });
+});
+
+describe('validarRedefinicaoSenha', () => {
+  const base = { papel: 'PROFISSIONAL' as const, ehVoce: false, temAcessoEmOutroSalao: false };
+
+  it('permite para quem atua só neste salão', () => {
+    expect(() => validarRedefinicaoSenha(base)).not.toThrow();
+    expect(() => validarRedefinicaoSenha({ ...base, papel: 'RECEPCAO' })).not.toThrow();
+  });
+
+  it('bloqueia a própria senha e a de um dono', () => {
+    expect(() => validarRedefinicaoSenha({ ...base, ehVoce: true })).toThrow(RegraDeNegocioError);
+    expect(() => validarRedefinicaoSenha({ ...base, papel: 'DONO' })).toThrow(RegraDeNegocioError);
+  });
+
+  it('bloqueia quem tem acesso a outro salão (evita tomar a conta)', () => {
+    expect(() => validarRedefinicaoSenha({ ...base, temAcessoEmOutroSalao: true })).toThrow(
       RegraDeNegocioError,
     );
   });

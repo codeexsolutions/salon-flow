@@ -41,7 +41,7 @@ export async function MenuUsuario() {
           type="submit"
           className="text-suave hover:text-perigo"
           aria-label="Sair"
-          title={`Sair (${sessao.email})`}
+          title={`Sair (@${sessao.usuario})`}
         >
           <LogOut className="size-4" aria-hidden />
         </button>

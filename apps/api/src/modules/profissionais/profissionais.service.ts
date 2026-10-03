@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { emailDeLogin } from '@salonflow/shared';
 import type {
   AtualizarProfissionalInput,
   CriarBloqueioInput,
@@ -55,30 +56,29 @@ export class ProfissionaisService {
     return this.repository.contarAtivos(this.contexto.salaoId, ids);
   }
 
-  async criar(dados: CriarProfissionalInput) {
+  async criar({ usuario, ...dados }: CriarProfissionalInput) {
     const salaoId = this.contexto.salaoId;
-    if (dados.email && (await this.repository.emailEmUso(salaoId, dados.email))) {
-      throw this.emailDuplicado();
-    }
-    return this.repository.criar(salaoId, dados);
+    const email = usuario ? emailDeLogin(usuario) : undefined;
+    if (email) await this.validarLoginLivre(salaoId, email);
+    return this.repository.criar(salaoId, { ...dados, email });
   }
 
-  async atualizar(id: string, dados: AtualizarProfissionalInput) {
+  async atualizar(id: string, { usuario, ...dados }: AtualizarProfissionalInput) {
     const salaoId = this.contexto.salaoId;
     const atual = await this.buscar(id);
+    // undefined = não mexe; null = remove o usuário (ainda sem acesso).
+    const email = usuario === undefined ? undefined : usuario && emailDeLogin(usuario);
 
-    if (dados.email !== undefined && dados.email !== atual.email) {
+    if (email !== undefined && email !== atual.email) {
       if (atual.usuarioId) {
         throw new RegraDeNegocioError(
-          'EMAIL_VINCULADO',
-          'O e-mail não pode ser alterado: o profissional já usa o app com ele.',
+          'USUARIO_VINCULADO',
+          'O usuário não pode ser alterado: o profissional já entra no app com ele.',
         );
       }
-      if (dados.email && (await this.repository.emailEmUso(salaoId, dados.email, id))) {
-        throw this.emailDuplicado();
-      }
+      if (email) await this.validarLoginLivre(salaoId, email, id);
     }
-    return this.repository.atualizar(salaoId, id, dados);
+    return this.repository.atualizar(salaoId, id, { ...dados, email });
   }
 
   async definirJornada(id: string, { intervalos }: DefinirJornadaInput) {
@@ -123,10 +123,16 @@ export class ProfissionaisService {
     return this.repository.vincularPorEmail(usuarioId, email.toLowerCase());
   }
 
-  private emailDuplicado() {
-    return new ConflitoError(
-      'EMAIL_EM_USO',
-      'Já existe um profissional com este e-mail neste salão.',
-    );
+  /** Usuário novo (ou de alguém que já é deste salão) e sem outro profissional com ele. */
+  private async validarLoginLivre(salaoId: string, email: string, ignorarId?: string) {
+    if (await this.repository.emailEmUso(salaoId, email, ignorarId)) {
+      throw new ConflitoError(
+        'USUARIO_EM_USO',
+        'Já existe um profissional com este usuário neste salão.',
+      );
+    }
+    if (await this.repository.loginDeOutraPessoa(salaoId, email)) {
+      throw new ConflitoError('USUARIO_EXISTE', 'Este usuário já existe. Escolha outro.');
+    }
   }
 }

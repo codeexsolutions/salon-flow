@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import type { Papel } from '../enums.js';
+import { nomeUsuarioSchema } from '../login.js';
 
-/** Dono libera o painel para alguém da recepção (pelo e-mail). */
+/** Dono libera o painel para alguém da recepção (pelo usuário de login). */
 export const convidarRecepcaoSchema = z.object({
   nome: z.string().trim().min(2).max(120),
-  email: z.email('E-mail inválido').trim().toLowerCase().max(160),
+  usuario: nomeUsuarioSchema,
 });
 export type ConvidarRecepcaoInput = z.infer<typeof convidarRecepcaoSchema>;
 
@@ -15,7 +16,7 @@ export type AlterarAcessoInput = z.infer<typeof alterarAcessoSchema>;
 export interface MembroEquipe {
   id: string;
   nome: string | null;
-  email: string;
+  usuario: string;
   papel: Papel;
   ativo: boolean;
   /** Também atende como profissional (tem o app do profissional). */
@@ -25,11 +26,11 @@ export interface MembroEquipe {
   criadoEm: string;
 }
 
-/** Acesso liberado para um e-mail que ainda não entrou no SalonFlow. */
+/** Acesso liberado para um usuário que ainda não entrou no SalonFlow. */
 export interface ConviteAcessoPendente {
   id: string;
   nome: string | null;
-  email: string;
+  usuario: string;
   papel: Papel;
   criadoEm: string;
 }
@@ -40,9 +41,10 @@ export interface EquipeSalao {
 }
 
 /**
- * Resultado do convite: `LIBERADO` = a pessoa já tem conta e já tem acesso;
+ * Resultado do convite: `LIBERADO` = a pessoa já é do salão e agora vê o painel;
  * `PENDENTE` = falta criar a conta dela (e-mail + senha provisória).
  */
-export interface ResultadoConvite {
-  situacao: 'LIBERADO' | 'PENDENTE';
-}
+export type ResultadoConvite =
+  | { situacao: 'LIBERADO' }
+  /** `conviteId` permite desfazer se a conta não puder ser criada. */
+  | { situacao: 'PENDENTE'; conviteId: string };

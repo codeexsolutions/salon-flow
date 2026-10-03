@@ -3,7 +3,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { useState, useTransition } from 'react';
 import { Check, Copy, MessageCircle, Shuffle, UserPlus } from 'lucide-react';
-import { convidarRecepcao } from '@/app/admin/(painel)/equipe/actions';
+import { emailDeLogin } from '@salonflow/shared';
+import { cancelarConvite, convidarRecepcao } from '@/app/admin/(painel)/equipe/actions';
 import { traduzirErroAuth } from '@/components/auth/erros-auth';
 import {
   Campo,
@@ -16,17 +17,17 @@ import { gerarSenhaProvisoria } from '@/lib/auth/senha-provisoria';
 import { env } from '@/lib/env';
 
 type Concluido =
-  | { tipo: 'conta-criada'; nome: string; email: string; senha: string }
+  | { tipo: 'conta-criada'; nome: string; usuario: string; senha: string }
   | { tipo: 'ja-tinha-conta'; nome: string };
 
 /**
  * O dono libera o painel para a recepção: registra o acesso na API e cria a conta
- * (e-mail + senha provisória) para entregar à pessoa. Usa um cliente Supabase SEM
+ * (usuário + senha provisória) para entregar à pessoa. Usa um cliente Supabase SEM
  * sessão, para criar a conta sem deslogar o dono.
  */
 export function AdicionarRecepcao() {
   const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
+  const [usuario, setUsuario] = useState('');
   const [senha, setSenha] = useState(gerarSenhaProvisoria);
   const [concluido, setConcluido] = useState<Concluido | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -34,7 +35,7 @@ export function AdicionarRecepcao() {
 
   function recomecar() {
     setNome('');
-    setEmail('');
+    setUsuario('');
     setSenha(gerarSenhaProvisoria());
     setConcluido(null);
     setErro(null);
@@ -44,12 +45,12 @@ export function AdicionarRecepcao() {
     evento.preventDefault();
     setErro(null);
     iniciar(async () => {
-      const r = await convidarRecepcao({ nome, email });
+      const r = await convidarRecepcao({ nome, usuario });
       if (!r.ok) {
         setErro(r.erro);
         return;
       }
-      const emailNormalizado = email.trim().toLowerCase();
+      const login = usuario.trim().toLowerCase();
       if (r.dados.situacao === 'LIBERADO') {
         setConcluido({ tipo: 'ja-tinha-conta', nome });
         return;
@@ -59,24 +60,22 @@ export function AdicionarRecepcao() {
         auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
       });
       const { data, error } = await isolado.auth.signUp({
-        email: emailNormalizado,
+        email: emailDeLogin(login),
         password: senha,
         options: {
           data: { full_name: nome.trim(), tipo_conta: 'recepcao', senha_provisoria: true },
         },
       });
-      if (error) {
+      // Usuário já usado por outra pessoa: desfaz a reserva para não dar acesso a ela.
+      const jaExiste = !!data.user && data.user.identities?.length === 0;
+      if (error || jaExiste) {
+        await cancelarConvite(r.dados.conviteId);
         setErro(
-          `${traduzirErroAuth(error.message)} O acesso ficou reservado para este e-mail; tente de novo.`,
+          jaExiste ? 'Este usuário já existe. Escolha outro.' : traduzirErroAuth(error!.message),
         );
         return;
       }
-      // E-mail que já tinha conta no Supabase: o acesso vale quando a pessoa entrar.
-      if (data.user && data.user.identities?.length === 0) {
-        setConcluido({ tipo: 'ja-tinha-conta', nome });
-        return;
-      }
-      setConcluido({ tipo: 'conta-criada', nome, email: emailNormalizado, senha });
+      setConcluido({ tipo: 'conta-criada', nome, usuario: login, senha });
     });
   }
 
@@ -85,7 +84,7 @@ export function AdicionarRecepcao() {
       <div className="flex flex-col gap-3 text-sm">
         <MensagemForm
           sucesso
-          mensagem={`${concluido.nome} já tem conta no SalonFlow. O acesso ao painel foi liberado: é só entrar com a senha de sempre.`}
+          mensagem={`${concluido.nome} já faz parte do salão. O acesso ao painel foi liberado: é só entrar com a senha de sempre.`}
         />
         <button type="button" onClick={recomecar} className={`${classeBotaoSecundario} self-start`}>
           Adicionar outra pessoa
@@ -110,12 +109,15 @@ export function AdicionarRecepcao() {
             className={classeInput}
           />
         </Campo>
-        <Campo rotulo="E-mail">
+        <Campo rotulo="Usuário" ajuda="Ex.: ana.recepcao">
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={usuario}
+            onChange={(e) => setUsuario(e.target.value)}
             required
+            minLength={3}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className={classeInput}
           />
         </Campo>
@@ -143,7 +145,7 @@ export function AdicionarRecepcao() {
       {erro && <MensagemForm mensagem={erro} />}
       <button
         type="submit"
-        disabled={pendente || nome.trim().length < 2 || !email.includes('@') || senha.length < 6}
+        disabled={pendente || nome.trim().length < 2 || usuario.trim().length < 3 || senha.length < 6}
         className={`${classeBotaoPrimario} self-start`}
       >
         <UserPlus className="size-4" aria-hidden />
@@ -153,29 +155,35 @@ export function AdicionarRecepcao() {
   );
 }
 
-function DadosDeAcesso({
+export function DadosDeAcesso({
   nome,
-  email,
+  usuario,
   senha,
   aoRecomecar,
+  titulo,
 }: {
   nome: string;
-  email: string;
+  usuario: string;
+  /** Mensagem de sucesso (padrão: acesso criado). */
+  titulo?: string;
   senha: string;
-  aoRecomecar: () => void;
+  aoRecomecar?: () => void;
 }) {
   const [copiado, setCopiado] = useState(false);
   const link = `${window.location.origin}/entrar`;
-  const texto = `Olá, ${nome}! Seu acesso ao painel do salão:\n${link}\nE-mail: ${email}\nSenha: ${senha}\nNo primeiro acesso, crie a sua senha.`;
+  const texto = `Olá, ${nome}! Seu acesso ao SalonFlow:\n${link}\nUsuário: ${usuario}\nSenha: ${senha}\nAo entrar, crie a sua senha.`;
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-      <MensagemForm sucesso mensagem={`Acesso criado! Entregue os dados abaixo para ${nome}.`} />
+      <MensagemForm
+        sucesso
+        mensagem={titulo ?? `Acesso criado! Entregue os dados abaixo para ${nome}.`}
+      />
       <dl className="grid grid-cols-[5rem_1fr] gap-y-1 rounded-xl bg-nude p-4 font-mono text-sm">
         <dt className="font-sans text-suave">Link</dt>
         <dd className="break-all">{link}</dd>
-        <dt className="font-sans text-suave">E-mail</dt>
-        <dd className="break-all">{email}</dd>
+        <dt className="font-sans text-suave">Usuário</dt>
+        <dd className="break-all">{usuario}</dd>
         <dt className="font-sans text-suave">Senha</dt>
         <dd className="font-semibold">{senha}</dd>
       </dl>
@@ -199,9 +207,11 @@ function DadosDeAcesso({
         >
           <MessageCircle className="size-4" aria-hidden /> Enviar pelo WhatsApp
         </a>
-        <button type="button" onClick={aoRecomecar} className={classeBotaoSecundario}>
-          Adicionar outra pessoa
-        </button>
+        {aoRecomecar && (
+          <button type="button" onClick={aoRecomecar} className={classeBotaoSecundario}>
+            Adicionar outra pessoa
+          </button>
+        )}
       </div>
       <p className="text-xs text-suave">
         Por segurança, esta senha não fica salva no painel. A pessoa cria a própria senha no primeiro

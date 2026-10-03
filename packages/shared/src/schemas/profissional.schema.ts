@@ -1,11 +1,13 @@
 import { z } from 'zod';
+import { nomeUsuarioSchema } from '../login.js';
 import { dataHoraLocalSchema as dataHoraLocal } from './comum.schema.js';
 
 const hora = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$|^24:00$/, 'Use o formato HH:MM');
 
 export const criarProfissionalSchema = z.object({
   nome: z.string().trim().min(2).max(120),
-  email: z.email('E-mail inválido').trim().toLowerCase().optional(),
+  /** Usuário de login do profissional no app (opcional). */
+  usuario: nomeUsuarioSchema.optional(),
   telefone: z.string().trim().max(20).optional(),
   corAgenda: z
     .string()
@@ -14,9 +16,9 @@ export const criarProfissionalSchema = z.object({
 });
 export type CriarProfissionalInput = z.infer<typeof criarProfissionalSchema>;
 
-/** Na edição, `null` limpa o e-mail/telefone. */
+/** Na edição, `null` limpa o usuário/telefone. */
 export const atualizarProfissionalSchema = criarProfissionalSchema.partial().extend({
-  email: z.email('E-mail inválido').trim().toLowerCase().nullable().optional(),
+  usuario: nomeUsuarioSchema.nullable().optional(),
   telefone: z.string().trim().max(20).nullable().optional(),
   ativo: z.boolean().optional(),
 });
@@ -44,16 +46,17 @@ export type CriarBloqueioInput = z.infer<typeof criarBloqueioSchema>;
 
 /**
  * Acesso do profissional ao app:
- * - ATIVO: já entrou com o e-mail cadastrado e está vinculado
- * - PENDENTE: tem e-mail, mas ainda não entrou no app
- * - SEM_ACESSO: sem e-mail cadastrado
+ * - ATIVO: já entrou com o usuário cadastrado e está vinculado
+ * - PENDENTE: tem usuário, mas ainda não entrou no app
+ * - SEM_ACESSO: sem usuário cadastrado
  */
 export type AcessoApp = 'ATIVO' | 'PENDENTE' | 'SEM_ACESSO';
 
 export interface ProfissionalResumo {
   id: string;
   nome: string;
-  email: string | null;
+  /** Usuário de login no app. */
+  usuario: string | null;
   telefone: string | null;
   corAgenda: string;
   ativo: boolean;

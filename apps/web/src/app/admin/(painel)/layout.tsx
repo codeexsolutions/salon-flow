@@ -14,7 +14,7 @@ export default async function PainelLayout({ children }: { children: React.React
       <NavegacaoPainel
         salao={salao}
         outrosSaloes={outrosSaloes}
-        usuario={{ nome: perfil.nome, email: perfil.email }}
+        usuario={{ nome: perfil.nome, usuario: perfil.usuario }}
       />
       <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8 print:p-0">
         <Suspense>

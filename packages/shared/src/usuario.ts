@@ -15,8 +15,12 @@ export interface VinculoSalao {
 /** Resposta de GET /me. Sem salões = usuário apenas cliente. */
 export interface PerfilUsuario {
   id: string;
+  /** Usuário de login. */
+  usuario: string;
   email: string;
   nome: string | null;
   avatarUrl: string | null;
+  /** Já tem código de recuperação de senha. */
+  temRecuperacao: boolean;
   saloes: VinculoSalao[];
 }

@@ -11,6 +11,12 @@ export const envSchema = z.object({
   /** URL do projeto Supabase, usada para validar os tokens de login (JWKS). */
   SUPABASE_URL: z.url(),
 
+  /**
+   * Chave SECRETA do Supabase (sb_secret_...). Só para o salão redefinir a senha
+   * da equipe. Opcional: sem ela a API sobe e só essa função fica indisponível.
+   */
+  SUPABASE_SECRET_KEY: z.string().min(1).optional(),
+
   /** Origens liberadas no CORS, separadas por vírgula. */
   CORS_ORIGINS: z
     .string()

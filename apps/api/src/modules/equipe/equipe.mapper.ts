@@ -1,4 +1,9 @@
-import type { ConviteAcessoPendente, EquipeSalao, MembroEquipe } from '@salonflow/shared';
+import {
+  usuarioDeLogin,
+  type ConviteAcessoPendente,
+  type EquipeSalao,
+  type MembroEquipe,
+} from '@salonflow/shared';
 import type { EquipeService } from './equipe.service.js';
 
 type Equipe = Awaited<ReturnType<EquipeService['listar']>>;
@@ -9,7 +14,7 @@ export function paraEquipeSalao({ membros, convites }: Equipe, usuarioLogadoId: 
       (m): MembroEquipe => ({
         id: m.id,
         nome: m.usuario.nome,
-        email: m.usuario.email,
+        usuario: usuarioDeLogin(m.usuario.email),
         papel: m.papel,
         ativo: m.ativo,
         ehProfissional: m.usuario.profissionais.length > 0,
@@ -21,7 +26,7 @@ export function paraEquipeSalao({ membros, convites }: Equipe, usuarioLogadoId: 
       (c): ConviteAcessoPendente => ({
         id: c.id,
         nome: c.nome,
-        email: c.email,
+        usuario: usuarioDeLogin(c.email),
         papel: c.papel,
         criadoEm: c.criadoEm.toISOString(),
       }),

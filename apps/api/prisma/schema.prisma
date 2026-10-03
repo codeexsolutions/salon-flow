@@ -30,7 +30,15 @@ model Usuario {
   email     String   @unique
   nome      String?
   avatarUrl String?  @map("avatar_url")
+  /// Celular (só dígitos), informado no cadastro; parte da recuperação de senha.
+  telefone  String?
   criadoEm  DateTime @default(now()) @map("criado_em")
+
+  /// Código de recuperação de senha (hash scrypt; o código só é mostrado uma vez).
+  recuperacaoHash         String?   @map("recuperacao_hash")
+  /// Tentativas erradas seguidas; ao estourar, a recuperação fica bloqueada por um tempo.
+  recuperacaoTentativas   Int       @default(0) @map("recuperacao_tentativas")
+  recuperacaoBloqueadaAte DateTime? @map("recuperacao_bloqueada_ate")
 
   vinculos      MembroSalao[]
   profissionais Profissional[]

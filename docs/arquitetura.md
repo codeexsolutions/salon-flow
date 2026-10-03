@@ -53,7 +53,10 @@ O módulo `saloes` é a referência: copie a estrutura dele ao criar um módulo 
 
 ## Autenticação
 
-- Login no front via Supabase (Google ou link mágico por e-mail).
+- Login no front via Supabase com **usuário e senha** (o usuário vira o e-mail interno
+  `usuario@salonflow.invalid`; helpers `emailDeLogin`/`usuarioDeLogin` em `@salonflow/shared`).
+- Senha esquecida: clientes e donos usam usuário + celular + código de recuperação (hash scrypt,
+  bloqueio após 5 erros); profissionais e recepção recebem senha provisória nova do dono.
 - O front manda `Authorization: Bearer <access_token>` para a API.
 - `AuthGuard` (global) valida o token pelas chaves públicas do Supabase (JWKS).
 - Toda rota exige login, exceto as marcadas com `@Publica()`.
@@ -75,7 +78,7 @@ Toda chamada à API passa por `src/lib/api/client.ts`.
 | Módulo                                                                      | Status  |
 | --------------------------------------------------------------------------- | ------- |
 | health, usuarios, saloes                                                    | ✅ base |
-| profissionais (jornada, folgas, convite por e-mail)                         | ✅      |
+| profissionais (jornada, folgas, acesso por usuário)                         | ✅      |
 | equipe (acesso da recepção, remover/devolver acesso)                        | ✅      |
 | servicos (preço, duração, profissionais, ficha técnica)                     | ✅      |
 | clientes (busca e cadastro rápido; ficha completa ⏳)                       | 🟡      |

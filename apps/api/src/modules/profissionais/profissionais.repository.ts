@@ -3,6 +3,12 @@ import type { AtualizarProfissionalInput, CriarProfissionalInput } from '@salonf
 import { PrismaService } from '../../shared/database/prisma.service.js';
 import type { IntervaloMin } from './domain/jornada.js';
 
+/** Dados gravados: o `usuario` do contrato vira o e-mail interno de login. */
+type DadosProfissional = Omit<CriarProfissionalInput, 'usuario'> & { email?: string };
+type DadosProfissionalParcial = Omit<AtualizarProfissionalInput, 'usuario'> & {
+  email?: string | null;
+};
+
 const comJornada = {
   jornada: { orderBy: [{ diaSemana: 'asc' as const }, { inicioMin: 'asc' as const }] },
 };
@@ -56,12 +62,24 @@ export class ProfissionaisRepository {
     return total > 0;
   }
 
-  criar(salaoId: string, dados: CriarProfissionalInput) {
+  /**
+   * O login já pertence a alguém que NÃO faz parte deste salão? Nesse caso o salão
+   * não pode usá-lo (daria acesso ao salão a uma pessoa qualquer).
+   */
+  async loginDeOutraPessoa(salaoId: string, email: string) {
+    const usuario = await this.prisma.usuario.findUnique({
+      where: { email },
+      select: { vinculos: { where: { salaoId }, select: { id: true } } },
+    });
+    return !!usuario && usuario.vinculos.length === 0;
+  }
+
+  criar(salaoId: string, dados: DadosProfissional) {
     return this.prisma.profissional.create({ data: { ...dados, salaoId } });
   }
 
   /** Atualiza o profissional e liga/desliga o acesso dele ao app junto com `ativo`. */
-  atualizar(salaoId: string, id: string, dados: AtualizarProfissionalInput) {
+  atualizar(salaoId: string, id: string, dados: DadosProfissionalParcial) {
     return this.prisma.$transaction(async (tx) => {
       const profissional = await tx.profissional.update({ where: { id, salaoId }, data: dados });
 

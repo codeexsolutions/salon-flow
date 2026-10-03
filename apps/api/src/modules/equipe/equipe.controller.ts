@@ -12,8 +12,10 @@ import {
 import {
   alterarAcessoSchema,
   convidarRecepcaoSchema,
+  redefinirSenhaSchema,
   type AlterarAcessoInput,
   type ConvidarRecepcaoInput,
+  type RedefinirSenhaInput,
   type EquipeSalao,
   type ResultadoConvite,
 } from '@salonflow/shared';
@@ -56,5 +58,15 @@ export class EquipeController {
     @Body(new ZodValidationPipe(alterarAcessoSchema)) { ativo }: AlterarAcessoInput,
   ) {
     return this.service.alterarAcesso(id, ativo, usuario.id);
+  }
+
+  @Post('membros/:id/senha')
+  @HttpCode(204)
+  redefinirSenha(
+    @UsuarioAtual() usuario: UsuarioAutenticado,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(redefinirSenhaSchema)) { senha }: RedefinirSenhaInput,
+  ) {
+    return this.service.redefinirSenha(id, senha, usuario.id);
   }
 }

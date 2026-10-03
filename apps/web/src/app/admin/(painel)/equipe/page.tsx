@@ -3,6 +3,7 @@ import { Clock, Scissors } from 'lucide-react';
 import type { EquipeSalao, MembroEquipe, Papel } from '@salonflow/shared';
 import { AdicionarRecepcao } from '@/components/equipe/adicionar-recepcao';
 import { AlternarAcesso, CancelarConvite } from '@/components/equipe/acoes-acesso';
+import { RedefinirSenha } from '@/components/equipe/redefinir-senha';
 import { CabecalhoPagina } from '@/components/ui/cabecalho-pagina';
 import { Secao } from '@/components/ui/secao';
 import { apiSalao } from '@/lib/api/salao';
@@ -56,21 +57,21 @@ export default async function EquipePage() {
       {convites.length > 0 && (
         <Secao
           titulo="Aguardando o primeiro acesso"
-          descricao="O acesso é liberado quando a pessoa entrar com este e-mail."
+          descricao="O acesso é liberado quando a pessoa entrar com este usuário."
         >
           <ul className="flex flex-col divide-y divide-borda">
             {convites.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{c.nome ?? c.email}</p>
+                  <p className="truncate font-medium">{c.nome ?? c.usuario}</p>
                   <p className="truncate text-sm text-suave">
-                    {c.email} · {PAPEIS[c.papel].rotulo}
+                    @{c.usuario} · {PAPEIS[c.papel].rotulo}
                   </p>
                   <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-alerta">
                     <Clock className="size-3" aria-hidden /> Liberado em {dataCurta(c.criadoEm)}
                   </p>
                 </div>
-                <CancelarConvite id={c.id} email={c.email} />
+                <CancelarConvite id={c.id} usuario={c.usuario} />
               </li>
             ))}
           </ul>
@@ -91,7 +92,7 @@ function ListaMembros({ membros }: { membros: MembroEquipe[] }) {
   return (
     <ul className="flex flex-col divide-y divide-borda">
       {membros.map((m) => {
-        const nome = m.nome ?? m.email;
+        const nome = m.nome ?? m.usuario;
         return (
           <li key={m.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
             <div className="flex min-w-0 items-center gap-3">
@@ -103,7 +104,7 @@ function ListaMembros({ membros }: { membros: MembroEquipe[] }) {
                   {nome}
                   {m.ehVoce && <span className="ml-1.5 text-xs font-normal text-suave">(você)</span>}
                 </p>
-                <p className="truncate text-sm text-suave">{m.email}</p>
+                <p className="truncate text-sm text-suave">@{m.usuario}</p>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   <span
                     title={PAPEIS[m.papel].descricao}
@@ -119,7 +120,12 @@ function ListaMembros({ membros }: { membros: MembroEquipe[] }) {
                 </div>
               </div>
             </div>
-            {!m.ehVoce && m.papel !== 'DONO' && <AlternarAcesso id={m.id} nome={nome} ativo={m.ativo} />}
+            {!m.ehVoce && m.papel !== 'DONO' && (
+              <div className="flex shrink-0 flex-col items-end gap-1.5">
+                {m.ativo && <RedefinirSenha id={m.id} nome={nome} usuario={m.usuario} />}
+                <AlternarAcesso id={m.id} nome={nome} ativo={m.ativo} />
+              </div>
+            )}
           </li>
         );
       })}

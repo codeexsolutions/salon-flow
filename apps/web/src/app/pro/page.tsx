@@ -16,7 +16,7 @@ export default async function ProAgendaPage({ searchParams }: PageProps<'/pro'>)
       <section className="flex flex-col gap-4 text-center">
         <EmConstrucao
           titulo="Você ainda não está em nenhum salão"
-          descricao={`Peça ao salão para cadastrar ${perfil.email} como profissional. Depois, é só abrir este app de novo.`}
+          descricao={`Peça ao salão para cadastrar o usuário @${perfil.usuario} como profissional. Depois, é só abrir este app de novo.`}
         />
         <form action={sair}>
           <button type="submit" className="text-sm text-suave underline">

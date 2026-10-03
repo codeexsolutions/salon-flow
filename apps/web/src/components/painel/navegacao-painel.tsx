@@ -51,7 +51,7 @@ const ITENS: Item[] = [
 interface Props {
   salao: VinculoSalao;
   outrosSaloes: VinculoSalao[];
-  usuario: { nome: string | null; email: string };
+  usuario: { nome: string | null; usuario: string };
 }
 
 /** Menu do painel: barra lateral no computador e gaveta no celular. */
@@ -189,8 +189,8 @@ function ConteudoMenu({
           </Link>
         )}
         <div className="min-w-0">
-          <p className="truncate font-medium">{usuario.nome ?? usuario.email}</p>
-          {usuario.nome && <p className="truncate text-xs text-suave">{usuario.email}</p>}
+          <p className="truncate font-medium">{usuario.nome ?? usuario.usuario}</p>
+          <p className="truncate text-xs text-suave">@{usuario.usuario}</p>
         </div>
         <div className="flex gap-4">
           <Link

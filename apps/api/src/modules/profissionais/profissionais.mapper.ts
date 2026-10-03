@@ -1,3 +1,4 @@
+import { usuarioDeLogin } from '@salonflow/shared';
 import type {
   AcessoApp,
   BloqueioAgenda as BloqueioAgendaDto,
@@ -20,7 +21,7 @@ export function paraProfissionalResumo(p: Profissional): ProfissionalResumo {
   return {
     id: p.id,
     nome: p.nome,
-    email: p.email,
+    usuario: p.email && usuarioDeLogin(p.email),
     telefone: p.telefone,
     corAgenda: p.corAgenda,
     ativo: p.ativo,

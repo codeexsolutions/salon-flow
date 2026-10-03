@@ -1,6 +1,7 @@
 export * from './enums.js';
 export * from './api.js';
 export * from './usuario.js';
+export * from './login.js';
 export * from './dinheiro.js';
 export * from './regras.js';
 export * from './schemas/comum.schema.js';

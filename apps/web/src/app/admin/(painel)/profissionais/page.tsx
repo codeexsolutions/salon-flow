@@ -46,7 +46,7 @@ export default async function ProfissionaisPage() {
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-medium">{p.nome}</span>
                   <span className="truncate text-xs text-suave">
-                    {p.email ?? p.telefone ?? 'Sem contato'}
+                    {p.usuario ? `@${p.usuario}` : (p.telefone ?? 'Sem contato')}
                   </span>
                 </span>
                 {p.ativo ? (

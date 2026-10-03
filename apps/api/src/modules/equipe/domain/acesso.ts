@@ -19,3 +19,30 @@ export function validarAlteracaoAcesso(alvo: { papel: Papel; ehVoce: boolean }) 
     throw new RegraDeNegocioError('ACESSO_DONO', 'O acesso de um dono não pode ser removido.');
   }
 }
+
+/**
+ * O dono define uma senha nova para alguém da equipe que esqueceu a dele.
+ * Só vale para quem atua APENAS neste salão: senão um dono poderia assumir a
+ * conta de alguém que tem acesso (ou é dono) em outro salão.
+ */
+export function validarRedefinicaoSenha(alvo: {
+  papel: Papel;
+  ehVoce: boolean;
+  temAcessoEmOutroSalao: boolean;
+}) {
+  if (alvo.ehVoce) {
+    throw new RegraDeNegocioError(
+      'PROPRIA_SENHA',
+      'Para trocar a sua senha, use o menu Senha.',
+    );
+  }
+  if (alvo.papel === 'DONO') {
+    throw new RegraDeNegocioError('SENHA_DONO', 'A senha de um dono não pode ser redefinida.');
+  }
+  if (alvo.temAcessoEmOutroSalao) {
+    throw new RegraDeNegocioError(
+      'ACESSO_OUTRO_SALAO',
+      'Esta pessoa também tem acesso a outro salão; só ela pode trocar a própria senha.',
+    );
+  }
+}

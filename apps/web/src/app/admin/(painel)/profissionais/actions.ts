@@ -8,13 +8,18 @@ import {
   criarBloqueioSchema,
   criarProfissionalSchema,
   definirJornadaSchema,
+  nomeUsuarioSchema,
   type ProfissionalResumo,
 } from '@salonflow/shared';
 import { estadoDeErro, type EstadoForm } from '@/lib/api/estado-form';
 import { falha, falhaDeValidacao, sucesso, type Resultado } from '@/lib/api/resultado';
 import { apiSalao } from '@/lib/api/salao';
 
-const ERROS_DE_CAMPO = { EMAIL_EM_USO: 'email', EMAIL_VINCULADO: 'email' };
+const ERROS_DE_CAMPO = {
+  USUARIO_EM_USO: 'usuario',
+  USUARIO_VINCULADO: 'usuario',
+  USUARIO_EXISTE: 'usuario',
+};
 
 /** Lê os campos do FormData; vazio vira undefined (campo opcional não preenchido). */
 function lerCampos(formData: FormData, campos: string[]) {
@@ -23,7 +28,7 @@ function lerCampos(formData: FormData, campos: string[]) {
   );
 }
 
-const CAMPOS_PROFISSIONAL = ['nome', 'email', 'telefone', 'corAgenda'];
+const CAMPOS_PROFISSIONAL = ['nome', 'usuario', 'telefone', 'corAgenda'];
 
 export async function criarProfissional(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
   const validacao = criarProfissionalSchema.safeParse(lerCampos(formData, CAMPOS_PROFISSIONAL));
@@ -48,7 +53,7 @@ export async function atualizarProfissional(
 ): Promise<EstadoForm> {
   const campos = lerCampos(formData, CAMPOS_PROFISSIONAL);
   // Campo opcional apagado no formulário vira null para ser limpo no banco.
-  const dados = { ...campos, email: campos.email ?? null, telefone: campos.telefone ?? null };
+  const dados = { ...campos, usuario: campos.usuario ?? null, telefone: campos.telefone ?? null };
   const validacao = atualizarProfissionalSchema.safeParse(dados);
   if (!validacao.success) return { erros: z.flattenError(validacao.error).fieldErrors };
 
@@ -111,12 +116,23 @@ export async function removerBloqueio(id: string, bloqueioId: string) {
   revalidatePath(`/admin/profissionais/${id}`);
 }
 
-/** Define o e-mail do profissional antes de criar o acesso dele ao app. */
-export async function definirEmailProfissional(id: string, email: string): Promise<Resultado> {
-  const validacao = z.email('E-mail inválido').safeParse(email);
+/** Define o usuário do profissional antes de criar o acesso dele ao app. */
+export async function definirUsuarioProfissional(id: string, usuario: string): Promise<Resultado> {
+  const validacao = nomeUsuarioSchema.safeParse(usuario);
   if (!validacao.success) return falhaDeValidacao(validacao.error);
   try {
-    await apiSalao(`/profissionais/${id}`, { method: 'PATCH', body: { email: validacao.data } });
+    await apiSalao(`/profissionais/${id}`, { method: 'PATCH', body: { usuario: validacao.data } });
+  } catch (erro) {
+    return falha(erro);
+  }
+  revalidatePath(`/admin/profissionais/${id}`);
+  return sucesso(undefined);
+}
+
+/** Desfaz o usuário reservado quando a conta não pôde ser criada (ex.: já é de outra pessoa). */
+export async function limparUsuarioProfissional(id: string): Promise<Resultado> {
+  try {
+    await apiSalao(`/profissionais/${id}`, { method: 'PATCH', body: { usuario: null } });
   } catch (erro) {
     return falha(erro);
   }

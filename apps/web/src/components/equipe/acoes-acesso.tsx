@@ -56,12 +56,12 @@ export function AlternarAcesso({ id, nome, ativo }: { id: string; nome: string; 
   );
 }
 
-export function CancelarConvite({ id, email }: { id: string; email: string }) {
+export function CancelarConvite({ id, usuario }: { id: string; usuario: string }) {
   return (
     <AcaoComConfirmacao
       rotulo="Cancelar"
       perigo
-      confirmacao={`Cancelar o acesso reservado para ${email}?`}
+      confirmacao={`Cancelar o acesso reservado para @${usuario}?`}
       executar={() => cancelarConvite(id)}
     />
   );

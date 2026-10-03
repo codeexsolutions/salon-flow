@@ -67,6 +67,14 @@ export class EquipeRepository {
     return this.prisma.conviteAcesso.deleteMany({ where: { id, salaoId } });
   }
 
+  /** A pessoa tem vínculo (ativo ou não) com algum outro salão? */
+  async temVinculoEmOutroSalao(salaoId: string, usuarioId: string) {
+    const total = await this.prisma.membroSalao.count({
+      where: { usuarioId, salaoId: { not: salaoId } },
+    });
+    return total > 0;
+  }
+
   alterarAtivo(salaoId: string, id: string, ativo: boolean) {
     return this.prisma.membroSalao.update({ where: { id, salaoId }, data: { ativo } });
   }

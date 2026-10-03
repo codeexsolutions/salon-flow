@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/database/prisma.service.js';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
+import type { EstadoTentativas } from './domain/recuperacao.js';
 
 @Injectable()
 export class UsuariosRepository {
@@ -17,6 +18,39 @@ export class UsuariosRepository {
         avatarUrl: usuario.avatarUrl,
       },
       update: { email: usuario.email, nome: usuario.nome, avatarUrl: usuario.avatarUrl },
+    });
+  }
+
+  buscarParaRecuperacao(email: string) {
+    return this.prisma.usuario.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        telefone: true,
+        recuperacaoHash: true,
+        recuperacaoTentativas: true,
+        recuperacaoBloqueadaAte: true,
+      },
+    });
+  }
+
+  /** Novo código (hash) e celular; zera as tentativas erradas. */
+  salvarRecuperacao(id: string, telefone: string, recuperacaoHash: string) {
+    return this.prisma.usuario.update({
+      where: { id },
+      data: {
+        telefone,
+        recuperacaoHash,
+        recuperacaoTentativas: 0,
+        recuperacaoBloqueadaAte: null,
+      },
+    });
+  }
+
+  salvarTentativas(id: string, { tentativas, bloqueadaAte }: EstadoTentativas) {
+    return this.prisma.usuario.update({
+      where: { id },
+      data: { recuperacaoTentativas: tentativas, recuperacaoBloqueadaAte: bloqueadaAte },
     });
   }
 

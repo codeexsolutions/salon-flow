@@ -15,7 +15,7 @@ export function FormProfissional({ profissional }: { profissional?: Profissional
     ? atualizarProfissional.bind(null, profissional.id)
     : criarProfissional;
   const [estado, acao, enviando] = useActionState<EstadoForm, FormData>(acaoServidor, {});
-  const emailTravado = profissional?.acessoApp === 'ATIVO';
+  const usuarioTravado = profissional?.acessoApp === 'ATIVO';
 
   return (
     <form action={acao} className="flex flex-col gap-4">
@@ -24,20 +24,22 @@ export function FormProfissional({ profissional }: { profissional?: Profissional
       </Campo>
 
       <Campo
-        rotulo="E-mail"
-        erro={estado.erros?.email}
+        rotulo="Usuário de acesso ao app"
+        erro={estado.erros?.usuario}
         ajuda={
-          emailTravado
-            ? 'Já usa o app com este e-mail.'
-            : 'Opcional. Com ele, o profissional entra no app e vê a própria agenda e comissões.'
+          usuarioTravado
+            ? 'Já entra no app com este usuário.'
+            : 'Opcional. Letras, números, ponto ou _ (ex.: joao.barbeiro). Com ele, o profissional vê a própria agenda e comissões.'
         }
       >
         <input
-          name="email"
-          type="email"
-          readOnly={emailTravado}
-          defaultValue={profissional?.email ?? ''}
-          className={`${classeInput} ${emailTravado ? 'opacity-60' : ''}`}
+          name="usuario"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          readOnly={usuarioTravado}
+          defaultValue={profissional?.usuario ?? ''}
+          className={`${classeInput} ${usuarioTravado ? 'opacity-60' : ''}`}
         />
       </Campo>
 

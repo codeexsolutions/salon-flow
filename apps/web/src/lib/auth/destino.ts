@@ -15,6 +15,7 @@ export function caminhoSeguro(next: string | null | undefined): string | null {
  */
 export function destinoPorPapel(perfil: PerfilUsuario, tipoConta?: string): string {
   if (perfil.saloes.some((s) => s.papel === 'DONO' || s.papel === 'RECEPCAO')) return '/admin';
+  // Profissional que também é dono/recepção começa pelo painel; o app fica no menu.
   if (perfil.saloes.some((s) => s.papel === 'PROFISSIONAL')) return '/pro';
   if (tipoConta === 'salao') return '/admin/novo-salao';
   if (tipoConta === 'profissional') return '/pro';

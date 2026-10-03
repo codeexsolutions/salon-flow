@@ -12,3 +12,4 @@ export * from './schemas/agendamento.schema.js';
 export * from './schemas/comanda.schema.js';
 export * from './schemas/produto.schema.js';
 export * from './schemas/financeiro.schema.js';
+export * from './schemas/equipe.schema.js';

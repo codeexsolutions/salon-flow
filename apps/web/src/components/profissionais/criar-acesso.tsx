@@ -7,6 +7,7 @@ import { Check, Copy, KeyRound, MessageCircle, Shuffle } from 'lucide-react';
 import type { ProfissionalResumo } from '@salonflow/shared';
 import { definirEmailProfissional } from '@/app/admin/(painel)/profissionais/actions';
 import { linkWhatsApp } from '@/lib/agenda';
+import { gerarSenhaProvisoria } from '@/lib/auth/senha-provisoria';
 import { env } from '@/lib/env';
 import { traduzirErroAuth } from '@/components/auth/erros-auth';
 import {
@@ -17,17 +18,6 @@ import {
   MensagemForm,
 } from '@/components/ui/campo';
 
-/** Senha provisória legível (sem 0/O, 1/l). */
-function gerarSenha() {
-  const letras = 'abcdefghjkmnpqrstuvwxyz';
-  const numeros = '23456789';
-  const aleatorio = (s: string) => s[crypto.getRandomValues(new Uint32Array(1))[0] % s.length];
-  return (
-    Array.from({ length: 4 }, () => aleatorio(letras)).join('') +
-    Array.from({ length: 4 }, () => aleatorio(numeros)).join('')
-  );
-}
-
 /**
  * O dono cria o acesso do profissional (e-mail + senha provisória) e entrega a ele.
  * Usa um cliente Supabase SEM sessão: criar a conta não desloga o dono.
@@ -36,7 +26,7 @@ function gerarSenha() {
 export function CriarAcesso({ profissional }: { profissional: ProfissionalResumo }) {
   const router = useRouter();
   const [email, setEmail] = useState(profissional.email ?? '');
-  const [senha, setSenha] = useState(gerarSenha);
+  const [senha, setSenha] = useState(gerarSenhaProvisoria);
   const [criado, setCriado] = useState<{
     email: string;
     senha: string;
@@ -170,7 +160,7 @@ export function CriarAcesso({ profissional }: { profissional: ProfissionalResumo
             />
             <button
               type="button"
-              onClick={() => setSenha(gerarSenha())}
+              onClick={() => setSenha(gerarSenhaProvisoria())}
               aria-label="Gerar outra senha"
               title="Gerar outra senha"
               className={classeBotaoSecundario}

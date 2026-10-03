@@ -70,6 +70,7 @@ model Salao {
   atualizadoEm             DateTime @updatedAt @map("atualizado_em")
 
   membros              MembroSalao[]
+  convitesAcesso       ConviteAcesso[]
   profissionais        Profissional[]
   jornadaIntervalos    JornadaIntervalo[]
   bloqueiosAgenda      BloqueioAgenda[]
@@ -108,6 +109,23 @@ model MembroSalao {
   @@unique([salaoId, usuarioId])
   @@index([usuarioId])
   @@map("membros_salao")
+}
+
+/// Acesso ao painel liberado pelo dono para um e-mail que ainda não entrou no SalonFlow.
+/// Vira MembroSalao no primeiro login com esse e-mail (e o convite é apagado).
+model ConviteAcesso {
+  id       String   @id @default(uuid()) @db.Uuid
+  salaoId  String   @map("salao_id") @db.Uuid
+  email    String
+  nome     String?
+  papel    Papel
+  criadoEm DateTime @default(now()) @map("criado_em")
+
+  salao Salao @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@unique([salaoId, email])
+  @@index([email])
+  @@map("convites_acesso")
 }
 
 /// Profissional que atende no salão. Pode existir sem acesso ao app (usuarioId nulo).

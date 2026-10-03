@@ -16,6 +16,8 @@ import {
   Receipt,
   Scissors,
   Settings,
+  ShieldCheck,
+  Smartphone,
   Users,
   Wallet,
   X,
@@ -42,6 +44,7 @@ const ITENS: Item[] = [
   { rotulo: 'Serviços', href: '/admin/servicos', icone: Scissors },
   { rotulo: 'Estoque', href: '/admin/estoque', icone: Package },
   { rotulo: 'Comissões', href: '/admin/comissoes', icone: HandCoins, papeis: ['DONO'] },
+  { rotulo: 'Equipe e acessos', href: '/admin/equipe', icone: ShieldCheck, papeis: ['DONO'] },
   { rotulo: 'Configurações', href: '/admin/configuracoes', icone: Settings, papeis: ['DONO'] },
 ];
 
@@ -174,6 +177,16 @@ function ConteudoMenu({
               </button>
             </div>
           </form>
+        )}
+        {salao.ehProfissional && (
+          <Link
+            href="/pro"
+            onClick={aoNavegar}
+            className="inline-flex items-center gap-2 rounded-xl border border-borda px-3 py-2 hover:border-primaria/40 hover:bg-nude"
+          >
+            <Smartphone className="size-4 text-primaria" aria-hidden />
+            Minha agenda (app do profissional)
+          </Link>
         )}
         <div className="min-w-0">
           <p className="truncate font-medium">{usuario.nome ?? usuario.email}</p>

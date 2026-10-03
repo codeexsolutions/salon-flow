@@ -8,6 +8,8 @@ export interface VinculoSalao {
   /** Fuso IANA do salão (ex.: America/Sao_Paulo), para exibir horários. */
   fusoHorario: string;
   papel: Papel;
+  /** Também atende como profissional neste salão (pode usar o app do profissional). */
+  ehProfissional: boolean;
 }
 
 /** Resposta de GET /me. Sem salões = usuário apenas cliente. */

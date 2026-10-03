@@ -25,7 +25,16 @@ export class UsuariosRepository {
       where: { usuarioId, ativo: true, salao: { ativo: true } },
       select: {
         papel: true,
-        salao: { select: { id: true, nome: true, slug: true, fusoHorario: true } },
+        salao: {
+          select: {
+            id: true,
+            nome: true,
+            slug: true,
+            fusoHorario: true,
+            // Cadastro de profissional ativo deste usuário no salão (dá o app do profissional).
+            profissionais: { where: { usuarioId, ativo: true }, select: { id: true }, take: 1 },
+          },
+        },
       },
       orderBy: { criadoEm: 'asc' },
     });

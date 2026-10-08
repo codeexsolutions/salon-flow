@@ -59,26 +59,38 @@ Testes e2e da API (precisam do banco no ar): `npm run test:e2e -w @salonflow/api
 
 ## Deploy
 
-**Supabase**
+Produção usa o **mesmo projeto Supabase** do desenvolvimento (banco, Auth e Storage já configurados).
+A cada `git push` na `main`, Railway e Vercel publicam sozinhos.
 
-1. Crie o projeto (região: a mesma da API no Railway).
-2. Authentication > Providers > Email: habilitado, com **Confirm email DESLIGADO**.
+**Supabase** (já feito neste projeto; só confira)
+
+1. Authentication > Sign In / Providers > Email: habilitado, com **Confirm email DESLIGADO**.
    O login é por **usuário e senha**: cada usuário vira o e-mail interno `usuario@salonflow.invalid`
    (domínio reservado, nunca recebe mensagens), então não há e-mails a confirmar nem SMTP a configurar.
-3. Pegue as connection strings (pooler "Session" e direta) e a Publishable key.
-4. No SQL Editor, rode `apps/api/prisma/supabase/storage.sql` (bucket de imagens dos salões e políticas: só o dono envia).
+2. `apps/api/prisma/supabase/storage.sql` já aplicado (bucket de imagens; só o dono envia).
+3. Depois do deploy: Authentication > URL Configuration > **Site URL** = URL da Vercel.
 
-**Railway (API)**
+**1º Railway (API)**
 
-1. Novo serviço a partir do repositório, **sem** Root Directory (o build precisa do monorepo inteiro).
-2. Config file path: `apps/api/railway.json`.
-3. Variáveis: `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `CORS_ORIGINS`, `NODE_ENV=production`.
-   `SUPABASE_SECRET_KEY` (sb_secret_...) habilita a troca de senha: recuperação com código e
-   senha nova dada pelo salão. Nunca vai para o front.
-4. Domínio: `api.salonflow.com.br`.
+1. New Project > Deploy from GitHub repo > `codeexsolutions/salon-flow`.
+2. Settings: **sem** Root Directory (o build precisa do monorepo); Config file path:
+   `apps/api/railway.json`; Region: **US West** (perto do Supabase us-west-2).
+3. Variables (mesmos valores do `apps/api/.env`):
+   - `DATABASE_URL` (pooler, porta 6543) e `DIRECT_URL` (pooler "Session", porta 5432 — IPv4,
+     usado pelas migrações no pre-deploy)
+   - `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (sb_secret_..., nunca vai para o front)
+   - `NODE_ENV=production`
+   - `CORS_ORIGINS` = URL da Vercel (preencha depois do passo da Vercel)
+   - **Não** defina `PORT`: o Railway injeta.
+4. Settings > Networking > **Generate Domain**. Teste: `https://<api>.up.railway.app/health`.
 
-**Vercel (web)**
+**2º Vercel (web)**
 
-1. Importe o repositório com Root Directory `apps/web`.
-2. Variáveis: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
-3. Domínio: `app.salonflow.com.br`.
+1. Add New > Project > importe `codeexsolutions/salon-flow`; **Root Directory** `apps/web`
+   (framework Next.js; o build vem do `apps/web/vercel.json`).
+2. Environment Variables: `NEXT_PUBLIC_API_URL` (URL do Railway, sem barra no fim),
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+3. Deploy. Volte ao Railway e coloque a URL da Vercel em `CORS_ORIGINS`.
+
+Domínio próprio (ex.: `app.salonflow.com.br` / `api.salonflow.com.br`) pode ser ligado depois;
+lembre de atualizar `NEXT_PUBLIC_API_URL`, `CORS_ORIGINS` e a Site URL do Supabase.

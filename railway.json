@@ -3,7 +3,13 @@
   "build": {
     "builder": "RAILPACK",
     "buildCommand": "npx turbo run build --filter=@salonflow/api",
-    "watchPatterns": ["apps/api/**", "packages/shared/**", "package-lock.json"]
+    "watchPatterns": [
+      "apps/api/**",
+      "packages/shared/**",
+      "package.json",
+      "package-lock.json",
+      "railway.json"
+    ]
   },
   "deploy": {
     "preDeployCommand": "npm run prisma:deploy -w @salonflow/api",

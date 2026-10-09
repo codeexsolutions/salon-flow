@@ -73,8 +73,8 @@ A cada `git push` na `main`, Railway e Vercel publicam sozinhos.
 **1º Railway (API)**
 
 1. New Project > Deploy from GitHub repo > `codeexsolutions/salon-flow`.
-2. Settings: **sem** Root Directory (o build precisa do monorepo); Config file path:
-   `apps/api/railway.json`; Region: **US West** (perto do Supabase us-west-2).
+2. Settings: **sem** Root Directory e **sem** Config file path (o Railway lê o `railway.json`
+   da raiz; o build precisa do monorepo); Region: **US West** (perto do Supabase us-west-2).
 3. Variables (mesmos valores do `apps/api/.env`):
    - `DATABASE_URL` (pooler, porta 6543) e `DIRECT_URL` (pooler "Session", porta 5432 — IPv4,
      usado pelas migrações no pre-deploy)

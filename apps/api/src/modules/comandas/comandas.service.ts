@@ -165,7 +165,7 @@ export class ComandasService {
 
   async cancelar(id: string) {
     await this.buscarAberta(id);
-    if (!(await this.repository.alterarStatus(this.contexto.salaoId, id, 'ABERTA', 'CANCELADA'))) {
+    if (!(await this.repository.cancelar(this.contexto.salaoId, id))) {
       throw this.naoEstaAberta();
     }
     return this.buscar(id);

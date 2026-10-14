@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import type { StatusComanda } from '@salonflow/shared';
 import type { FormaPagamento, Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../shared/database/prisma.service.js';
 import type { Fechamento } from '../comissoes/domain/calculo.js';
@@ -153,11 +152,22 @@ export class ComandasRepository {
     });
   }
 
-  async alterarStatus(salaoId: string, id: string, de: StatusComanda, para: StatusComanda) {
-    const { count } = await this.prisma.comanda.updateMany({
-      where: { id, salaoId, status: de },
-      data: { status: para, ...(para === 'CANCELADA' && { fechadaEm: new Date() }) },
+  /**
+   * Cancela a comanda aberta e solta os agendamentos dos itens: assim eles podem
+   * ir para outra comanda (o vínculo item ↔ agendamento é único).
+   */
+  cancelar(salaoId: string, id: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.comanda.updateMany({
+        where: { id, salaoId, status: 'ABERTA' },
+        data: { status: 'CANCELADA', fechadaEm: new Date() },
+      });
+      if (count === 0) return false;
+      await tx.comandaItem.updateMany({
+        where: { comandaId: id, salaoId, agendamentoId: { not: null } },
+        data: { agendamentoId: null },
+      });
+      return true;
     });
-    return count > 0;
   }
 }

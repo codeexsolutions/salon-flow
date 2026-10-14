@@ -51,3 +51,11 @@ drop policy if exists "saloes: dono remove" on storage.objects;
 create policy "saloes: dono remove" on storage.objects
   for delete to authenticated
   using (bucket_id = 'saloes' and privado.eh_dono_do_salao((storage.foldername(name))[1]));
+
+-- O dono precisa "enxergar" os arquivos da pasta do salão para trocar e apagar
+-- (sem SELECT o Storage não encontra o arquivo e a remoção não apaga nada).
+-- Não expõe nada novo: o bucket já é público para leitura.
+drop policy if exists "saloes: dono consulta" on storage.objects;
+create policy "saloes: dono consulta" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'saloes' and privado.eh_dono_do_salao((storage.foldername(name))[1]));

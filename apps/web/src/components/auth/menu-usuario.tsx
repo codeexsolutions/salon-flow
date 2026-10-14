@@ -1,9 +1,11 @@
 import Link from 'next/link';
-import { CalendarHeart, KeyRound, LogOut } from 'lucide-react';
-import { sair } from '@/lib/auth/actions';
+import { CalendarHeart, UserRound } from 'lucide-react';
 import { obterSessao } from '@/lib/auth/sessao';
 
-/** Links do cabeçalho conforme o usuário esteja logado ou não. */
+/**
+ * Links do cabeçalho conforme o usuário esteja logado ou não. Senha, código de
+ * recuperação e "Sair" ficam na página da conta, não no cabeçalho.
+ */
 export async function MenuUsuario() {
   const sessao = await obterSessao();
 
@@ -30,22 +32,12 @@ export async function MenuUsuario() {
       </Link>
       <Link
         href="/conta/senha"
-        className="text-suave hover:text-primaria"
-        aria-label="Alterar senha"
-        title="Alterar senha"
+        className="inline-flex items-center gap-1.5 hover:text-primaria"
+        title={`Minha conta (@${sessao.usuario})`}
       >
-        <KeyRound className="size-4" aria-hidden />
+        <UserRound className="size-4" aria-hidden />
+        Conta
       </Link>
-      <form action={sair}>
-        <button
-          type="submit"
-          className="text-suave hover:text-perigo"
-          aria-label="Sair"
-          title={`Sair (@${sessao.usuario})`}
-        >
-          <LogOut className="size-4" aria-hidden />
-        </button>
-      </form>
     </>
   );
 }

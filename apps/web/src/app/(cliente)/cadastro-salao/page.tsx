@@ -38,7 +38,7 @@ export default async function CadastroSalaoPage() {
         </ul>
         <p className="mt-auto text-xs text-white/70">
           Depois do cadastro, adicione seus profissionais e serviços no painel. Cada profissional
-          entra no app com o e-mail que você cadastrar.
+          entra no app com o usuário e a senha que você criar para ele.
         </p>
       </section>
 

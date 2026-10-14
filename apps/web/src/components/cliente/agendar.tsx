@@ -249,8 +249,7 @@ export function Agendar({
           <p className="text-sm">
             <strong>{servico.nome}</strong> com {profissionalEscolhido?.nome}
             <br />
-            {dataPorExtenso(escolha.inicio.slice(0, 10))}
-            às {escolha.inicio.slice(11)} ·{' '}
+            {dataPorExtenso(escolha.inicio.slice(0, 10))} às {escolha.inicio.slice(11)} ·{' '}
             {formatarPreco(profissionalEscolhido?.precoCentavos ?? servico.precoCentavos)}
           </p>
           {erro && (

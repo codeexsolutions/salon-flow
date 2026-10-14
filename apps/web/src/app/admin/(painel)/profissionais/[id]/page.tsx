@@ -60,7 +60,7 @@ export default async function ProfissionalPage({ params }: PageProps<'/admin/pro
           titulo="Acesso ao app"
           descricao={
             profissional.acessoApp === 'ATIVO'
-              ? 'Já usa o app com o e-mail cadastrado. Para trocar a senha, ele usa "Conta" no app.'
+              ? 'Já entra no app com o usuário cadastrado. Se esquecer a senha, gere uma nova em Equipe e acessos.'
               : 'Crie o login do profissional e entregue a ele. No primeiro acesso, ele troca a senha.'
           }
         >

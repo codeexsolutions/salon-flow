@@ -4,17 +4,17 @@ const SELOS: Record<AcessoApp, { texto: string; classe: string; dica: string }> 
   ATIVO: {
     texto: 'Usa o app',
     classe: 'bg-sucesso-suave text-sucesso',
-    dica: 'Já entrou no app com o e-mail cadastrado',
+    dica: 'Já entrou no app com o usuário cadastrado',
   },
   PENDENTE: {
     texto: 'Convite pendente',
     classe: 'bg-alerta-suave text-alerta',
-    dica: 'Ganha acesso quando entrar no app com o e-mail cadastrado',
+    dica: 'Ganha acesso quando entrar no app com o usuário cadastrado',
   },
   SEM_ACESSO: {
     texto: 'Sem acesso',
     classe: 'bg-nude text-suave',
-    dica: 'Cadastre um e-mail para liberar o app',
+    dica: 'Crie um usuário para liberar o app',
   },
 };
 

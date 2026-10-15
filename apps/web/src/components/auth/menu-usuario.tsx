@@ -13,7 +13,7 @@ export async function MenuUsuario() {
     return (
       <Link
         href="/entrar"
-        className="rounded-xl bg-primaria px-4 py-2 text-sm font-medium text-primaria-contraste hover:bg-primaria-hover"
+        className="rounded-xl bg-botao px-4 py-2 text-sm font-medium text-botao-contraste hover:bg-botao-hover"
       >
         Entrar
       </Link>

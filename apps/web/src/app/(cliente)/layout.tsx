@@ -17,7 +17,7 @@ export default function ClienteLayout({ children }: { children: React.ReactNode 
           <Marca />
           <nav className="flex items-center gap-4 text-sm">
             <Link href="/saloes" className="font-medium hover:text-primaria">
-              Salões
+              Explorar
             </Link>
             <Suspense>
               <MenuUsuario />
@@ -28,9 +28,9 @@ export default function ClienteLayout({ children }: { children: React.ReactNode 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
       <footer className="border-t border-borda">
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs text-suave">
-          <span>© SalonFlow — agendamento e gestão para salões</span>
+          <span>© SalonFlow — agendamento e gestão para salões, barbearias e estética</span>
           <Link href="/cadastro-salao" className="hover:text-primaria">
-            Cadastre seu salão
+            Cadastre seu negócio
           </Link>
         </div>
       </footer>

@@ -52,7 +52,7 @@ export function CartaoAgendamento({ agendamento: a }: { agendamento: MeuAgendame
               {pendente ? 'Cancelando…' : 'Cancelar'}
             </button>
           ) : (
-            <span className="text-xs text-suave">Para cancelar agora, fale com o salão.</span>
+            <span className="text-xs text-suave">Para cancelar agora, fale com o estabelecimento.</span>
           )}
           {whatsapp && (
             <a href={whatsapp} target="_blank" rel="noreferrer" className="text-sucesso">

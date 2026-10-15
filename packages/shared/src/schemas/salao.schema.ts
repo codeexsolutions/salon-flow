@@ -60,6 +60,13 @@ export const atualizarSalaoSchema = z.object({
   logoUrl: z.url().max(500).nullable().optional(),
   capaUrl: z.url().max(500).nullable().optional(),
   visivelNoMarketplace: z.boolean().optional(),
+  /** Cor de destaque da página do estabelecimento; null volta à cor do SalonFlow. */
+  corDestaque: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'Cor inválida')
+    .transform((v) => v.toLowerCase())
+    .nullable()
+    .optional(),
 });
 export type AtualizarSalaoInput = z.infer<typeof atualizarSalaoSchema>;
 
@@ -78,6 +85,8 @@ export interface SalaoPublico {
   instagram: string | null;
   logoUrl: string | null;
   capaUrl: string | null;
+  /** #rrggbb escolhida pelo estabelecimento; null = cor do SalonFlow. */
+  corDestaque: string | null;
 }
 
 /** Salão na busca do marketplace. */
@@ -90,6 +99,19 @@ export interface SalaoMarketplace extends SalaoPublico {
 export interface SalaoConfiguracao extends SalaoPublico {
   visivelNoMarketplace: boolean;
 }
+
+/** Cores sugeridas para o estabelecimento (o dono também pode escolher outra). */
+export const CORES_ESTABELECIMENTO = [
+  { nome: 'Grafite', cor: '#1c1c1e' },
+  { nome: 'Âmbar', cor: '#b7791f' },
+  { nome: 'Rosé', cor: '#a35866' },
+  { nome: 'Vinho', cor: '#7a3e55' },
+  { nome: 'Coral', cor: '#c4553d' },
+  { nome: 'Verde-sálvia', cor: '#3d7a5e' },
+  { nome: 'Petróleo', cor: '#0f6b6b' },
+  { nome: 'Azul', cor: '#2e5aa8' },
+  { nome: 'Lilás', cor: '#6a4fa3' },
+] as const;
 
 /** Bucket do Supabase Storage com as imagens dos salões (pasta = id do salão). */
 export const BUCKET_IMAGENS_SALAO = 'saloes';

@@ -2,19 +2,25 @@
 
 import { useState, useTransition } from 'react';
 import { z } from 'zod';
-import { atualizarSalaoSchema, type SalaoConfiguracao } from '@salonflow/shared';
+import {
+  atualizarSalaoSchema,
+  CORES_ESTABELECIMENTO,
+  type SalaoConfiguracao,
+} from '@salonflow/shared';
 import { salvarSalao } from '@/app/admin/(painel)/configuracoes/actions';
 import { Campo, classeBotaoPrimario, classeInput, MensagemForm } from '@/components/ui/campo';
 import { Secao } from '@/components/ui/secao';
+import { SeletorCor } from './seletor-cor';
 import { SeletorImagem } from './seletor-imagem';
 
 type Erros = Partial<Record<string, string[]>>;
 
-/** Configurações do salão: dados, endereço, imagens e visibilidade no diretório. */
+/** Configurações do salão: imagens, cor da página, dados, endereço e visibilidade no diretório. */
 export function FormSalao({ salao }: { salao: SalaoConfiguracao }) {
   const [logoUrl, setLogoUrl] = useState(salao.logoUrl);
   const [capaUrl, setCapaUrl] = useState(salao.capaUrl);
   const [visivel, setVisivel] = useState(salao.visivelNoMarketplace);
+  const [cor, setCor] = useState(salao.corDestaque ?? CORES_ESTABELECIMENTO[0].cor);
   const [erros, setErros] = useState<Erros>({});
   const [retorno, setRetorno] = useState<{ ok: boolean; texto: string } | null>(null);
   const [pendente, iniciar] = useTransition();
@@ -34,6 +40,8 @@ export function FormSalao({ salao }: { salao: SalaoConfiguracao }) {
       logoUrl,
       capaUrl,
       visivelNoMarketplace: visivel,
+      // Grafite = cor padrão do SalonFlow (guarda vazio).
+      corDestaque: cor === CORES_ESTABELECIMENTO[0].cor ? null : cor,
     };
     const validacao = atualizarSalaoSchema.safeParse(dados);
     if (!validacao.success) {
@@ -53,11 +61,15 @@ export function FormSalao({ salao }: { salao: SalaoConfiguracao }) {
 
   return (
     <form action={salvar} className="flex flex-col gap-6">
-      <Secao titulo="Imagens" descricao="Aparecem na página do salão e na busca de salões.">
+      <Secao titulo="Imagens" descricao="Aparecem na sua página e na busca do SalonFlow.">
         <div className="grid gap-6 sm:grid-cols-[auto_1fr]">
           <SeletorImagem salaoId={salao.id} tipo="logo" url={logoUrl} aoMudar={setLogoUrl} />
           <SeletorImagem salaoId={salao.id} tipo="capa" url={capaUrl} aoMudar={setCapaUrl} />
         </div>
+      </Secao>
+
+      <Secao titulo="Cor da sua página" descricao="Dê a sua cara à página onde os clientes agendam.">
+        <SeletorCor cor={cor} aoMudar={setCor} nome={salao.nome} />
       </Secao>
 
       <Secao titulo="Dados do salão">
@@ -139,7 +151,7 @@ export function FormSalao({ salao }: { salao: SalaoConfiguracao }) {
         </div>
       </Secao>
 
-      <Secao titulo="Diretório de salões">
+      <Secao titulo="Busca do SalonFlow">
         <label className="flex items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -148,9 +160,9 @@ export function FormSalao({ salao }: { salao: SalaoConfiguracao }) {
             className="mt-1"
           />
           <span>
-            <strong>Aparecer na busca de salões do SalonFlow</strong>
+            <strong>Aparecer na busca do SalonFlow</strong>
             <span className="block text-suave">
-              Desmarcado, o salão some da busca, mas o link direto da sua página continua
+              Desmarcado, você some da busca, mas o link direto da sua página continua
               funcionando.
             </span>
           </span>

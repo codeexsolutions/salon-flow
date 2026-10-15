@@ -26,7 +26,7 @@ export const classeInput =
 const baseBotao =
   'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60';
 
-export const classeBotaoPrimario = `${baseBotao} bg-primaria text-primaria-contraste shadow-sm hover:bg-primaria-hover`;
+export const classeBotaoPrimario = `${baseBotao} bg-botao text-botao-contraste shadow-sm hover:bg-botao-hover`;
 
 export const classeBotaoSecundario = `${baseBotao} border border-borda bg-superficie text-foreground hover:border-primaria/40 hover:bg-nude`;
 

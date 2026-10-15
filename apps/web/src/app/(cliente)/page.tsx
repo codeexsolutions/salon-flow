@@ -40,13 +40,14 @@ export default async function InicioPage() {
     <div className="flex flex-col gap-14">
       <section className="flex flex-col items-center gap-6 pt-6 text-center">
         <p className="text-xs font-medium tracking-[0.2em] text-dourado uppercase">
-          Beleza com hora marcada
+          Beleza e cuidado com hora marcada
         </p>
         <h1 className="max-w-2xl text-4xl leading-tight sm:text-5xl">
-          Encontre o salão ideal e <em className="text-primaria">agende em segundos</em>
+          Encontre onde agendar e <em className="text-primaria not-italic">marque em segundos</em>
         </h1>
         <p className="max-w-xl text-suave">
-          Escolha o serviço, o profissional e o horário. Sem ligação, sem espera.
+          Salões, barbearias, estética e sobrancelhas. Escolha o serviço, o profissional e o
+          horário, sem ligação e sem espera.
         </p>
         <form
           action="/saloes"
@@ -55,8 +56,8 @@ export default async function InicioPage() {
           <Search className="ml-2 size-5 shrink-0 text-suave" aria-hidden />
           <input
             name="busca"
-            placeholder="Nome do salão, bairro ou cidade"
-            aria-label="Buscar salão"
+            placeholder="Nome, bairro ou cidade"
+            aria-label="Buscar estabelecimento"
             className="min-w-0 flex-1 bg-transparent px-1 py-2 outline-none placeholder:text-suave/70"
           />
           <button type="submit" className={classeBotaoPrimario}>
@@ -67,21 +68,21 @@ export default async function InicioPage() {
 
       <section className="flex flex-col gap-4">
         <div className="flex items-end justify-between gap-4">
-          <h2 className="font-display text-2xl">Salões no SalonFlow</h2>
+          <h2 className="font-display text-2xl">No SalonFlow</h2>
           {destaques.length > 0 && (
             <Link
               href="/saloes"
               className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primaria hover:underline"
             >
-              Ver todos os salões <ArrowRight className="size-4" aria-hidden />
+              Ver todos <ArrowRight className="size-4" aria-hidden />
             </Link>
           )}
         </div>
         {destaques.length === 0 ? (
           <EstadoVazio
             icone={Store}
-            titulo="Nenhum salão disponível ainda"
-            descricao="Os salões cadastrados aparecem aqui."
+            titulo="Nenhum estabelecimento disponível ainda"
+            descricao="Os estabelecimentos cadastrados aparecem aqui."
           />
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -94,19 +95,19 @@ export default async function InicioPage() {
         )}
       </section>
 
-      <section className="flex flex-col gap-6 rounded-3xl bg-gradient-to-br from-[#a35866] to-[#6e3540] p-8 text-white sm:p-10">
+      <section className="flex flex-col gap-6 rounded-3xl faixa-escura p-8 text-white sm:p-10">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium tracking-[0.2em] text-[#f3d9a8] uppercase">
-            Para salões
+          <p className="text-xs font-medium tracking-[0.2em] text-faixa-destaque uppercase">
+            Para o seu negócio
           </p>
           <h2 className="mt-2 font-display text-3xl">
-            Tudo o que o seu salão precisa, num só lugar
+            Tudo o que o seu negócio precisa, num só lugar
           </h2>
         </div>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {RECURSOS_SALAO.map(({ icone: Icone, titulo, texto }) => (
             <li key={titulo} className="rounded-2xl bg-white/10 p-4">
-              <Icone className="size-5 text-[#f3d9a8]" aria-hidden />
+              <Icone className="size-5 text-faixa-destaque" aria-hidden />
               <p className="mt-2 font-medium">{titulo}</p>
               <p className="mt-1 text-sm text-white/80">{texto}</p>
             </li>
@@ -114,9 +115,9 @@ export default async function InicioPage() {
         </ul>
         <Link
           href="/cadastro-salao"
-          className="inline-flex items-center gap-2 self-start rounded-xl bg-white px-5 py-2.5 font-medium text-[#6e3540] hover:bg-[#fbf0ee]"
+          className="inline-flex items-center gap-2 self-start rounded-xl bg-faixa-destaque px-5 py-2.5 font-medium text-faixa-destaque-texto hover:brightness-105"
         >
-          Cadastre seu salão grátis <ArrowRight className="size-4" aria-hidden />
+          Cadastre seu negócio grátis <ArrowRight className="size-4" aria-hidden />
         </Link>
       </section>
     </div>

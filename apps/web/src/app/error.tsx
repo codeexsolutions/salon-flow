@@ -32,7 +32,7 @@ export default function Erro({
       <button
         type="button"
         onClick={() => retry()}
-        className="rounded-lg bg-primaria px-4 py-2 font-medium text-primaria-contraste"
+        className="rounded-lg bg-botao px-4 py-2 font-medium text-botao-contraste"
       >
         Tentar novamente
       </button>

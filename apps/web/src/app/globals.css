@@ -1,47 +1,84 @@
 @import 'tailwindcss';
 
 /*
- * Identidade SalonFlow — elegante, rosé e nude.
- * Todas as cores da interface vêm destes tokens (claro e escuro).
- * Contraste: primária (#a35866) com texto branco ≈ 5:1 (WCAG AA).
+ * Identidade SalonFlow — grafite e âmbar, neutra para salão, barbearia, estética e
+ * sobrancelhas. Cada estabelecimento pode ter a própria cor na página dele (.tema-salao).
+ *
+ * Papéis: `botao` = fundo dos botões e marcas cheias; `primaria` = destaque em texto,
+ * links, bordas e foco; `nude` = fundo suave de destaque.
+ * Contraste: botão grafite com texto âmbar ≈ 10:1; âmbar escuro (#8f5d00) no branco ≈ 5,4:1.
  */
 :root {
-  --background: #fbf7f5;
+  --background: #f6f6f4;
   --superficie: #ffffff;
-  --nude: #f4e9e4;
-  --foreground: #3a2a2b;
-  --suave: #806b68;
-  --borda: #eadcd6;
-  --primaria: #a35866;
-  --primaria-hover: #8c4855;
+  --nude: #f4ecdc;
+  --foreground: #1a1a1c;
+  --suave: #66666b;
+  --borda: #e3e2de;
+  --primaria: #8f5d00;
+  --primaria-hover: #6f4800;
   --primaria-contraste: #ffffff;
-  --dourado: #b08a4e;
+  --botao: #1c1c1e;
+  --botao-hover: #34343a;
+  --botao-contraste: #f6c15c;
+  --dourado: #a86d00;
   --sucesso: #2f7a52;
   --sucesso-suave: #e7f3ec;
   --alerta: #9a6212;
   --alerta-suave: #fbf0dc;
   --perigo: #b4363f;
   --perigo-suave: #fbe8e8;
+  /* Faixas escuras de destaque (login, cadastro, "para o seu negócio"): iguais nos dois temas. */
+  --faixa-de: #1c1c1e;
+  --faixa-ate: #3a3020;
+  --faixa-destaque: #f6c15c;
+  --faixa-destaque-texto: #1a1405;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1b1415;
-    --superficie: #241b1c;
-    --nude: #2f2324;
-    --foreground: #f4e8e5;
-    --suave: #b9a3a0;
-    --borda: #3d2e2f;
-    --primaria: #dc9aa5;
-    --primaria-hover: #e8b2bb;
-    --primaria-contraste: #1b1415;
-    --dourado: #d2ad6f;
+    --background: #121213;
+    --superficie: #1c1c1e;
+    --nude: #2a2418;
+    --foreground: #ededeb;
+    --suave: #a0a0a5;
+    --borda: #2e2e31;
+    --primaria: #f0c066;
+    --primaria-hover: #f6d08a;
+    --primaria-contraste: #1a1405;
+    --botao: #e8b04a;
+    --botao-hover: #f0c066;
+    --botao-contraste: #1a1405;
+    --dourado: #e8b04a;
     --sucesso: #7fcf9f;
     --sucesso-suave: #1c3127;
     --alerta: #e7b45f;
     --alerta-suave: #3a2c15;
     --perigo: #f08a90;
     --perigo-suave: #3d1d20;
+  }
+}
+
+/*
+ * Página de um estabelecimento com cor própria: as variáveis --cs-* vêm do servidor
+ * (lib/cor-estabelecimento.ts), já calculadas para contraste no claro e no escuro.
+ */
+.tema-salao {
+  --primaria: var(--cs-texto);
+  --primaria-hover: var(--cs-texto);
+  --botao: var(--cs-botao);
+  --botao-hover: var(--cs-botao-hover);
+  --botao-contraste: var(--cs-contraste);
+  --nude: var(--cs-nude);
+}
+@media (prefers-color-scheme: dark) {
+  .tema-salao {
+    --primaria: var(--cs-texto-escuro);
+    --primaria-hover: var(--cs-texto-escuro);
+    --botao: var(--cs-botao-escuro);
+    --botao-hover: var(--cs-botao-escuro-hover);
+    --botao-contraste: var(--cs-contraste-escuro);
+    --nude: var(--cs-nude-escuro);
   }
 }
 
@@ -55,6 +92,11 @@
   --color-primaria: var(--primaria);
   --color-primaria-hover: var(--primaria-hover);
   --color-primaria-contraste: var(--primaria-contraste);
+  --color-botao: var(--botao);
+  --color-botao-hover: var(--botao-hover);
+  --color-botao-contraste: var(--botao-contraste);
+  --color-faixa-destaque: var(--faixa-destaque);
+  --color-faixa-destaque-texto: var(--faixa-destaque-texto);
   --color-dourado: var(--dourado);
   --color-sucesso: var(--sucesso);
   --color-sucesso-suave: var(--sucesso-suave);
@@ -75,9 +117,20 @@ body {
 
 /* Títulos de página na fonte de destaque. */
 h1 {
-  font-family: var(--font-titulo), Georgia, serif;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: var(--font-titulo), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Faixa escura de destaque (mesma nos dois temas). */
+.faixa-escura {
+  background: linear-gradient(135deg, var(--faixa-de), var(--faixa-ate));
+  color: #ffffff;
+}
+
+/* Capa padrão de quem não enviou imagem: segue a cor do estabelecimento (.tema-salao). */
+.capa-padrao {
+  background: linear-gradient(120deg, var(--nude), var(--botao));
 }
 
 :focus-visible {

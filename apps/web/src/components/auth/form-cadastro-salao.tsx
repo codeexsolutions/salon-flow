@@ -45,7 +45,7 @@ export function FormCadastroSalao() {
       setErros(resultado.erros ?? {});
       setMensagem({
         ok: false,
-        texto: resultado.mensagem ?? 'Sua conta foi criada, mas o salão não. Confira os dados.',
+        texto: resultado.mensagem ?? 'Sua conta foi criada, mas o estabelecimento não. Confira os dados.',
       });
     }
   }
@@ -120,7 +120,7 @@ export function FormCadastroSalao() {
       <CodigoRecuperacao
         codigo={codigo.codigo}
         usuario={codigo.usuario}
-        rotuloContinuar={pendente ? 'Criando o salão…' : 'Continuar para o painel'}
+        rotuloContinuar={pendente ? 'Criando seu negócio…' : 'Continuar para o painel'}
         aoContinuar={() => iniciar(() => cadastrarSalao(salaoPendente))}
       />
     );
@@ -129,8 +129,8 @@ export function FormCadastroSalao() {
   return (
     <form action={enviar} className="flex flex-col gap-6">
       <fieldset className="flex flex-col gap-4">
-        <legend className="mb-3 font-display text-xl">Seu salão</legend>
-        <Campo rotulo="Nome do salão" erro={erros.nome}>
+        <legend className="mb-3 font-display text-xl">Seu negócio</legend>
+        <Campo rotulo="Nome do estabelecimento" erro={erros.nome}>
           <input
             name="nome"
             required
@@ -140,7 +140,7 @@ export function FormCadastroSalao() {
           />
         </Campo>
         <Campo
-          rotulo="Endereço da página do salão"
+          rotulo="Endereço da sua página"
           erro={erros.slug}
           ajuda="É o link que você divulga para os clientes agendarem."
         >
@@ -233,7 +233,7 @@ export function FormCadastroSalao() {
       )}
 
       <button type="submit" disabled={pendente} className={classeBotaoPrimario}>
-        {pendente ? 'Cadastrando…' : 'Cadastrar salão e entrar no painel'}
+        {pendente ? 'Cadastrando…' : 'Cadastrar e entrar no painel'}
       </button>
       <p className="text-center text-sm text-suave">
         Já tem conta?{' '}

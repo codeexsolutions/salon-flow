@@ -17,7 +17,7 @@ const TITULOS: Record<Modo, { titulo: string; subtitulo: string }> = {
   entrar: { titulo: 'Entrar', subtitulo: 'Acesse com seu usuário e senha.' },
   criar: {
     titulo: 'Criar conta',
-    subtitulo: 'Para encontrar salões, agendar e acompanhar seus horários.',
+    subtitulo: 'Para encontrar onde agendar e acompanhar seus horários.',
   },
 };
 
@@ -182,8 +182,8 @@ export function FormLogin({
           href="/cadastro-salao"
           className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-nude px-3 py-2 text-foreground hover:text-primaria"
         >
-          <Store className="size-4" aria-hidden />É dono de salão?{' '}
-          <span className="font-medium text-primaria">Cadastre seu salão</span>
+          <Store className="size-4" aria-hidden />Tem um negócio?{' '}
+          <span className="font-medium text-primaria">Cadastre grátis</span>
         </Link>
       </div>
     </div>

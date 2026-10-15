@@ -6,6 +6,7 @@ import { Agendar } from '@/components/cliente/agendar';
 import { CabecalhoSalao } from '@/components/cliente/cabecalho-salao';
 import { api, ApiError } from '@/lib/api/client';
 import { obterSessao } from '@/lib/auth/sessao';
+import { temaDoEstabelecimento } from '@/lib/cor-estabelecimento';
 
 const buscarSalao = cache(async (slug: string) => {
   try {
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<'/s/[slug]'>): Prom
   return { title: `Agendar em ${salao.nome}` };
 }
 
-/** Página pública do salão — também é o link direto que o salão divulga. */
+/** Página pública do estabelecimento, com a cor dele — também é o link que ele divulga. */
 export default async function SalaoPage({ params, searchParams }: PageProps<'/s/[slug]'>) {
   const { slug } = await params;
   const consulta = await searchParams;
@@ -36,14 +37,15 @@ export default async function SalaoPage({ params, searchParams }: PageProps<'/s/
   // Voltando do login: retoma a escolha que o cliente tinha feito.
   const texto = (v: string | string[] | undefined) => (typeof v === 'string' ? v : undefined);
   const inicio = texto(consulta.inicio);
+  const tema = temaDoEstabelecimento(salao.corDestaque);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={`flex flex-col gap-6 ${tema.className ?? ''}`} style={tema.style}>
       <CabecalhoSalao salao={salao} />
 
       {servicos.length === 0 ? (
         <p className="rounded-xl border border-dashed border-borda p-8 text-center text-sm text-suave">
-          Este salão ainda não oferece agendamento online.
+          Este estabelecimento ainda não oferece agendamento online.
         </p>
       ) : (
         <Agendar

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, MapPin } from 'lucide-react';
 import type { SalaoMarketplace } from '@salonflow/shared';
+import { temaDoEstabelecimento } from '@/lib/cor-estabelecimento';
 
 /** Cartão de salão na busca/diretório. */
 export function CartaoSalao({ salao: s }: { salao: SalaoMarketplace }) {
@@ -8,12 +9,15 @@ export function CartaoSalao({ salao: s }: { salao: SalaoMarketplace }) {
     .filter(Boolean)
     .join(', ');
 
+  const tema = temaDoEstabelecimento(s.corDestaque);
+
   return (
     <Link
       href={`/s/${s.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-borda bg-superficie transition hover:-translate-y-0.5 hover:border-primaria/40 hover:shadow-md"
+      style={tema.style}
+      className={`${tema.className ?? ''} group flex h-full flex-col overflow-hidden rounded-2xl border border-borda bg-superficie transition hover:-translate-y-0.5 hover:border-primaria/40 hover:shadow-md`}
     >
-      <div className="h-24 bg-gradient-to-br from-[#a35866] to-[#6e3540]">
+      <div className="h-24 capa-padrao">
         {s.capaUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={s.capaUrl} alt="" className="size-full object-cover" />
@@ -39,7 +43,7 @@ export function CartaoSalao({ salao: s }: { salao: SalaoMarketplace }) {
           {s.descricao && <span className="line-clamp-2 text-xs text-suave">{s.descricao}</span>}
         </span>
         <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-primaria">
-          {s.totalServicos > 0 ? `${s.totalServicos} serviço(s) · Agendar` : 'Ver salão'}
+          {s.totalServicos > 0 ? `${s.totalServicos} serviço(s) · Agendar` : 'Ver página'}
           <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden />
         </span>
       </div>

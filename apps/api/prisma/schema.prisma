@@ -64,6 +64,8 @@ model Salao {
   /// URLs públicas (Supabase Storage, bucket "saloes").
   logoUrl                  String?  @map("logo_url")
   capaUrl                  String?  @map("capa_url")
+  /// Cor de destaque do estabelecimento (#rrggbb) na página pública; null = cor do SalonFlow.
+  corDestaque              String?  @map("cor_destaque")
   visivelNoMarketplace     Boolean  @default(true) @map("visivel_no_marketplace")
   /// Fuso horário IANA usado para interpretar horários de agenda, jornada e folgas.
   fusoHorario              String   @default("America/Sao_Paulo") @map("fuso_horario")

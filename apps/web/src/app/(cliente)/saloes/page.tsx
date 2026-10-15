@@ -7,8 +7,8 @@ import { EstadoVazio } from '@/components/ui/estado-vazio';
 import { api } from '@/lib/api/client';
 
 export const metadata = {
-  title: 'Salões',
-  description: 'Encontre salões de beleza e barbearias e agende online.',
+  title: 'Explorar',
+  description: 'Encontre salões, barbearias, estética e sobrancelhas e agende online.',
 };
 
 type Consulta = { busca?: string; cidade?: string; categoria?: string; pagina?: string };
@@ -50,9 +50,9 @@ export default async function SaloesPage({ searchParams }: PageProps<'/saloes'>)
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-4xl">Salões</h1>
+        <h1 className="text-4xl">Onde agendar</h1>
         <p className="text-sm text-suave">
-          {resultado.total} {resultado.total === 1 ? 'salão encontrado' : 'salões encontrados'}
+          {resultado.total} {resultado.total === 1 ? 'estabelecimento encontrado' : 'estabelecimentos encontrados'}
         </p>
       </header>
 
@@ -62,7 +62,7 @@ export default async function SaloesPage({ searchParams }: PageProps<'/saloes'>)
           <input
             name="busca"
             defaultValue={consulta.busca}
-            placeholder="Nome do salão ou bairro"
+            placeholder="Nome ou bairro"
             aria-label="Buscar"
             className="min-w-0 flex-1 bg-transparent py-2 outline-none placeholder:text-suave/70"
           />
@@ -98,7 +98,7 @@ export default async function SaloesPage({ searchParams }: PageProps<'/saloes'>)
                 aria-current={ativo ? 'true' : undefined}
                 className={`shrink-0 rounded-full border px-4 py-1.5 text-sm transition ${
                   ativo
-                    ? 'border-primaria bg-primaria text-primaria-contraste'
+                    ? 'border-botao bg-botao text-botao-contraste'
                     : 'border-borda bg-superficie hover:border-primaria/40'
                 }`}
               >
@@ -112,8 +112,8 @@ export default async function SaloesPage({ searchParams }: PageProps<'/saloes'>)
       {resultado.itens.length === 0 ? (
         <EstadoVazio
           icone={Store}
-          titulo="Nenhum salão encontrado"
-          descricao={temFiltro ? 'Tente outra busca, cidade ou tipo de serviço.' : 'Os salões cadastrados aparecem aqui.'}
+          titulo="Nenhum estabelecimento encontrado"
+          descricao={temFiltro ? 'Tente outra busca, cidade ou tipo de serviço.' : 'Os estabelecimentos cadastrados aparecem aqui.'}
           acao={
             temFiltro ? (
               <Link href="/saloes" className={classeBotaoSecundario}>

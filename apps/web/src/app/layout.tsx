@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import { DM_Sans, Playfair_Display } from 'next/font/google';
+import { Bricolage_Grotesque, DM_Sans } from 'next/font/google';
 import { RegistrarPwa } from '@/components/pwa/registrar-pwa';
 import './globals.css';
 
 const corpo = DM_Sans({ variable: '--font-corpo', subsets: ['latin'] });
-const titulo = Playfair_Display({ variable: '--font-titulo', subsets: ['latin'] });
+const titulo = Bricolage_Grotesque({ variable: '--font-titulo', subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: { default: 'SalonFlow', template: '%s · SalonFlow' },
-  description: 'Agendamento e gestão para salões de beleza e barbearias',
+  description: 'Agendamento e gestão para salões, barbearias, estética e sobrancelhas',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'SalonFlow' },
   icons: {
     icon: [{ url: '/icons/icon.svg', type: 'image/svg+xml' }],
@@ -18,8 +18,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fbf7f5' },
-    { media: '(prefers-color-scheme: dark)', color: '#1b1415' },
+    { media: '(prefers-color-scheme: light)', color: '#f6f6f4' },
+    { media: '(prefers-color-scheme: dark)', color: '#121213' },
   ],
 };
 

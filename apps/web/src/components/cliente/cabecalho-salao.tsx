@@ -14,7 +14,7 @@ export function CabecalhoSalao({ salao }: { salao: SalaoPublico }) {
   return (
     <header className="overflow-hidden rounded-3xl border border-borda bg-superficie">
       <div
-        className={`aspect-[3/1] max-h-56 w-full bg-gradient-to-br from-[#a35866] to-[#6e3540] ${
+        className={`aspect-[3/1] max-h-56 w-full capa-padrao ${
           salao.capaUrl ? '' : 'opacity-90'
         }`}
       >

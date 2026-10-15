@@ -17,6 +17,7 @@ export function paraSalaoPublico(salao: Salao): SalaoPublico {
     instagram: salao.instagram,
     logoUrl: salao.logoUrl,
     capaUrl: salao.capaUrl,
+    corDestaque: salao.corDestaque,
   };
 }
 

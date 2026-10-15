@@ -164,7 +164,7 @@ export function NovoAgendamento({
                           aria-pressed={ativo}
                           className={`rounded-md border px-2 py-1 text-xs ${
                             ativo
-                              ? 'border-primaria bg-primaria text-primaria-contraste'
+                              ? 'border-botao bg-botao text-botao-contraste'
                               : 'border-borda'
                           }`}
                         >

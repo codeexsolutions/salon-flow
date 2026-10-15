@@ -289,7 +289,7 @@ function Etapa({
   return (
     <section className="flex flex-col gap-3">
       <h2 className="flex items-center gap-2 font-semibold">
-        <span className="flex size-6 items-center justify-center rounded-full bg-primaria text-xs text-primaria-contraste">
+        <span className="flex size-6 items-center justify-center rounded-full bg-botao text-xs text-botao-contraste">
           {numero}
         </span>
         {titulo}
@@ -314,7 +314,7 @@ function Chip({
       onClick={onClick}
       aria-pressed={ativo}
       className={`shrink-0 rounded-lg border px-3 py-2 text-sm ${
-        ativo ? 'border-primaria bg-primaria text-primaria-contraste' : 'border-borda'
+        ativo ? 'border-botao bg-botao text-botao-contraste' : 'border-borda'
       }`}
     >
       {children}

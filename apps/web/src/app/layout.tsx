@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Bricolage_Grotesque, DM_Sans } from 'next/font/google';
+import { AvisoNovaVersao } from '@/components/pwa/aviso-nova-versao';
 import { RegistrarPwa } from '@/components/pwa/registrar-pwa';
 import './globals.css';
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <body className="flex min-h-full flex-col">
         {children}
         <RegistrarPwa />
+        <AvisoNovaVersao />
       </body>
     </html>
   );

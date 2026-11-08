@@ -100,6 +100,7 @@ model Salao {
   caixas               Caixa[]
   movimentosCaixa      MovimentoCaixa[]
   reaberturasCaixa     ReaberturaCaixa[]
+  reaberturasComanda   ReaberturaComanda[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -375,13 +376,21 @@ model Comanda {
   observacoes      String?
   abertaEm         DateTime      @default(now()) @map("aberta_em")
   abertaPorId      String?       @map("aberta_por_id") @db.Uuid
+  /// Data do atendimento (vale para comissões, relatórios e caixa). Na comanda
+  /// lançada depois ou reaberta, é a data em que o serviço aconteceu.
   fechadaEm        DateTime?     @map("fechada_em")
   fechadaPorId     String?       @map("fechada_por_id") @db.Uuid
+  /// Quando foi realmente fechada no sistema (difere de fechadaEm se lançada depois).
+  lancadaEm        DateTime?     @map("lancada_em")
+  /// Comanda aberta com data anterior (lançamento atrasado ou reabertura): ao fechar,
+  /// fechadaEm recebe este valor em vez de "agora".
+  competenciaEm    DateTime?     @map("competencia_em")
 
-  salao      Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
-  cliente    Cliente?      @relation(fields: [clienteId], references: [id], onDelete: NoAction)
-  itens      ComandaItem[]
-  pagamentos Pagamento[]
+  salao       Salao               @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  cliente     Cliente?            @relation(fields: [clienteId], references: [id], onDelete: NoAction)
+  itens       ComandaItem[]
+  pagamentos  Pagamento[]
+  reaberturas ReaberturaComanda[]
 
   @@unique([salaoId, numero])
   @@index([salaoId, status])
@@ -608,6 +617,8 @@ model Caixa {
   contadoDinheiroCentavos  Int?        @map("contado_dinheiro_centavos")
   diferencaCentavos        Int?        @map("diferenca_centavos")
   observacoes              String?
+  /// Criado automaticamente para um dia em que o caixa não foi aberto (lançamento atrasado).
+  lancadoDepois            Boolean     @default(false) @map("lancado_depois")
 
   salao       Salao             @relation(fields: [salaoId], references: [id], onDelete: Cascade)
   movimentos  MovimentoCaixa[]
@@ -655,4 +666,24 @@ model ReaberturaCaixa {
 
   @@index([caixaId])
   @@map("reaberturas_caixa")
+}
+
+/// Histórico de reaberturas de comanda (só o dono): guarda o fechamento que foi desfeito.
+model ReaberturaComanda {
+  id                    String   @id @default(uuid()) @db.Uuid
+  comandaId             String   @map("comanda_id") @db.Uuid
+  salaoId               String   @map("salao_id") @db.Uuid
+  motivo                String
+  reabertaPorId         String?  @map("reaberta_por_id") @db.Uuid
+  reabertaEm            DateTime @default(now()) @map("reaberta_em")
+  fechadaEmAnterior     DateTime @map("fechada_em_anterior")
+  totalAnteriorCentavos Int      @map("total_anterior_centavos")
+  /// Itens, pagamentos e comissões como estavam (para consulta).
+  fechamentoAnterior    Json     @map("fechamento_anterior")
+
+  comanda Comanda @relation(fields: [comandaId], references: [id], onDelete: Cascade)
+  salao   Salao   @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@index([comandaId])
+  @@map("reaberturas_comanda")
 }

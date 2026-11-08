@@ -30,6 +30,15 @@ export class CaixaRepository {
     });
   }
 
+  /** Caixa mais recente aberto naquele dia (qualquer status). */
+  doDia(salaoId: string, inicio: Date, fim: Date) {
+    return this.prisma.caixa.findFirst({
+      where: { salaoId, abertoEm: { gte: inicio, lt: fim } },
+      orderBy: { abertoEm: 'desc' },
+      select: { id: true, status: true, lancadoDepois: true },
+    });
+  }
+
   buscar(salaoId: string, id: string) {
     return this.prisma.caixa.findFirst({ where: { id, salaoId }, include: comValores });
   }

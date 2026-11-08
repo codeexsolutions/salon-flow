@@ -1,10 +1,16 @@
 import type { ComandaDetalhe, ComandaResumo } from '@salonflow/shared';
-import type { Comanda, ComandaItem, Pagamento } from '../../generated/prisma/client.js';
+import type {
+  Comanda,
+  ComandaItem,
+  Pagamento,
+  ReaberturaComanda,
+} from '../../generated/prisma/client.js';
 
 type ComandaCompleta = Comanda & {
   cliente: { id: string; nome: string } | null;
   itens: (ComandaItem & { profissional: { id: string; nome: string } | null })[];
   pagamentos: Pagamento[];
+  reaberturas?: ReaberturaComanda[];
 };
 
 function subtotal(c: ComandaCompleta) {
@@ -21,6 +27,8 @@ export function paraComandaResumo(c: ComandaCompleta): ComandaResumo {
     totalCentavos: c.totalCentavos ?? Math.max(0, subtotal(c) - c.descontoCentavos),
     abertaEm: c.abertaEm.toISOString(),
     fechadaEm: c.fechadaEm?.toISOString() ?? null,
+    lancadaEm: c.lancadaEm?.toISOString() ?? null,
+    competenciaEm: c.competenciaEm?.toISOString() ?? null,
   };
 }
 
@@ -53,6 +61,11 @@ export function paraComandaDetalhe(c: ComandaCompleta): ComandaDetalhe {
       valorCentavos: p.valorCentavos,
       taxaBps: p.taxaBps,
       taxaCentavos: p.taxaCentavos,
+    })),
+    reaberturas: (c.reaberturas ?? []).map((r) => ({
+      reabertaEm: r.reabertaEm.toISOString(),
+      motivo: r.motivo,
+      totalAnteriorCentavos: r.totalAnteriorCentavos,
     })),
   };
 }

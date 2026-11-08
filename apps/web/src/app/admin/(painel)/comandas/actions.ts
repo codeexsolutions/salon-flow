@@ -6,7 +6,9 @@ import {
   adicionarItemComandaSchema,
   atualizarComandaSchema,
   atualizarItemComandaSchema,
+  dataAtendimentoComandaSchema,
   fecharComandaSchema,
+  reabrirComandaSchema,
   type ComandaDetalhe,
 } from '@salonflow/shared';
 import { falha, falhaDeValidacao, sucesso, type Resultado } from '@/lib/api/resultado';
@@ -98,6 +100,7 @@ export async function fecharComanda(id: string, entrada: unknown): Promise<Resul
   }
   atualizar(id);
   revalidatePath('/admin/agenda');
+  revalidatePath('/admin/caixa', 'layout');
   return sucesso(undefined);
 }
 
@@ -108,5 +111,33 @@ export async function cancelarComanda(id: string): Promise<Resultado> {
     return falha(erro);
   }
   atualizar(id);
+  return sucesso(undefined);
+}
+
+/** Lançamento atrasado: dia em que o atendimento aconteceu (só o dono). */
+export async function definirDataAtendimento(id: string, entrada: unknown): Promise<Resultado> {
+  const validacao = dataAtendimentoComandaSchema.safeParse(entrada);
+  if (!validacao.success) return falhaDeValidacao(validacao.error);
+  try {
+    await apiSalao(`/comandas/${id}/data-atendimento`, { method: 'PATCH', body: validacao.data });
+  } catch (erro) {
+    return falha(erro);
+  }
+  atualizar(id);
+  return sucesso(undefined);
+}
+
+/** Reabre comanda fechada para correção (só o dono). */
+export async function reabrirComanda(id: string, entrada: unknown): Promise<Resultado> {
+  const validacao = reabrirComandaSchema.safeParse(entrada);
+  if (!validacao.success) return falhaDeValidacao(validacao.error);
+  try {
+    await apiSalao(`/comandas/${id}/reabrir`, { method: 'POST', body: validacao.data });
+  } catch (erro) {
+    return falha(erro);
+  }
+  atualizar(id);
+  revalidatePath('/admin/caixa', 'layout');
+  revalidatePath('/admin/comissoes', 'layout');
   return sucesso(undefined);
 }

@@ -14,18 +14,22 @@ import {
   atualizarComandaSchema,
   atualizarItemComandaSchema,
   criarComandaSchema,
+  dataAtendimentoComandaSchema,
   dataLocalSchema,
   fecharComandaSchema,
+  reabrirComandaSchema,
   type AdicionarItemComandaInput,
   type AtualizarComandaInput,
   type AtualizarItemComandaInput,
   type CriarComandaInput,
+  type DataAtendimentoComandaInput,
   type FecharComandaInput,
+  type ReabrirComandaInput,
 } from '@salonflow/shared';
 import { UsuarioAtual } from '../../shared/auth/decorators.js';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe.js';
-import { RotaDoSalao } from '../../shared/tenant/rota-do-salao.decorator.js';
+import { RotaDoSalao, SomentePapeis } from '../../shared/tenant/rota-do-salao.decorator.js';
 import { paraComandaDetalhe, paraComandaResumo } from './comandas.mapper.js';
 import { ComandasService } from './comandas.service.js';
 
@@ -94,6 +98,27 @@ export class ComandasController {
     @Body(new ZodValidationPipe(fecharComandaSchema)) dados: FecharComandaInput,
   ) {
     return paraComandaDetalhe(await this.service.fechar(id, dados, usuario.id));
+  }
+
+  /** Lançamento atrasado: dia em que o atendimento aconteceu. Só o dono. */
+  @Patch(':id/data-atendimento')
+  @SomentePapeis('DONO')
+  async definirDataAtendimento(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(dataAtendimentoComandaSchema)) dados: DataAtendimentoComandaInput,
+  ) {
+    return paraComandaDetalhe(await this.service.definirDataAtendimento(id, dados));
+  }
+
+  /** Reabre comanda fechada para correção. Só o dono. */
+  @Post(':id/reabrir')
+  @SomentePapeis('DONO')
+  async reabrir(
+    @UsuarioAtual() usuario: UsuarioAutenticado,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(reabrirComandaSchema)) dados: ReabrirComandaInput,
+  ) {
+    return paraComandaDetalhe(await this.service.reabrir(id, dados, usuario.id));
   }
 
   @Post(':id/cancelar')

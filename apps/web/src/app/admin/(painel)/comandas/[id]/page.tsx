@@ -9,12 +9,16 @@ import {
   type ProfissionalResumo,
   type ServicoResumo,
 } from '@salonflow/shared';
+import { DataAtendimento } from '@/components/comandas/data-atendimento';
 import { EditorComanda } from '@/components/comandas/editor-comanda';
+import { ReabrirComanda } from '@/components/comandas/reabrir-comanda';
 import { Secao } from '@/components/ui/secao';
 import { ApiError } from '@/lib/api/client';
 import { apiSalao } from '@/lib/api/salao';
 import { obterContextoAdmin } from '@/lib/auth/contexto';
-import { dataLocal, dataPorExtenso, horaLocal } from '@/lib/data-hora';
+import { dataLocal, dataPorExtenso, hojeNoFuso, horaLocal, somarDias } from '@/lib/data-hora';
+
+const dma = (data: string) => data.split('-').reverse().join('/');
 
 async function carregar(id: string) {
   try {
@@ -40,21 +44,45 @@ export default async function ComandaPage({ params }: PageProps<'/admin/comandas
         <p className="text-sm text-suave">
           Aberta em {dataPorExtenso(dataLocal(comanda.abertaEm, fuso))},{' '}
           {horaLocal(comanda.abertaEm, fuso)}
-          {comanda.status === 'FECHADA' && ` · fechada às ${horaLocal(comanda.fechadaEm!, fuso)}`}
+          {comanda.status === 'FECHADA' && <InfoFechamento comanda={comanda} fuso={fuso} />}
           {comanda.status === 'CANCELADA' && ' · cancelada'}
         </p>
       </div>
 
       {comanda.status === 'ABERTA' ? (
-        <EditorAberta comanda={comanda} />
+        <EditorAberta comanda={comanda} ehDono={salao.papel === 'DONO'} fuso={fuso} />
       ) : (
-        <ComandaEncerrada comanda={comanda} ehDono={salao.papel === 'DONO'} />
+        <ComandaEncerrada comanda={comanda} ehDono={salao.papel === 'DONO'} fuso={fuso} />
       )}
     </div>
   );
 }
 
-async function EditorAberta({ comanda }: { comanda: ComandaDetalhe }) {
+/** Fechada às HH:MM; se lançada depois, mostra o dia do atendimento e o do lançamento. */
+function InfoFechamento({ comanda, fuso }: { comanda: ComandaDetalhe; fuso: string }) {
+  const atendimento = dataLocal(comanda.fechadaEm!, fuso);
+  const lancada = comanda.lancadaEm ? dataLocal(comanda.lancadaEm, fuso) : atendimento;
+  if (lancada === atendimento) return <> · fechada às {horaLocal(comanda.fechadaEm!, fuso)}</>;
+  return (
+    <>
+      {' '}
+      · atendimento em <strong>{dma(atendimento)}</strong> · lançada em {dma(lancada)},{' '}
+      {horaLocal(comanda.lancadaEm!, fuso)}
+    </>
+  );
+}
+
+async function EditorAberta({
+  comanda,
+  ehDono,
+  fuso,
+}: {
+  comanda: ComandaDetalhe;
+  ehDono: boolean;
+  fuso: string;
+}) {
+  const hoje = hojeNoFuso(fuso);
+  const dataAtendimento = comanda.competenciaEm ? dataLocal(comanda.competenciaEm, fuso) : null;
   const [servicos, profissionais, produtos] = await Promise.all([
     apiSalao<ServicoResumo[]>('/servicos'),
     apiSalao<ProfissionalResumo[]>('/profissionais'),
@@ -68,11 +96,36 @@ async function EditorAberta({ comanda }: { comanda: ComandaDetalhe }) {
       servicos={servicos}
       profissionais={profissionais}
       produtos={produtos.filter((p) => p.precoVendaCentavos !== null)}
+      cabecalho={
+        ehDono ? (
+          <DataAtendimento
+            comandaId={comanda.id}
+            data={dataAtendimento === hoje ? null : dataAtendimento}
+            hoje={hoje}
+            minimo={somarDias(hoje, -30)}
+          />
+        ) : (
+          dataAtendimento &&
+          dataAtendimento !== hoje && (
+            <p className="rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm">
+              Lançamento do dia <strong>{dma(dataAtendimento)}</strong>.
+            </p>
+          )
+        )
+      }
     />
   );
 }
 
-function ComandaEncerrada({ comanda, ehDono }: { comanda: ComandaDetalhe; ehDono: boolean }) {
+function ComandaEncerrada({
+  comanda,
+  ehDono,
+  fuso,
+}: {
+  comanda: ComandaDetalhe;
+  ehDono: boolean;
+  fuso: string;
+}) {
   const fechada = comanda.status === 'FECHADA';
   const totalComissao = comanda.itens.reduce((s, i) => s + (i.comissaoCentavos ?? 0), 0);
   const totalTaxas = comanda.pagamentos.reduce((s, p) => s + p.taxaCentavos, 0);
@@ -121,6 +174,17 @@ function ComandaEncerrada({ comanda, ehDono }: { comanda: ComandaDetalhe; ehDono
         </dl>
       </Secao>
 
+      {(comanda.reaberturas ?? []).length > 0 && (
+        <ul className="flex flex-col gap-1 text-xs text-suave">
+          {comanda.reaberturas.map((r) => (
+            <li key={r.reabertaEm}>
+              Reaberta em {dma(dataLocal(r.reabertaEm, fuso))} {horaLocal(r.reabertaEm, fuso)} ·{' '}
+              {r.motivo} · total anterior {formatarPreco(r.totalAnteriorCentavos)}
+            </li>
+          ))}
+        </ul>
+      )}
+
       {fechada && (
         <Secao titulo="Pagamentos">
           <ul className="text-sm">
@@ -150,6 +214,8 @@ function ComandaEncerrada({ comanda, ehDono }: { comanda: ComandaDetalhe; ehDono
           )}
         </Secao>
       )}
+
+      {fechada && ehDono && <ReabrirComanda comandaId={comanda.id} />}
     </>
   );
 }

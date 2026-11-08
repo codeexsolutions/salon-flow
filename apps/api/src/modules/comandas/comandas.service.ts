@@ -4,9 +4,11 @@ import type {
   AtualizarComandaInput,
   AtualizarItemComandaInput,
   CriarComandaInput,
+  DataAtendimentoComandaInput,
   FecharComandaInput,
+  ReabrirComandaInput,
 } from '@salonflow/shared';
-import { limitesDoDia } from '../../shared/domain/data-hora.js';
+import { limitesDoDia, localParaUtc, utcParaLocal } from '../../shared/domain/data-hora.js';
 import {
   ConflitoError,
   NaoEncontradoError,
@@ -20,7 +22,13 @@ import { calcularFechamento } from '../comissoes/domain/calculo.js';
 import { ComissoesService } from '../comissoes/comissoes.service.js';
 import { ProdutosService } from '../produtos/produtos.service.js';
 import { ServicosService } from '../servicos/servicos.service.js';
-import { ComandasRepository, type NovoItem } from './comandas.repository.js';
+import { ComandasRepository, type DestinoCaixa, type NovoItem } from './comandas.repository.js';
+import {
+  diasEntre,
+  LIMITE_DIAS_RETROATIVOS,
+  planoDeCaixa,
+  validarDataAtendimento,
+} from './domain/lancamento.js';
 
 @Injectable()
 export class ComandasService {
@@ -153,13 +161,42 @@ export class ComandasService {
    * Fecha: confere pagamentos, calcula e GRAVA as comissões (com custo da ficha
    * técnica), baixa o estoque e conclui os agendamentos.
    */
-  async fechar(id: string, { pagamentos }: FecharComandaInput, usuarioId: string) {
+  async fechar(
+    id: string,
+    { pagamentos, confirmarCaixaFechado }: FecharComandaInput,
+    usuarioId: string,
+  ) {
     const comanda = await this.buscarAberta(id);
-    const [parametros, consumo, caixaId] = await Promise.all([
+    const fuso = this.contexto.fusoHorario;
+    const hoje = this.hoje();
+    const dataAtendimento = comanda.competenciaEm
+      ? utcParaLocal(comanda.competenciaEm, fuso).slice(0, 10)
+      : null;
+    const [parametros, consumo, caixaAbertoAgora, caixaDoDia] = await Promise.all([
       this.comissoes.parametrosDeCalculo(),
       this.produtos.consumoDaComanda(comanda.itens),
       this.caixa.idDoCaixaAberto(),
+      dataAtendimento ? this.caixa.caixaDoDia(dataAtendimento) : Promise.resolve(null),
     ]);
+
+    const plano = planoDeCaixa({ dataAtendimento, hoje, caixaAbertoAgora, caixaDoDia });
+    if (plano.tipo === 'USAR' && plano.exigeConfirmacao && !confirmarCaixaFechado) {
+      throw new ConflitoError(
+        'CAIXA_DO_DIA_FECHADO',
+        `O caixa de ${dataAtendimento!.split('-').reverse().join('/')} já foi fechado. ` +
+          'Os pagamentos vão entrar nele e a conferência do dinheiro será recalculada.',
+      );
+    }
+    const destino: DestinoCaixa =
+      plano.tipo === 'USAR'
+        ? { tipo: 'EXISTENTE', caixaId: plano.caixaId }
+        : plano.tipo === 'CRIAR'
+          ? {
+              tipo: 'DO_DIA',
+              ...limitesDoDia(dataAtendimento!, fuso),
+              abertoEm: comanda.competenciaEm!,
+            }
+          : { tipo: 'NENHUM' };
 
     const fechamento = calcularFechamento({
       itens: comanda.itens.map((i) => ({
@@ -176,8 +213,9 @@ export class ComandasService {
       id,
       fechamento,
       consumo.saidas,
-      caixaId,
+      destino,
       usuarioId,
+      comanda.competenciaEm ?? new Date(),
     );
     if (!fechada) throw this.naoEstaAberta();
 
@@ -185,6 +223,57 @@ export class ComandasService {
       comanda.itens.map((i) => i.agendamentoId).filter((a): a is string => !!a),
     );
     return fechada;
+  }
+
+  /**
+   * Lançamento atrasado: define em que dia o atendimento aconteceu (só o dono).
+   * null ou hoje = comanda normal.
+   */
+  async definirDataAtendimento(id: string, { data }: DataAtendimentoComandaInput) {
+    await this.buscarAberta(id);
+    const hoje = this.hoje();
+    if (data && data !== hoje) {
+      const erro = validarDataAtendimento(data, hoje);
+      if (erro) throw new RegraDeNegocioError('DATA_ATENDIMENTO_INVALIDA', erro);
+    }
+    const competencia =
+      data && data !== hoje ? localParaUtc(`${data}T12:00`, this.contexto.fusoHorario) : null;
+    if (!(await this.repository.definirCompetencia(this.contexto.salaoId, id, competencia))) {
+      throw this.naoEstaAberta();
+    }
+    return this.buscar(id);
+  }
+
+  /**
+   * Reabre comanda fechada para correção (só o dono): desfaz pagamentos, estoque e
+   * comissões; ao fechar de novo, mantém a data do atendimento original.
+   */
+  async reabrir(id: string, { motivo }: ReabrirComandaInput, usuarioId: string) {
+    const comanda = await this.buscar(id);
+    if (comanda.status !== 'FECHADA' || !comanda.fechadaEm) {
+      throw new ConflitoError('COMANDA_NAO_FECHADA', 'Só é possível reabrir comanda fechada.');
+    }
+    const diaDoAtendimento = utcParaLocal(comanda.fechadaEm, this.contexto.fusoHorario).slice(
+      0,
+      10,
+    );
+    if (diasEntre(diaDoAtendimento, this.hoje()) > LIMITE_DIAS_RETROATIVOS) {
+      throw new RegraDeNegocioError(
+        'COMANDA_ANTIGA',
+        `Só é possível reabrir comandas dos últimos ${LIMITE_DIAS_RETROATIVOS} dias.`,
+      );
+    }
+    const r = await this.repository.reabrir(this.contexto.salaoId, id, motivo, usuarioId);
+    if (r === 'REPASSE') {
+      throw new RegraDeNegocioError(
+        'COMANDA_COM_REPASSE',
+        'A comissão desta comanda já foi paga em um repasse. Cancele o repasse antes de reabrir.',
+      );
+    }
+    if (r === 'NAO_FECHADA') {
+      throw new ConflitoError('COMANDA_NAO_FECHADA', 'Só é possível reabrir comanda fechada.');
+    }
+    return this.buscar(id);
   }
 
   async cancelar(id: string) {
@@ -199,6 +288,11 @@ export class ComandasService {
     const comanda = await this.buscar(id);
     if (comanda.status !== 'ABERTA') throw this.naoEstaAberta();
     return comanda;
+  }
+
+  /** Data local de hoje no fuso do salão. */
+  private hoje() {
+    return utcParaLocal(new Date(), this.contexto.fusoHorario).slice(0, 10);
   }
 
   private naoEstaAberta() {

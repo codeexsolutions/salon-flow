@@ -125,6 +125,8 @@ export interface CaixaResumo {
   esperadoDinheiroCentavos: number;
   contadoDinheiroCentavos: number | null;
   diferencaCentavos: number | null;
+  /** Criado pelo sistema para um dia sem caixa (comandas lançadas depois). */
+  lancadoDepois: boolean;
 }
 
 export interface CaixaDetalhe extends CaixaResumo {

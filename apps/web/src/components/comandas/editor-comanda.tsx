@@ -39,12 +39,15 @@ export function EditorComanda({
   servicos,
   profissionais,
   produtos,
+  cabecalho,
 }: {
   comanda: ComandaDetalhe;
   servicos: ServicoResumo[];
   profissionais: ProfissionalResumo[];
   /** Produtos à venda (ativos e com preço de venda). */
   produtos: ProdutoResumo[];
+  /** Conteúdo extra no topo (ex.: data do atendimento, só para o dono). */
+  cabecalho?: React.ReactNode;
 }) {
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
@@ -128,18 +131,29 @@ export function EditorComanda({
   }
 
   function fechar() {
-    executar(() =>
+    const enviar = (confirmarCaixaFechado: boolean) =>
       fecharComanda(comanda.id, {
+        confirmarCaixaFechado,
         pagamentos: pagamentos.map((p) => ({
           forma: p.forma,
           valorCentavos: textoParaCentavos(p.valor),
         })),
-      }),
-    );
+      });
+    setErro(null);
+    iniciar(async () => {
+      let r = await enviar(false);
+      // Lançamento em data anterior cujo caixa já foi fechado: confirma e tenta de novo.
+      if (!r.ok && r.codigo === 'CAIXA_DO_DIA_FECHADO') {
+        if (!confirm(`${r.erro}\n\nDeseja continuar?`)) return;
+        r = await enviar(true);
+      }
+      if (!r.ok) setErro(r.erro);
+    });
   }
 
   return (
     <div className="flex flex-col gap-6">
+      {cabecalho}
       <Secao titulo="Cliente">
         {comanda.cliente ? (
           <div className="flex items-center justify-between text-sm">

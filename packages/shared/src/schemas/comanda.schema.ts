@@ -106,7 +106,24 @@ export const atualizarComandaSchema = z.object({
 });
 export type AtualizarComandaInput = z.infer<typeof atualizarComandaSchema>;
 
+/** Data do atendimento (lançamento atrasado). null = hoje. Só o dono. */
+export const dataAtendimentoComandaSchema = z.object({
+  data: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use o formato AAAA-MM-DD')
+    .nullable(),
+});
+export type DataAtendimentoComandaInput = z.infer<typeof dataAtendimentoComandaSchema>;
+
+/** Reabrir comanda fechada para correção (só o dono). */
+export const reabrirComandaSchema = z.object({
+  motivo: z.string().trim().min(3, 'Informe o motivo da reabertura').max(300),
+});
+export type ReabrirComandaInput = z.infer<typeof reabrirComandaSchema>;
+
 export const fecharComandaSchema = z.object({
+  /** Confirma lançar os pagamentos num caixa (de outro dia) que já foi fechado. */
+  confirmarCaixaFechado: z.boolean().optional(),
   pagamentos: z
     .array(
       z.object({
@@ -127,7 +144,12 @@ export interface ComandaResumo {
   /** Subtotal menos desconto (na aberta é a previsão; na fechada, o total cobrado). */
   totalCentavos: number;
   abertaEm: string;
+  /** Data do atendimento (na lançada depois/reaberta, a data em que aconteceu). */
   fechadaEm: string | null;
+  /** Quando foi realmente fechada no sistema (difere de fechadaEm se lançada depois). */
+  lancadaEm: string | null;
+  /** Aberta com data anterior: ao fechar, vale esta data. */
+  competenciaEm: string | null;
 }
 
 export interface ItemComanda {
@@ -165,6 +187,7 @@ export interface ComandaDetalhe extends ComandaResumo {
   observacoes: string | null;
   itens: ItemComanda[];
   pagamentos: PagamentoComanda[];
+  reaberturas: { reabertaEm: string; motivo: string; totalAnteriorCentavos: number }[];
 }
 
 // ---------- Extrato de comissões ----------

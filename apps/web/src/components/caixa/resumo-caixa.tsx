@@ -18,9 +18,13 @@ export function ResumoCaixa({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
   return (
     <Secao
       titulo={fechado ? 'Caixa fechado' : 'Caixa aberto'}
-      descricao={`Aberto em ${dataPorExtenso(dataLocal(caixa.abertoEm, fusoHorario))}, ${horaLocal(caixa.abertoEm, fusoHorario)}${
-        caixa.fechadoEm ? ` · fechado às ${horaLocal(caixa.fechadoEm, fusoHorario)}` : ''
-      }`}
+      descricao={
+        caixa.lancadoDepois
+          ? `${dataPorExtenso(dataLocal(caixa.abertoEm, fusoHorario))} · criado pelo lançamento de comandas em data anterior (o caixa não foi aberto nesse dia)`
+          : `Aberto em ${dataPorExtenso(dataLocal(caixa.abertoEm, fusoHorario))}, ${horaLocal(caixa.abertoEm, fusoHorario)}${
+              caixa.fechadoEm ? ` · fechado às ${horaLocal(caixa.fechadoEm, fusoHorario)}` : ''
+            }`
+      }
     >
       <div className="grid gap-4 text-sm sm:grid-cols-2">
         <dl className="grid grid-cols-[1fr_auto] gap-y-1">

@@ -41,6 +41,12 @@ export class CaixaService {
     return (await this.repository.idDoAberto(this.contexto.salaoId))?.id ?? null;
   }
 
+  /** Usado pelas comandas lançadas em data anterior: o caixa daquele dia, se houver. */
+  caixaDoDia(data: string) {
+    const { inicio, fim } = limitesDoDia(data, this.contexto.fusoHorario);
+    return this.repository.doDia(this.contexto.salaoId, inicio, fim);
+  }
+
   async abrir({ trocoInicialCentavos }: AbrirCaixaInput, usuarioId: string) {
     const caixa = await this.repository.abrir(
       this.contexto.salaoId,
@@ -142,6 +148,7 @@ function paraCaixaDetalhe(c: CaixaComValores): CaixaDetalhe {
     esperadoDinheiroCentavos: c.esperadoDinheiroCentavos ?? resumo.esperadoDinheiroCentavos,
     contadoDinheiroCentavos: c.contadoDinheiroCentavos,
     diferencaCentavos: c.diferencaCentavos,
+    lancadoDepois: c.lancadoDepois,
     totaisPorForma: resumo.totaisPorForma,
     sangriasCentavos: resumo.sangriasCentavos,
     reforcosCentavos: resumo.reforcosCentavos,

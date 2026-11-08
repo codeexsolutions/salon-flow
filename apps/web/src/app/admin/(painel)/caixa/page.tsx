@@ -35,7 +35,9 @@ export default async function CaixaPage() {
                   <span className="flex-1">
                     {dataLocal(c.abertoEm, fuso).split('-').reverse().join('/')}{' '}
                     <span className="text-suave">
-                      {horaLocal(c.abertoEm, fuso)}–{c.fechadoEm && horaLocal(c.fechadoEm, fuso)}
+                      {c.lancadoDepois
+                        ? 'lançado depois'
+                        : `${horaLocal(c.abertoEm, fuso)}–${c.fechadoEm ? horaLocal(c.fechadoEm, fuso) : ''}`}
                     </span>
                   </span>
                   <span>{formatarPreco(c.totalRecebidoCentavos)}</span>

@@ -86,6 +86,19 @@ export const adicionarItemComandaSchema = z.discriminatedUnion('tipo', [
 ]);
 export type AdicionarItemComandaInput = z.infer<typeof adicionarItemComandaSchema>;
 
+/** Corrige um item da comanda aberta: valor cobrado e/ou profissional (só serviço). */
+export const atualizarItemComandaSchema = z
+  .object({
+    /** Serviço: valor cobrado. Produto: valor total da linha. */
+    valorCentavos: centavos.optional(),
+    profissionalId: z.uuid('Escolha o profissional').optional(),
+  })
+  .refine(
+    (d) => d.valorCentavos !== undefined || d.profissionalId !== undefined,
+    'Informe o valor ou o profissional',
+  );
+export type AtualizarItemComandaInput = z.infer<typeof atualizarItemComandaSchema>;
+
 export const atualizarComandaSchema = z.object({
   descontoCentavos: centavos.optional(),
   observacoes: z.string().trim().max(500).nullable().optional(),

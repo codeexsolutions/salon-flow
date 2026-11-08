@@ -10,12 +10,14 @@ import {
   textoParaCentavos,
   type ComandaDetalhe,
   type FormaPagamento,
+  type ItemComanda,
   type ProfissionalResumo,
   type ProdutoResumo,
   type ServicoResumo,
 } from '@salonflow/shared';
 import {
   adicionarItem,
+  atualizarItem,
   cancelarComanda,
   fecharComanda,
   removerItem,
@@ -59,6 +61,14 @@ export function EditorComanda({
   ]);
 
   const total = comanda.totalCentavos;
+  // Total mudou (item editado/adicionado, desconto): com uma forma só, acompanha o novo total.
+  const [totalAnterior, setTotalAnterior] = useState(total);
+  if (totalAnterior !== total) {
+    setTotalAnterior(total);
+    if (pagamentos.length === 1) {
+      setPagamentos([{ ...pagamentos[0], valor: centavosParaTexto(total) }]);
+    }
+  }
   const pagos = pagamentos.map((p) => textoParaCentavos(p.valor));
   const somaPagos = pagos.reduce<number>((s, v) => s + (v ?? 0), 0);
   const pagamentoValido = pagos.every((v) => v !== null && v > 0) && somaPagos === total;
@@ -157,28 +167,15 @@ export function EditorComanda({
         ) : (
           <ul className="flex flex-col divide-y divide-borda rounded-xl border border-borda bg-superficie text-sm">
             {comanda.itens.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 px-3 py-2">
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="font-medium">
-                    {item.tipo === 'PRODUTO' && item.quantidade > 1 && `${item.quantidade}× `}
-                    {item.descricao}
-                  </span>
-                  <span className="text-xs text-suave">
-                    {item.tipo === 'PRODUTO' ? 'Venda de produto' : item.profissional?.nome}
-                    {item.agendamentoId && ' · do agendamento'}
-                  </span>
-                </span>
-                <span>{formatarPreco(item.valorCentavos)}</span>
-                <button
-                  type="button"
-                  disabled={pendente}
-                  onClick={() => executar(() => removerItem(comanda.id, item.id))}
-                  aria-label={`Remover ${item.descricao}`}
-                  className="px-1 text-suave"
-                >
-                  ✕
-                </button>
-              </li>
+              <LinhaItem
+                key={`${item.id}-${item.valorCentavos}-${item.profissional?.id ?? ''}`}
+                item={item}
+                profissionais={profissionais}
+                pendente={pendente}
+                aoSalvar={(dados) => executar(() => atualizarItem(comanda.id, item.id, dados))}
+                aoRemover={() => executar(() => removerItem(comanda.id, item.id))}
+                aoErro={setErro}
+              />
             ))}
           </ul>
         )}
@@ -390,5 +387,142 @@ export function EditorComanda({
         </button>
       </div>
     </div>
+  );
+}
+
+/** Linha de item com edição inline de valor e profissional (serviço). */
+function LinhaItem({
+  item,
+  profissionais,
+  pendente,
+  aoSalvar,
+  aoRemover,
+  aoErro,
+}: {
+  item: ItemComanda;
+  profissionais: ProfissionalResumo[];
+  pendente: boolean;
+  aoSalvar: (dados: { valorCentavos?: number; profissionalId?: string }) => void;
+  aoRemover: () => void;
+  aoErro: (erro: string) => void;
+}) {
+  const [editando, setEditando] = useState(false);
+  const [valor, setValor] = useState(centavosParaTexto(item.valorCentavos));
+  const [profissionalId, setProfissionalId] = useState(item.profissional?.id ?? '');
+  const servico = item.tipo === 'SERVICO';
+
+  function salvar() {
+    const valorCentavos = textoParaCentavos(valor);
+    if (valorCentavos === null) {
+      aoErro('Valor inválido. Ex.: 45,00');
+      return;
+    }
+    const dados: { valorCentavos?: number; profissionalId?: string } = {};
+    if (valorCentavos !== item.valorCentavos) dados.valorCentavos = valorCentavos;
+    if (servico && profissionalId && profissionalId !== item.profissional?.id) {
+      dados.profissionalId = profissionalId;
+    }
+    if (Object.keys(dados).length === 0) {
+      setEditando(false);
+      return;
+    }
+    aoSalvar(dados);
+  }
+
+  const descricao = (
+    <span className="font-medium">
+      {item.tipo === 'PRODUTO' && item.quantidade > 1 && `${item.quantidade}× `}
+      {item.descricao}
+    </span>
+  );
+
+  if (editando) {
+    return (
+      <li className="flex flex-col gap-2 px-3 py-2">
+        {descricao}
+        <div className="flex flex-wrap items-center gap-2">
+          {servico && (
+            <select
+              value={profissionalId}
+              onChange={(e) => setProfissionalId(e.target.value)}
+              aria-label="Profissional"
+              className={`${classeInput} min-w-0 flex-1`}
+            >
+              {profissionais.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome}
+                </option>
+              ))}
+            </select>
+          )}
+          <label className="flex items-center gap-1 text-suave">
+            R$
+            <input
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && salvar()}
+              inputMode="decimal"
+              aria-label={item.tipo === 'PRODUTO' ? 'Valor total' : 'Valor cobrado'}
+              autoFocus
+              className={`${classeInput} w-28`}
+            />
+          </label>
+          <button
+            type="button"
+            disabled={pendente}
+            onClick={salvar}
+            className={classeBotaoSecundario}
+          >
+            Salvar
+          </button>
+          <button
+            type="button"
+            disabled={pendente}
+            onClick={() => setEditando(false)}
+            className="text-xs text-suave"
+          >
+            Cancelar
+          </button>
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex items-center gap-3 px-3 py-2">
+      <span className="flex min-w-0 flex-1 flex-col">
+        {descricao}
+        <span className="text-xs text-suave">
+          {item.tipo === 'PRODUTO' ? 'Venda de produto' : item.profissional?.nome}
+          {item.agendamentoId && ' · do agendamento'}
+        </span>
+      </span>
+      <button
+        type="button"
+        disabled={pendente}
+        onClick={() => setEditando(true)}
+        title={servico ? 'Alterar valor ou profissional' : 'Alterar valor'}
+        className="rounded-md px-1 underline decoration-dotted underline-offset-4 hover:text-primaria"
+      >
+        {formatarPreco(item.valorCentavos)}
+      </button>
+      <button
+        type="button"
+        disabled={pendente}
+        onClick={() => setEditando(true)}
+        className="text-xs text-primaria"
+      >
+        Editar
+      </button>
+      <button
+        type="button"
+        disabled={pendente}
+        onClick={aoRemover}
+        aria-label={`Remover ${item.descricao}`}
+        className="px-1 text-suave"
+      >
+        ✕
+      </button>
+    </li>
   );
 }

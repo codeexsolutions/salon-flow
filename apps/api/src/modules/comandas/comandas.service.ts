@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type {
   AdicionarItemComandaInput,
   AtualizarComandaInput,
+  AtualizarItemComandaInput,
   CriarComandaInput,
   FecharComandaInput,
 } from '@salonflow/shared';
@@ -107,6 +108,29 @@ export class ComandasService {
         quantidade: dados.quantidade,
         valorCentavos: unitario * dados.quantidade,
       });
+    }
+    return this.buscar(id);
+  }
+
+  /** Corrige valor cobrado ("a partir de") e/ou profissional de um item da comanda aberta. */
+  async atualizarItem(id: string, itemId: string, dados: AtualizarItemComandaInput) {
+    const comanda = await this.buscarAberta(id);
+    const item = comanda.itens.find((i) => i.id === itemId);
+    if (!item) throw new NaoEncontradoError('Item');
+
+    if (dados.profissionalId !== undefined && dados.profissionalId !== item.profissionalId) {
+      if (item.tipo !== 'SERVICO' || !item.servicoId) {
+        throw new RegraDeNegocioError(
+          'ITEM_SEM_PROFISSIONAL',
+          'Venda de produto não tem profissional.',
+        );
+      }
+      // Valida que o profissional (do salão) faz o serviço.
+      await this.servicos.opcoesDeAgendamento(item.servicoId, dados.profissionalId);
+    }
+
+    if (!(await this.repository.atualizarItem(this.contexto.salaoId, id, itemId, dados))) {
+      throw this.naoEstaAberta();
     }
     return this.buscar(id);
   }

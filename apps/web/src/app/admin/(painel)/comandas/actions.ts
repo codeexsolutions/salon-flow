@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import {
   adicionarItemComandaSchema,
   atualizarComandaSchema,
+  atualizarItemComandaSchema,
   fecharComandaSchema,
   type ComandaDetalhe,
 } from '@salonflow/shared';
@@ -41,6 +42,23 @@ export async function adicionarItem(id: string, entrada: unknown): Promise<Resul
   if (!validacao.success) return falhaDeValidacao(validacao.error);
   try {
     await apiSalao(`/comandas/${id}/itens`, { method: 'POST', body: validacao.data });
+  } catch (erro) {
+    return falha(erro);
+  }
+  atualizar(id);
+  return sucesso(undefined);
+}
+
+/** Corrige valor e/ou profissional de um item (comanda aberta). */
+export async function atualizarItem(
+  id: string,
+  itemId: string,
+  entrada: unknown,
+): Promise<Resultado> {
+  const validacao = atualizarItemComandaSchema.safeParse(entrada);
+  if (!validacao.success) return falhaDeValidacao(validacao.error);
+  try {
+    await apiSalao(`/comandas/${id}/itens/${itemId}`, { method: 'PATCH', body: validacao.data });
   } catch (erro) {
     return falha(erro);
   }

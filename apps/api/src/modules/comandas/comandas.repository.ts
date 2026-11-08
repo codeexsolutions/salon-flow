@@ -67,6 +67,20 @@ export class ComandasRepository {
     return this.prisma.comandaItem.create({ data: { ...item, salaoId, comandaId } });
   }
 
+  /** Altera valor/profissional de um item, só enquanto a comanda estiver ABERTA. */
+  async atualizarItem(
+    salaoId: string,
+    comandaId: string,
+    itemId: string,
+    dados: { valorCentavos?: number; profissionalId?: string },
+  ) {
+    const { count } = await this.prisma.comandaItem.updateMany({
+      where: { id: itemId, salaoId, comandaId, comanda: { status: 'ABERTA' } },
+      data: dados,
+    });
+    return count > 0;
+  }
+
   async removerItem(salaoId: string, comandaId: string, itemId: string) {
     const { count } = await this.prisma.comandaItem.deleteMany({
       where: { id: itemId, salaoId, comandaId, comanda: { status: 'ABERTA' } },

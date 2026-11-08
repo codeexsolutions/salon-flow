@@ -12,11 +12,13 @@ import {
 import {
   adicionarItemComandaSchema,
   atualizarComandaSchema,
+  atualizarItemComandaSchema,
   criarComandaSchema,
   dataLocalSchema,
   fecharComandaSchema,
   type AdicionarItemComandaInput,
   type AtualizarComandaInput,
+  type AtualizarItemComandaInput,
   type CriarComandaInput,
   type FecharComandaInput,
 } from '@salonflow/shared';
@@ -66,6 +68,15 @@ export class ComandasController {
     @Body(new ZodValidationPipe(adicionarItemComandaSchema)) dados: AdicionarItemComandaInput,
   ) {
     return paraComandaDetalhe(await this.service.adicionarItem(id, dados));
+  }
+
+  @Patch(':id/itens/:itemId')
+  async atualizarItem(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+    @Body(new ZodValidationPipe(atualizarItemComandaSchema)) dados: AtualizarItemComandaInput,
+  ) {
+    return paraComandaDetalhe(await this.service.atualizarItem(id, itemId, dados));
   }
 
   @Delete(':id/itens/:itemId')

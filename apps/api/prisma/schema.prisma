@@ -99,6 +99,7 @@ model Salao {
   repasses             Repasse[]
   caixas               Caixa[]
   movimentosCaixa      MovimentoCaixa[]
+  reaberturasCaixa     ReaberturaCaixa[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -608,9 +609,10 @@ model Caixa {
   diferencaCentavos        Int?        @map("diferenca_centavos")
   observacoes              String?
 
-  salao      Salao            @relation(fields: [salaoId], references: [id], onDelete: Cascade)
-  movimentos MovimentoCaixa[]
-  pagamentos Pagamento[]
+  salao       Salao             @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  movimentos  MovimentoCaixa[]
+  pagamentos  Pagamento[]
+  reaberturas ReaberturaCaixa[]
 
   @@index([salaoId, status])
   @@index([salaoId, abertoEm])
@@ -633,4 +635,24 @@ model MovimentoCaixa {
 
   @@index([caixaId])
   @@map("movimentos_caixa")
+}
+
+/// Histórico de reaberturas do caixa (só o dono): guarda o fechamento que foi desfeito.
+model ReaberturaCaixa {
+  id                        String   @id @default(uuid()) @db.Uuid
+  caixaId                   String   @map("caixa_id") @db.Uuid
+  salaoId                   String   @map("salao_id") @db.Uuid
+  motivo                    String
+  reabertoPorId             String?  @map("reaberto_por_id") @db.Uuid
+  reabertoEm                DateTime @default(now()) @map("reaberto_em")
+  fechadoEmAnterior         DateTime @map("fechado_em_anterior")
+  esperadoAnteriorCentavos  Int      @map("esperado_anterior_centavos")
+  contadoAnteriorCentavos   Int      @map("contado_anterior_centavos")
+  diferencaAnteriorCentavos Int      @map("diferenca_anterior_centavos")
+
+  caixa Caixa @relation(fields: [caixaId], references: [id], onDelete: Cascade)
+  salao Salao @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@index([caixaId])
+  @@map("reaberturas_caixa")
 }

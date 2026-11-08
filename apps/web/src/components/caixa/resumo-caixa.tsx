@@ -13,6 +13,8 @@ import { dataLocal, dataPorExtenso, horaLocal } from '@/lib/data-hora';
 /** Conferência do caixa: recebido por forma, movimentos e dinheiro esperado. */
 export function ResumoCaixa({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoHorario: string }) {
   const fechado = caixa.status === 'FECHADO';
+  // Tolera a API ainda sem forma nos movimentos (deploy fora de ordem): tudo era dinheiro.
+  const porForma = caixa.movimentosPorForma ?? {};
   return (
     <Secao
       titulo={fechado ? 'Caixa fechado' : 'Caixa aberto'}
@@ -68,15 +70,11 @@ export function ResumoCaixa({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
           <dt className="mb-1 font-medium">Entradas e saídas por forma</dt>
           <dd className="mb-1 text-xs text-suave">Entradas</dd>
           <dd className="mb-1 text-xs text-suave">Saídas</dd>
-          {FORMAS_MOVIMENTO_CAIXA.filter((f) => caixa.movimentosPorForma[f]).map((f) => (
+          {FORMAS_MOVIMENTO_CAIXA.filter((f) => porForma[f]).map((f) => (
             <Fragment key={f}>
               <dt className="text-suave">{ROTULO_FORMA_MOVIMENTO_CAIXA[f]}</dt>
-              <dd className="text-sucesso">
-                {formatarPreco(caixa.movimentosPorForma[f]!.entradasCentavos)}
-              </dd>
-              <dd className="text-perigo">
-                {formatarPreco(caixa.movimentosPorForma[f]!.saidasCentavos)}
-              </dd>
+              <dd className="text-sucesso">{formatarPreco(porForma[f]!.entradasCentavos)}</dd>
+              <dd className="text-perigo">{formatarPreco(porForma[f]!.saidasCentavos)}</dd>
             </Fragment>
           ))}
         </dl>
@@ -89,11 +87,23 @@ export function ResumoCaixa({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
               <span>
                 <span className="text-suave">{horaLocal(m.criadoEm, fusoHorario)}</span>{' '}
                 {m.tipo === 'SANGRIA' ? 'Saída' : 'Entrada'} ·{' '}
-                {ROTULO_FORMA_MOVIMENTO_CAIXA[m.forma]} · {m.motivo}
+                {ROTULO_FORMA_MOVIMENTO_CAIXA[m.forma ?? 'DINHEIRO']} · {m.motivo}
               </span>
               <span className={m.tipo === 'SANGRIA' ? 'text-perigo' : 'text-sucesso'}>
                 {m.tipo === 'SANGRIA' ? '−' : '+'} {formatarPreco(m.valorCentavos)}
               </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {(caixa.reaberturas ?? []).length > 0 && (
+        <ul className="flex flex-col gap-1 border-t border-borda pt-2 text-xs text-suave">
+          {caixa.reaberturas.map((r) => (
+            <li key={r.reabertoEm}>
+              Reaberto em {dataLocal(r.reabertoEm, fusoHorario).split('-').reverse().join('/')}{' '}
+              {horaLocal(r.reabertoEm, fusoHorario)} · {r.motivo} · fechamento anterior: esperado{' '}
+              {formatarPreco(r.esperadoAnteriorCentavos)}, contado{' '}
+              {formatarPreco(r.contadoAnteriorCentavos)}
             </li>
           ))}
         </ul>

@@ -2,7 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import type { z } from 'zod';
-import { abrirCaixaSchema, fecharCaixaSchema, movimentoCaixaSchema } from '@salonflow/shared';
+import {
+  abrirCaixaSchema,
+  fecharCaixaSchema,
+  movimentoCaixaSchema,
+  reabrirCaixaSchema,
+} from '@salonflow/shared';
 import { falha, falhaDeValidacao, sucesso, type Resultado } from '@/lib/api/resultado';
 import { apiSalao } from '@/lib/api/salao';
 
@@ -28,4 +33,9 @@ export async function movimentarCaixa(entrada: unknown) {
 
 export async function fecharCaixa(entrada: unknown) {
   return enviar('/caixa/fechar', fecharCaixaSchema, entrada);
+}
+
+/** Reabre o último caixa fechado para ajuste (só o dono). */
+export async function reabrirCaixa(id: string, entrada: unknown) {
+  return enviar(`/caixa/${id}/reabrir`, reabrirCaixaSchema, entrada);
 }

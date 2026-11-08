@@ -87,6 +87,21 @@ export const fecharCaixaSchema = z.object({
 });
 export type FecharCaixaInput = z.infer<typeof fecharCaixaSchema>;
 
+/** Reabrir um caixa fechado para ajuste (só o dono). */
+export const reabrirCaixaSchema = z.object({
+  motivo: z.string().trim().min(3, 'Informe o motivo da reabertura').max(300),
+});
+export type ReabrirCaixaInput = z.infer<typeof reabrirCaixaSchema>;
+
+export interface ReaberturaCaixaDto {
+  reabertoEm: string;
+  motivo: string;
+  fechadoEmAnterior: string;
+  esperadoAnteriorCentavos: number;
+  contadoAnteriorCentavos: number;
+  diferencaAnteriorCentavos: number;
+}
+
 export const historicoCaixaSchema = z.object({ de: dataLocalSchema, ate: dataLocalSchema });
 
 export type StatusCaixa = 'ABERTO' | 'FECHADO';
@@ -124,4 +139,6 @@ export interface CaixaDetalhe extends CaixaResumo {
   quantidadePagamentos: number;
   movimentos: MovimentoCaixaDto[];
   observacoes: string | null;
+  /** Reaberturas para ajuste (mais antiga primeiro). */
+  reaberturas: ReaberturaCaixaDto[];
 }

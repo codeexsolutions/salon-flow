@@ -9,6 +9,7 @@ import { PrismaService } from '../../shared/database/prisma.service.js';
 const comValores = {
   movimentos: { orderBy: { criadoEm: 'asc' as const } },
   pagamentos: { select: { forma: true, valorCentavos: true } },
+  reaberturas: { orderBy: { reabertoEm: 'asc' as const } },
 };
 
 @Injectable()
@@ -71,6 +72,53 @@ export class CaixaRepository {
       data: { ...dados, status: 'FECHADO', fechadoEm: new Date() },
     });
     return count > 0;
+  }
+
+  /**
+   * Reabre um caixa FECHADO guardando o fechamento desfeito. Mesma trava da abertura:
+   * só se não houver outro aberto e se for o caixa mais recente do salão.
+   */
+  reabrir(salaoId: string, id: string, motivo: string, reabertoPorId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('caixa'), hashtext(${salaoId}))`;
+      if ((await tx.caixa.count({ where: { salaoId, status: 'ABERTO' } })) > 0) {
+        return 'OUTRO_ABERTO' as const;
+      }
+      const caixa = await tx.caixa.findFirst({ where: { id, salaoId } });
+      if (!caixa) return 'NAO_ENCONTRADO' as const;
+      if (caixa.status !== 'FECHADO') return 'NAO_FECHADO' as const;
+      const maisRecente = await tx.caixa.findFirst({
+        where: { salaoId },
+        orderBy: { abertoEm: 'desc' },
+        select: { id: true },
+      });
+      if (maisRecente?.id !== id) return 'NAO_E_O_ULTIMO' as const;
+
+      await tx.reaberturaCaixa.create({
+        data: {
+          salaoId,
+          caixaId: id,
+          motivo,
+          reabertoPorId,
+          fechadoEmAnterior: caixa.fechadoEm ?? new Date(),
+          esperadoAnteriorCentavos: caixa.esperadoDinheiroCentavos ?? 0,
+          contadoAnteriorCentavos: caixa.contadoDinheiroCentavos ?? 0,
+          diferencaAnteriorCentavos: caixa.diferencaCentavos ?? 0,
+        },
+      });
+      await tx.caixa.update({
+        where: { id },
+        data: {
+          status: 'ABERTO',
+          fechadoEm: null,
+          fechadoPorId: null,
+          esperadoDinheiroCentavos: null,
+          contadoDinheiroCentavos: null,
+          diferencaCentavos: null,
+        },
+      });
+      return 'OK' as const;
+    });
   }
 
   historico(salaoId: string, inicio: Date, fim: Date) {

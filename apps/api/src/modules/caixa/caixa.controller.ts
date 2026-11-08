@@ -4,14 +4,16 @@ import {
   fecharCaixaSchema,
   historicoCaixaSchema,
   movimentoCaixaSchema,
+  reabrirCaixaSchema,
   type AbrirCaixaInput,
   type FecharCaixaInput,
   type MovimentoCaixaInput,
+  type ReabrirCaixaInput,
 } from '@salonflow/shared';
 import { UsuarioAtual } from '../../shared/auth/decorators.js';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe.js';
-import { RotaDoSalao } from '../../shared/tenant/rota-do-salao.decorator.js';
+import { RotaDoSalao, SomentePapeis } from '../../shared/tenant/rota-do-salao.decorator.js';
 import { CaixaService } from './caixa.service.js';
 
 /** Caixa diário: abertura, sangrias/reforços e fechamento com conferência. */
@@ -56,6 +58,17 @@ export class CaixaController {
     @Query(new ZodValidationPipe(historicoCaixaSchema)) { de, ate }: { de: string; ate: string },
   ) {
     return this.service.historico(de, ate);
+  }
+
+  /** Reabre o último caixa fechado para ajuste. Só o dono. */
+  @Post(':id/reabrir')
+  @SomentePapeis('DONO')
+  reabrir(
+    @UsuarioAtual() usuario: UsuarioAutenticado,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(reabrirCaixaSchema)) dados: ReabrirCaixaInput,
+  ) {
+    return this.service.reabrir(id, dados, usuario.id);
   }
 
   @Get(':id')

@@ -4,8 +4,9 @@ import type {
   CaixaDetalhe,
   FecharCaixaInput,
   MovimentoCaixaInput,
+  ReabrirCaixaInput,
 } from '@salonflow/shared';
-import type { Caixa, MovimentoCaixa } from '../../generated/prisma/client.js';
+import type { Caixa, MovimentoCaixa, ReaberturaCaixa } from '../../generated/prisma/client.js';
 import { limitesDoDia, proximoDia } from '../../shared/domain/data-hora.js';
 import {
   ConflitoError,
@@ -18,6 +19,7 @@ import { resumoDoCaixa } from './domain/resumo.js';
 
 type CaixaComValores = Caixa & {
   movimentos: MovimentoCaixa[];
+  reaberturas: ReaberturaCaixa[];
   pagamentos: { forma: string; valorCentavos: number }[];
 };
 
@@ -80,6 +82,28 @@ export class CaixaService {
     return this.detalhe(caixa.id);
   }
 
+  /** Reabre o último caixa fechado para ajuste (só o dono; a rota restringe). */
+  async reabrir(id: string, { motivo }: ReabrirCaixaInput, usuarioId: string) {
+    const r = await this.repository.reabrir(this.contexto.salaoId, id, motivo, usuarioId);
+    switch (r) {
+      case 'NAO_ENCONTRADO':
+        throw new NaoEncontradoError('Caixa');
+      case 'OUTRO_ABERTO':
+        throw new ConflitoError(
+          'CAIXA_JA_ABERTO',
+          'Já existe um caixa aberto. Feche-o antes de reabrir outro.',
+        );
+      case 'NAO_FECHADO':
+        throw new ConflitoError('CAIXA_NAO_FECHADO', 'Este caixa não está fechado.');
+      case 'NAO_E_O_ULTIMO':
+        throw new RegraDeNegocioError(
+          'CAIXA_NAO_E_O_ULTIMO',
+          'Só é possível reabrir o caixa mais recente.',
+        );
+    }
+    return this.detalhe(id);
+  }
+
   async detalhe(id: string): Promise<CaixaDetalhe> {
     const caixa = await this.repository.buscar(this.contexto.salaoId, id);
     if (!caixa) throw new NaoEncontradoError('Caixa');
@@ -124,6 +148,14 @@ function paraCaixaDetalhe(c: CaixaComValores): CaixaDetalhe {
     movimentosPorForma: resumo.movimentosPorForma,
     quantidadePagamentos: c.pagamentos.length,
     observacoes: c.observacoes,
+    reaberturas: c.reaberturas.map((r) => ({
+      reabertoEm: r.reabertoEm.toISOString(),
+      motivo: r.motivo,
+      fechadoEmAnterior: r.fechadoEmAnterior.toISOString(),
+      esperadoAnteriorCentavos: r.esperadoAnteriorCentavos,
+      contadoAnteriorCentavos: r.contadoAnteriorCentavos,
+      diferencaAnteriorCentavos: r.diferencaAnteriorCentavos,
+    })),
     movimentos: c.movimentos.map((m) => ({
       id: m.id,
       tipo: m.tipo,

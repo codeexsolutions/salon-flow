@@ -60,8 +60,22 @@ export interface RepasseDetalhe extends RepasseResumo {
 export const abrirCaixaSchema = z.object({ trocoInicialCentavos: centavos });
 export type AbrirCaixaInput = z.infer<typeof abrirCaixaSchema>;
 
+/** Forma da entrada/saída avulsa do caixa. Só DINHEIRO mexe na gaveta. */
+export const FORMAS_MOVIMENTO_CAIXA = ['DINHEIRO', 'PIX', 'CREDITO', 'DEBITO', 'VALE'] as const;
+export type FormaMovimentoCaixa = (typeof FORMAS_MOVIMENTO_CAIXA)[number];
+
+export const ROTULO_FORMA_MOVIMENTO_CAIXA: Record<FormaMovimentoCaixa, string> = {
+  DINHEIRO: 'Dinheiro',
+  PIX: 'Pix',
+  CREDITO: 'Crédito',
+  DEBITO: 'Débito',
+  VALE: 'Vale',
+};
+
 export const movimentoCaixaSchema = z.object({
+  /** SANGRIA = saída; REFORCO = entrada. */
   tipo: z.enum(['SANGRIA', 'REFORCO']),
+  forma: z.enum(FORMAS_MOVIMENTO_CAIXA).default('DINHEIRO'),
   valorCentavos: centavos.min(1, 'Informe o valor'),
   motivo: z.string().trim().min(2, 'Informe o motivo').max(200),
 });
@@ -80,6 +94,7 @@ export type StatusCaixa = 'ABERTO' | 'FECHADO';
 export interface MovimentoCaixaDto {
   id: string;
   tipo: 'SANGRIA' | 'REFORCO';
+  forma: FormaMovimentoCaixa;
   valorCentavos: number;
   motivo: string;
   criadoEm: string;
@@ -99,8 +114,13 @@ export interface CaixaResumo {
 
 export interface CaixaDetalhe extends CaixaResumo {
   totaisPorForma: Partial<Record<FormaPagamento, number>>;
+  /** Saídas/entradas em DINHEIRO (as que mexem na gaveta). */
   sangriasCentavos: number;
   reforcosCentavos: number;
+  /** Entradas e saídas avulsas por forma (inclui dinheiro). */
+  movimentosPorForma: Partial<
+    Record<FormaMovimentoCaixa, { entradasCentavos: number; saidasCentavos: number }>
+  >;
   quantidadePagamentos: number;
   movimentos: MovimentoCaixaDto[];
   observacoes: string | null;

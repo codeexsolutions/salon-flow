@@ -3,9 +3,12 @@
 import { useState, useTransition } from 'react';
 import {
   centavosParaTexto,
+  FORMAS_MOVIMENTO_CAIXA,
   formatarPreco,
+  ROTULO_FORMA_MOVIMENTO_CAIXA,
   textoParaCentavos,
   type CaixaDetalhe,
+  type FormaMovimentoCaixa,
 } from '@salonflow/shared';
 import { abrirCaixa, fecharCaixa, movimentarCaixa } from '@/app/admin/(painel)/caixa/actions';
 import type { Resultado } from '@/lib/api/resultado';
@@ -56,9 +59,10 @@ export function AbrirCaixa() {
   );
 }
 
-/** Caixa aberto: conferência parcial, sangria/reforço e fechamento. */
+/** Caixa aberto: conferência parcial, entradas/saídas avulsas e fechamento. */
 export function CaixaAberto({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoHorario: string }) {
   const [tipo, setTipo] = useState<'SANGRIA' | 'REFORCO'>('SANGRIA');
+  const [forma, setForma] = useState<FormaMovimentoCaixa>('DINHEIRO');
   const [valor, setValor] = useState('');
   const [motivo, setMotivo] = useState('');
   const [contado, setContado] = useState(centavosParaTexto(caixa.esperadoDinheiroCentavos));
@@ -74,13 +78,36 @@ export function CaixaAberto({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
     <div className="flex flex-col gap-6">
       <ResumoCaixa caixa={caixa} fusoHorario={fusoHorario} />
 
-      <Secao titulo="Sangria ou reforço">
+      <Secao
+        titulo="Entrada ou saída"
+        descricao="Lançamentos avulsos, fora das comandas. Só os em dinheiro mexem na gaveta."
+      >
         <div className="flex flex-wrap gap-4 text-sm">
           {(['SANGRIA', 'REFORCO'] as const).map((t) => (
             <label key={t} className="flex items-center gap-1">
               <input type="radio" checked={tipo === t} onChange={() => setTipo(t)} />
-              {t === 'SANGRIA' ? 'Sangria (retirar dinheiro)' : 'Reforço (colocar dinheiro)'}
+              {t === 'SANGRIA'
+                ? 'Saída (sangria, pagamento, vale…)'
+                : 'Entrada (reforço, recebimento…)'}
             </label>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2 text-sm" role="radiogroup" aria-label="Forma">
+          {FORMAS_MOVIMENTO_CAIXA.map((f) => (
+            <button
+              key={f}
+              type="button"
+              role="radio"
+              aria-checked={forma === f}
+              onClick={() => setForma(f)}
+              className={`rounded-full border px-3 py-1 ${
+                forma === f
+                  ? 'border-primaria bg-primaria text-primaria-contraste'
+                  : 'border-borda text-suave'
+              }`}
+            >
+              {ROTULO_FORMA_MOVIMENTO_CAIXA[f]}
+            </button>
           ))}
         </div>
         <div className="grid gap-2 text-sm sm:grid-cols-[8rem_1fr_auto]">
@@ -96,7 +123,11 @@ export function CaixaAberto({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             placeholder={
-              tipo === 'SANGRIA' ? 'Motivo: depósito, pagamento de fornecedor…' : 'Motivo: troco…'
+              tipo === 'SANGRIA'
+                ? forma === 'VALE'
+                  ? 'Motivo: vale para quem…'
+                  : 'Motivo: depósito, pagamento de fornecedor…'
+                : 'Motivo: troco, recebimento…'
             }
             maxLength={200}
             aria-label="Motivo"
@@ -111,7 +142,7 @@ export function CaixaAberto({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
                 () =>
                   centavos === null
                     ? Promise.resolve({ ok: false as const, erro: 'Valor inválido.' })
-                    : movimentarCaixa({ tipo, valorCentavos: centavos, motivo }),
+                    : movimentarCaixa({ tipo, forma, valorCentavos: centavos, motivo }),
                 () => {
                   setValor('');
                   setMotivo('');

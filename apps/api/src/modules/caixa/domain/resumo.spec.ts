@@ -11,8 +11,8 @@ describe('resumoDoCaixa', () => {
         { forma: 'CREDITO', valorCentavos: 12000 },
       ],
       [
-        { tipo: 'SANGRIA', valorCentavos: 4000 },
-        { tipo: 'REFORCO', valorCentavos: 2000 },
+        { tipo: 'SANGRIA', forma: 'DINHEIRO', valorCentavos: 4000 },
+        { tipo: 'REFORCO', forma: 'DINHEIRO', valorCentavos: 2000 },
       ],
     );
     expect(r.totaisPorForma).toEqual({ DINHEIRO: 8000, PIX: 8000, CREDITO: 12000 });
@@ -29,5 +29,27 @@ describe('resumoDoCaixa', () => {
     const r = resumoDoCaixa(0, [{ forma: 'PIX', valorCentavos: 9000 }], []);
     expect(r.esperadoDinheiroCentavos).toBe(0);
     expect(r.totalRecebidoCentavos).toBe(9000);
+  });
+
+  it('entradas/saídas em pix, cartão ou vale não mexem na gaveta, mas aparecem por forma', () => {
+    const r = resumoDoCaixa(
+      10000,
+      [],
+      [
+        { tipo: 'SANGRIA', forma: 'VALE', valorCentavos: 5000 },
+        { tipo: 'SANGRIA', forma: 'PIX', valorCentavos: 3000 },
+        { tipo: 'REFORCO', forma: 'CREDITO', valorCentavos: 7000 },
+        { tipo: 'SANGRIA', forma: 'DINHEIRO', valorCentavos: 1000 },
+      ],
+    );
+    expect(r.esperadoDinheiroCentavos).toBe(9000);
+    expect(r.sangriasCentavos).toBe(1000);
+    expect(r.reforcosCentavos).toBe(0);
+    expect(r.movimentosPorForma).toEqual({
+      VALE: { entradasCentavos: 0, saidasCentavos: 5000 },
+      PIX: { entradasCentavos: 0, saidasCentavos: 3000 },
+      CREDITO: { entradasCentavos: 7000, saidasCentavos: 0 },
+      DINHEIRO: { entradasCentavos: 0, saidasCentavos: 1000 },
+    });
   });
 });

@@ -1,6 +1,9 @@
+import { Fragment } from 'react';
 import {
+  FORMAS_MOVIMENTO_CAIXA,
   FORMAS_PAGAMENTO,
   formatarPreco,
+  ROTULO_FORMA_MOVIMENTO_CAIXA,
   ROTULO_FORMA_PAGAMENTO,
   type CaixaDetalhe,
 } from '@salonflow/shared';
@@ -43,8 +46,8 @@ export function ResumoCaixa({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
             rotulo="Recebido em dinheiro"
             valor={caixa.totaisPorForma.DINHEIRO ?? 0}
           />
-          <FragmentoLinha rotulo="Reforços" valor={caixa.reforcosCentavos} />
-          <FragmentoLinha rotulo="Sangrias" valor={-caixa.sangriasCentavos} />
+          <FragmentoLinha rotulo="Entradas em dinheiro" valor={caixa.reforcosCentavos} />
+          <FragmentoLinha rotulo="Saídas em dinheiro" valor={-caixa.sangriasCentavos} />
           <dt className="font-semibold">Esperado</dt>
           <dd className="font-semibold">{formatarPreco(caixa.esperadoDinheiroCentavos)}</dd>
           {fechado && caixa.contadoDinheiroCentavos !== null && (
@@ -61,12 +64,32 @@ export function ResumoCaixa({ caixa, fusoHorario }: { caixa: CaixaDetalhe; fusoH
       </div>
 
       {caixa.movimentos.length > 0 && (
+        <dl className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1 text-sm">
+          <dt className="mb-1 font-medium">Entradas e saídas por forma</dt>
+          <dd className="mb-1 text-xs text-suave">Entradas</dd>
+          <dd className="mb-1 text-xs text-suave">Saídas</dd>
+          {FORMAS_MOVIMENTO_CAIXA.filter((f) => caixa.movimentosPorForma[f]).map((f) => (
+            <Fragment key={f}>
+              <dt className="text-suave">{ROTULO_FORMA_MOVIMENTO_CAIXA[f]}</dt>
+              <dd className="text-sucesso">
+                {formatarPreco(caixa.movimentosPorForma[f]!.entradasCentavos)}
+              </dd>
+              <dd className="text-perigo">
+                {formatarPreco(caixa.movimentosPorForma[f]!.saidasCentavos)}
+              </dd>
+            </Fragment>
+          ))}
+        </dl>
+      )}
+
+      {caixa.movimentos.length > 0 && (
         <ul className="flex flex-col divide-y divide-borda border-t border-borda pt-2 text-sm">
           {caixa.movimentos.map((m) => (
             <li key={m.id} className="flex justify-between gap-3 py-1">
               <span>
                 <span className="text-suave">{horaLocal(m.criadoEm, fusoHorario)}</span>{' '}
-                {m.tipo === 'SANGRIA' ? 'Sangria' : 'Reforço'} · {m.motivo}
+                {m.tipo === 'SANGRIA' ? 'Saída' : 'Entrada'} ·{' '}
+                {ROTULO_FORMA_MOVIMENTO_CAIXA[m.forma]} · {m.motivo}
               </span>
               <span className={m.tipo === 'SANGRIA' ? 'text-perigo' : 'text-sucesso'}>
                 {m.tipo === 'SANGRIA' ? '−' : '+'} {formatarPreco(m.valorCentavos)}

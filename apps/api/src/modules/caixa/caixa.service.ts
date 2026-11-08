@@ -51,12 +51,13 @@ export class CaixaService {
 
   async movimentar(dados: MovimentoCaixaInput, usuarioId: string) {
     const caixa = await this.exigirAberto();
-    if (dados.tipo === 'SANGRIA') {
+    // Só saída em dinheiro precisa caber na gaveta.
+    if (dados.tipo === 'SANGRIA' && dados.forma === 'DINHEIRO') {
       const { esperadoDinheiroCentavos } = paraCaixaDetalhe(caixa);
       if (dados.valorCentavos > esperadoDinheiroCentavos) {
         throw new RegraDeNegocioError(
           'SANGRIA_MAIOR_QUE_SALDO',
-          'A sangria é maior que o dinheiro esperado na gaveta.',
+          'A saída em dinheiro é maior que o dinheiro esperado na gaveta.',
         );
       }
     }
@@ -120,11 +121,13 @@ function paraCaixaDetalhe(c: CaixaComValores): CaixaDetalhe {
     totaisPorForma: resumo.totaisPorForma,
     sangriasCentavos: resumo.sangriasCentavos,
     reforcosCentavos: resumo.reforcosCentavos,
+    movimentosPorForma: resumo.movimentosPorForma,
     quantidadePagamentos: c.pagamentos.length,
     observacoes: c.observacoes,
     movimentos: c.movimentos.map((m) => ({
       id: m.id,
       tipo: m.tipo,
+      forma: m.forma,
       valorCentavos: m.valorCentavos,
       motivo: m.motivo,
       criadoEm: m.criadoEm.toISOString(),

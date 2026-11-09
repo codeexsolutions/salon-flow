@@ -2,7 +2,10 @@ import Link from 'next/link';
 import {
   dataLocalSchema,
   formatarPreco,
+  ROTULO_FORMA_MOVIMENTO_CAIXA,
   ROTULO_FORMA_PAGAMENTO,
+  type FormaMovimentoCaixa,
+  type MovimentosFaturamento,
   type FaturamentoItemRanking,
   type RelatorioFaturamento,
 } from '@salonflow/shared';
@@ -77,17 +80,109 @@ function Cartao({
   );
 }
 
-function Linha({ rotulo, valor, sinal }: { rotulo: string; valor: number; sinal?: '−' | '=' }) {
+function Linha({
+  rotulo,
+  valor,
+  sinal,
+}: {
+  rotulo: string;
+  valor: number;
+  sinal?: '−' | '=' | '+';
+}) {
   return (
     <div
       className={`flex justify-between gap-4 py-1.5 ${sinal === '=' ? 'border-t border-borda font-semibold' : ''}`}
     >
-      <span className={sinal === '−' ? 'text-suave' : ''}>
-        {sinal === '−' ? '− ' : ''}
+      <span className={sinal === '−' || sinal === '+' ? 'text-suave' : ''}>
+        {sinal === '−' ? '− ' : sinal === '+' ? '+ ' : ''}
         {rotulo}
       </span>
       <span className="tabular-nums">{formatarPreco(valor)}</span>
     </div>
+  );
+}
+
+function PorFormaCaixa({
+  titulo,
+  valores,
+}: {
+  titulo: string;
+  valores: Partial<Record<FormaMovimentoCaixa, number>>;
+}) {
+  const linhas = Object.entries(valores) as [FormaMovimentoCaixa, number][];
+  if (linhas.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs text-suave">{titulo}</span>
+      {linhas
+        .sort(([, a], [, b]) => b - a)
+        .map(([forma, valor]) => (
+          <div key={forma} className="flex justify-between gap-4">
+            <span>{ROTULO_FORMA_MOVIMENTO_CAIXA[forma]}</span>
+            <span className="tabular-nums">{formatarPreco(valor)}</span>
+          </div>
+        ))}
+    </div>
+  );
+}
+
+/** Entradas e saídas avulsas do caixa e o saldo do período (fora das vendas). */
+function MovimentacoesCaixa({
+  movimentos: m,
+  resultadoCentavos,
+}: {
+  movimentos: MovimentosFaturamento;
+  resultadoCentavos: number;
+}) {
+  return (
+    <Secao
+      titulo="Movimentações do caixa"
+      descricao="Entradas e saídas lançadas direto no caixa (fora das comandas), pelo dia do caixa."
+    >
+      <div className="grid gap-6 text-sm lg:grid-cols-2">
+        <div className="flex flex-col">
+          <Linha rotulo="Resultado do salão (vendas)" valor={resultadoCentavos} />
+          <Linha rotulo="Outras entradas" valor={m.entradasCentavos} sinal="+" />
+          <Linha rotulo="Saídas e despesas" valor={m.saidasCentavos} sinal="−" />
+          <Linha rotulo="Saldo do período" valor={m.saldoCentavos} sinal="=" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <PorFormaCaixa titulo="Entradas por forma" valores={m.entradasPorForma} />
+          <PorFormaCaixa titulo="Saídas por forma" valores={m.saidasPorForma} />
+          {m.lista.length === 0 && (
+            <p className="text-suave sm:col-span-2">Nenhuma entrada ou saída avulsa no período.</p>
+          )}
+        </div>
+      </div>
+      {m.lista.length > 0 && (
+        <details className="text-sm">
+          <summary className="cursor-pointer text-primaria">
+            Ver lançamentos ({m.lista.length})
+          </summary>
+          <ul className="mt-2 flex flex-col divide-y divide-borda">
+            {m.lista.map((l, i) => (
+              <li key={i} className="flex items-center gap-3 py-1.5">
+                <span className="w-12 shrink-0 text-xs text-suave">
+                  {l.data.slice(8, 10)}/{l.data.slice(5, 7)}
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  {l.motivo}{' '}
+                  <span className="text-xs text-suave">
+                    · {ROTULO_FORMA_MOVIMENTO_CAIXA[l.forma]}
+                  </span>
+                </span>
+                <span
+                  className={`shrink-0 tabular-nums ${l.tipo === 'ENTRADA' ? 'text-sucesso' : 'text-perigo'}`}
+                >
+                  {l.tipo === 'ENTRADA' ? '+ ' : '− '}
+                  {formatarPreco(l.valorCentavos)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </Secao>
   );
 }
 
@@ -274,6 +369,10 @@ export default async function FaturamentoPage({ searchParams }: PageProps<'/admi
           )}
         </Secao>
       </div>
+
+      {r.movimentos && (
+        <MovimentacoesCaixa movimentos={r.movimentos} resultadoCentavos={t.resultadoCentavos} />
+      )}
 
       <Secao
         titulo="Por profissional"

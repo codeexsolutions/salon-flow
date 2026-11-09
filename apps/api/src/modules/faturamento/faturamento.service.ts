@@ -10,6 +10,7 @@ import {
   porForma,
   porProfissional,
   ranking,
+  resumoMovimentos,
   totaisDe,
 } from './domain/relatorio.js';
 import { FaturamentoRepository } from './faturamento.repository.js';
@@ -31,21 +32,29 @@ export class FaturamentoService {
       throw new RegraDeNegocioError('PERIODO_INVALIDO', 'O período máximo é de 1 ano.');
 
     const anterior = periodoAnterior(de, ate);
-    const [comandas, comandasAnteriores] = await Promise.all([
+    const fuso = this.contexto.fusoHorario;
+    const [comandas, comandasAnteriores, movimentos] = await Promise.all([
       this.comandas(de, ate),
       this.comandas(anterior.de, anterior.ate),
+      this.repository.movimentosDoCaixa(
+        this.contexto.salaoId,
+        limitesDoDia(de, fuso).inicio,
+        limitesDoDia(proximoDia(ate), fuso).inicio,
+      ),
     ]);
+    const totais = totaisDe(comandas);
 
     return {
       de,
       ate,
-      totais: totaisDe(comandas),
+      totais,
       anterior: { ...anterior, totais: totaisDe(comandasAnteriores) },
       porDia: porDia(comandas, de, ate, this.contexto.fusoHorario),
       porForma: porForma(comandas),
       porProfissional: porProfissional(comandas),
       servicos: ranking(comandas, 'SERVICO'),
       produtos: ranking(comandas, 'PRODUTO'),
+      movimentos: resumoMovimentos(movimentos, totais.resultadoCentavos, fuso),
     };
   }
 

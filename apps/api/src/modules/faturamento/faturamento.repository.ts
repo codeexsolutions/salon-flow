@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/database/prisma.service.js';
-import type { ComandaFaturada } from './domain/relatorio.js';
+import type { ComandaFaturada, MovimentoAvulso } from './domain/relatorio.js';
 
 /** Todas as consultas filtram por salaoId (isolamento entre salões). */
 @Injectable()
@@ -41,5 +41,21 @@ export class FaturamentoRepository {
         profissionalNome: profissional?.nome ?? null,
       })),
     }));
+  }
+
+  /** Entradas/saídas avulsas dos caixas abertos em [inicio, fim) (dia do caixa). */
+  async movimentosDoCaixa(salaoId: string, inicio: Date, fim: Date): Promise<MovimentoAvulso[]> {
+    const movimentos = await this.prisma.movimentoCaixa.findMany({
+      where: { salaoId, caixa: { abertoEm: { gte: inicio, lt: fim } } },
+      select: {
+        tipo: true,
+        forma: true,
+        valorCentavos: true,
+        motivo: true,
+        criadoEm: true,
+        caixa: { select: { abertoEm: true } },
+      },
+    });
+    return movimentos.map(({ caixa, ...m }) => ({ ...m, diaDoCaixa: caixa.abertoEm }));
   }
 }

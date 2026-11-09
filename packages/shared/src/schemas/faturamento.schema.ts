@@ -1,4 +1,5 @@
 import type { FormaPagamento } from './comanda.schema.js';
+import type { FormaMovimentoCaixa } from './financeiro.schema.js';
 
 /** Totais de um período (só comandas fechadas, pela data do atendimento). */
 export interface TotaisFaturamento {
@@ -50,6 +51,24 @@ export interface FaturamentoItemRanking {
   valorCentavos: number;
 }
 
+/** Entradas e saídas avulsas do caixa (fora das comandas). */
+export interface MovimentosFaturamento {
+  entradasCentavos: number;
+  saidasCentavos: number;
+  entradasPorForma: Partial<Record<FormaMovimentoCaixa, number>>;
+  saidasPorForma: Partial<Record<FormaMovimentoCaixa, number>>;
+  /** Resultado do salão + entradas − saídas: o que sobrou no período. */
+  saldoCentavos: number;
+  /** Mais recentes primeiro (até 200). */
+  lista: {
+    data: string;
+    tipo: 'ENTRADA' | 'SAIDA';
+    forma: FormaMovimentoCaixa;
+    valorCentavos: number;
+    motivo: string;
+  }[];
+}
+
 export interface RelatorioFaturamento {
   de: string;
   ate: string;
@@ -61,4 +80,6 @@ export interface RelatorioFaturamento {
   porProfissional: FaturamentoProfissional[];
   servicos: FaturamentoItemRanking[];
   produtos: FaturamentoItemRanking[];
+  /** API antiga não envia. */
+  movimentos?: MovimentosFaturamento;
 }

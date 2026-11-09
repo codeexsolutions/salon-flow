@@ -5,6 +5,7 @@ import {
   porForma,
   porProfissional,
   ranking,
+  resumoMovimentos,
   totaisDe,
   type ComandaFaturada,
 } from './relatorio.js';
@@ -142,6 +143,52 @@ describe('relatório de faturamento', () => {
     expect(periodoAnterior('2026-11-09', '2026-11-09')).toEqual({
       de: '2026-11-08',
       ate: '2026-11-08',
+    });
+  });
+
+  it('resume entradas e saídas do caixa e calcula o saldo', () => {
+    const dia = new Date('2026-11-10T12:00:00Z');
+    const r = resumoMovimentos(
+      [
+        {
+          diaDoCaixa: dia,
+          tipo: 'REFORCO',
+          forma: 'PIX',
+          valorCentavos: 5000,
+          motivo: 'Venda avulsa',
+          criadoEm: new Date('2026-11-10T13:00:00Z'),
+        },
+        {
+          diaDoCaixa: dia,
+          tipo: 'SANGRIA',
+          forma: 'DINHEIRO',
+          valorCentavos: 3000,
+          motivo: 'Fornecedor',
+          criadoEm: new Date('2026-11-10T14:00:00Z'),
+        },
+        {
+          diaDoCaixa: dia,
+          tipo: 'SANGRIA',
+          forma: 'DINHEIRO',
+          valorCentavos: 1000,
+          motivo: 'Lanche',
+          criadoEm: new Date('2026-11-10T15:00:00Z'),
+        },
+      ],
+      10000,
+      FUSO,
+    );
+    expect(r.entradasCentavos).toBe(5000);
+    expect(r.saidasCentavos).toBe(4000);
+    expect(r.entradasPorForma).toEqual({ PIX: 5000 });
+    expect(r.saidasPorForma).toEqual({ DINHEIRO: 4000 });
+    expect(r.saldoCentavos).toBe(11000);
+    expect(r.lista[0]).toEqual({
+      data: '2026-11-10',
+      tipo: 'SAIDA',
+      forma: 'DINHEIRO',
+      valorCentavos: 1000,
+      motivo: 'Lanche',
     });
   });
 });

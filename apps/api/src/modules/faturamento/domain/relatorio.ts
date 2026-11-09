@@ -3,7 +3,9 @@ import type {
   FaturamentoForma,
   FaturamentoItemRanking,
   FaturamentoProfissional,
+  FormaMovimentoCaixa,
   FormaPagamento,
+  MovimentosFaturamento,
   TotaisFaturamento,
 } from '@salonflow/shared';
 import { proximoDia, utcParaLocal } from '../../../shared/domain/data-hora.js';
@@ -155,4 +157,55 @@ export function ranking(
     }
   }
   return [...grupos.values()].sort((a, b) => b.valorCentavos - a.valorCentavos).slice(0, limite);
+}
+
+/** Entrada/saída avulsa do caixa, com o dia do caixa em que foi lançada. */
+export interface MovimentoAvulso {
+  diaDoCaixa: Date;
+  tipo: 'SANGRIA' | 'REFORCO';
+  forma: FormaMovimentoCaixa;
+  valorCentavos: number;
+  motivo: string;
+  criadoEm: Date;
+}
+
+const LIMITE_LISTA = 200;
+
+/** Soma entradas (reforços) e saídas (sangrias) do caixa e o saldo do período. */
+export function resumoMovimentos(
+  movimentos: MovimentoAvulso[],
+  resultadoCentavos: number,
+  fuso: string,
+): MovimentosFaturamento {
+  let entradas = 0;
+  let saidas = 0;
+  const entradasPorForma: MovimentosFaturamento['entradasPorForma'] = {};
+  const saidasPorForma: MovimentosFaturamento['saidasPorForma'] = {};
+  for (const m of movimentos) {
+    if (m.tipo === 'REFORCO') {
+      entradas += m.valorCentavos;
+      entradasPorForma[m.forma] = (entradasPorForma[m.forma] ?? 0) + m.valorCentavos;
+    } else {
+      saidas += m.valorCentavos;
+      saidasPorForma[m.forma] = (saidasPorForma[m.forma] ?? 0) + m.valorCentavos;
+    }
+  }
+  const lista = [...movimentos]
+    .sort((a, b) => b.criadoEm.getTime() - a.criadoEm.getTime())
+    .slice(0, LIMITE_LISTA)
+    .map((m) => ({
+      data: utcParaLocal(m.diaDoCaixa, fuso).slice(0, 10),
+      tipo: m.tipo === 'REFORCO' ? ('ENTRADA' as const) : ('SAIDA' as const),
+      forma: m.forma,
+      valorCentavos: m.valorCentavos,
+      motivo: m.motivo,
+    }));
+  return {
+    entradasCentavos: entradas,
+    saidasCentavos: saidas,
+    entradasPorForma,
+    saidasPorForma,
+    saldoCentavos: resultadoCentavos + entradas - saidas,
+    lista,
+  };
 }

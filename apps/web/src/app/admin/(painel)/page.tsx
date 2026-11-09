@@ -97,7 +97,7 @@ export default async function PainelInicioPage() {
           valor={formatarPreco(r.faturado)}
           detalhe={`${r.quantidadeFechadas} comanda(s) fechada(s) · ${r.abertas} aberta(s)`}
           icone={Receipt}
-          href="/admin/comandas"
+          href={salao.papel === 'DONO' ? '/admin/faturamento' : '/admin/comandas'}
           destaque={r.abertas > 0}
         />
         <Indicador

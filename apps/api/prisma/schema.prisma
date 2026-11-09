@@ -102,6 +102,7 @@ model Salao {
   reaberturasCaixa     ReaberturaCaixa[]
   maquininhas          Maquininha[]
   reaberturasComanda   ReaberturaComanda[]
+  contratoParcerias    ContratoParceria[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -168,6 +169,8 @@ model Profissional {
   regrasComissao RegraComissao[]
   comandaItens   ComandaItem[]
   repasses       Repasse[]
+
+  contratos ContratoParceria[]
 
   @@unique([salaoId, email])
   @@unique([salaoId, usuarioId])
@@ -715,4 +718,79 @@ model ReaberturaComanda {
 
   @@index([comandaId])
   @@map("reaberturas_comanda")
+}
+
+enum StatusContrato {
+  RASCUNHO
+  ATIVO
+  ENCERRADO
+}
+
+enum PeriodicidadeRepasse {
+  SEMANAL
+  QUINZENAL
+  MENSAL
+}
+
+enum HomologacaoContrato {
+  /// Sindicato da categoria profissional e laboral
+  SINDICATO
+  /// Órgão local do Ministério do Trabalho (na ausência do sindicato)
+  MTE
+}
+
+/// Contrato de parceria salão-parceiro × profissional-parceiro (Lei 13.352/2016).
+/// Os dados das partes ficam copiados no contrato (o documento não muda depois).
+model ContratoParceria {
+  id                    String               @id @default(uuid()) @db.Uuid
+  salaoId               String               @map("salao_id") @db.Uuid
+  profissionalId        String               @map("profissional_id") @db.Uuid
+  status                StatusContrato       @default(RASCUNHO)
+  salaoRazaoSocial      String               @map("salao_razao_social")
+  salaoDocumento        String               @map("salao_documento")
+  salaoEndereco         String               @map("salao_endereco")
+  profissionalNome      String               @map("profissional_nome")
+  profissionalDocumento String               @map("profissional_documento")
+  profissionalMei       Boolean              @default(false) @map("profissional_mei")
+  profissionalEndereco  String               @map("profissional_endereco")
+  /// FuncaoParceiro (cabeleireiro, manicure...)
+  funcoes               String[]
+  /// Serviços contratados (fora deles a comanda avisa: art. 1º-C, II).
+  servicoIds            String[]             @map("servico_ids") @db.Uuid
+  cotaProfissionalBps   Int                  @map("cota_profissional_bps")
+  periodicidade         PeriodicidadeRepasse
+  inicioEm              DateTime             @map("inicio_em") @db.Date
+  assinadoEm            DateTime?            @map("assinado_em") @db.Date
+  homologacao           HomologacaoContrato?
+  homologadoEm          DateTime?            @map("homologado_em") @db.Date
+  /// [{ nome, cpf }] (duas testemunhas)
+  testemunhas           Json                 @default("[]")
+  avisoPrevioEm         DateTime?            @map("aviso_previo_em") @db.Date
+  encerradoEm           DateTime?            @map("encerrado_em") @db.Date
+  comumAcordo           Boolean              @default(false) @map("comum_acordo")
+  motivoEncerramento    String?              @map("motivo_encerramento")
+  criadoEm              DateTime             @default(now()) @map("criado_em")
+  atualizadoEm          DateTime             @updatedAt @map("atualizado_em")
+
+  salao        Salao            @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissional Profissional     @relation(fields: [profissionalId], references: [id], onDelete: Cascade)
+  arquivo      ArquivoContrato?
+
+  @@index([salaoId, profissionalId])
+  @@map("contratos_parceria")
+}
+
+/// PDF do contrato assinado/homologado (guardado no banco: tem dados pessoais).
+model ArquivoContrato {
+  contratoId String   @id @map("contrato_id") @db.Uuid
+  salaoId    String   @map("salao_id") @db.Uuid
+  nome       String
+  tamanho    Int
+  conteudo   Bytes
+  enviadoEm  DateTime @default(now()) @map("enviado_em")
+
+  contrato ContratoParceria @relation(fields: [contratoId], references: [id], onDelete: Cascade)
+
+  @@index([salaoId])
+  @@map("arquivos_contrato")
 }

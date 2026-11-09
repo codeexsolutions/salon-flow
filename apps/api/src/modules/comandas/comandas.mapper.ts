@@ -9,7 +9,7 @@ import type {
 type ComandaCompleta = Comanda & {
   cliente: { id: string; nome: string } | null;
   itens: (ComandaItem & {
-    profissional: { id: string; nome: string } | null;
+    profissional: { id: string; nome: string; contratos?: { servicoIds: string[] }[] } | null;
     servico?: { precoAPartirDe: boolean } | null;
   })[];
   pagamentos: (Pagamento & { maquininha?: { id: string; nome: string } | null })[];
@@ -48,10 +48,11 @@ export function paraComandaDetalhe(c: ComandaCompleta): ComandaDetalhe {
       servicoId: i.servicoId,
       produtoId: i.produtoId,
       quantidade: i.quantidade,
-      profissional: i.profissional,
+      profissional: i.profissional && { id: i.profissional.id, nome: i.profissional.nome },
       agendamentoId: i.agendamentoId,
       valorCentavos: i.valorCentavos,
       precoAPartirDe: i.servico?.precoAPartirDe ?? false,
+      foraDoContrato: foraDoContrato(i),
       descontoRateadoCentavos: i.descontoRateadoCentavos,
       taxaRateadaCentavos: i.taxaRateadaCentavos,
       baseComissaoCentavos: i.baseComissaoCentavos,
@@ -74,4 +75,19 @@ export function paraComandaDetalhe(c: ComandaCompleta): ComandaDetalhe {
       totalAnteriorCentavos: r.totalAnteriorCentavos,
     })),
   };
+}
+
+/** Serviço que não está no contrato de parceria ativo do profissional. */
+function foraDoContrato(i: {
+  tipo: string;
+  servicoId: string | null;
+  profissional: { contratos?: { servicoIds: string[] }[] } | null;
+}): boolean {
+  const contrato = i.profissional?.contratos?.[0];
+  return (
+    !!contrato &&
+    i.tipo === 'SERVICO' &&
+    !!i.servicoId &&
+    !contrato.servicoIds.includes(i.servicoId)
+  );
 }

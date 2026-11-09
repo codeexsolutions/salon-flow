@@ -7,6 +7,7 @@ import {
   ArrowLeftRight,
   CalendarDays,
   ExternalLink,
+  FileSignature,
   HandCoins,
   KeyRound,
   LayoutDashboard,
@@ -59,6 +60,7 @@ const ITENS: Item[] = [
     permissao: 'FATURAMENTO',
   },
   { rotulo: 'Comissões', href: '/admin/comissoes', icone: HandCoins, permissao: 'COMISSOES' },
+  { rotulo: 'Contratos', href: '/admin/contratos', icone: FileSignature, papeis: ['DONO'] },
   { rotulo: 'Equipe e acessos', href: '/admin/equipe', icone: ShieldCheck, papeis: ['DONO'] },
   { rotulo: 'Configurações', href: '/admin/configuracoes', icone: Settings, papeis: ['DONO'] },
 ];

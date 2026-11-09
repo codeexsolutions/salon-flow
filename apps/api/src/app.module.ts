@@ -9,6 +9,7 @@ import { CaixaModule } from './modules/caixa/caixa.module.js';
 import { ClientesModule } from './modules/clientes/clientes.module.js';
 import { ComandasModule } from './modules/comandas/comandas.module.js';
 import { ComissoesModule } from './modules/comissoes/comissoes.module.js';
+import { ContratosModule } from './modules/contratos/contratos.module.js';
 import { EquipeModule } from './modules/equipe/equipe.module.js';
 import { FaturamentoModule } from './modules/faturamento/faturamento.module.js';
 import { HealthModule } from './modules/health/health.module.js';
@@ -40,6 +41,7 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
     ComandasModule,
     EquipeModule,
     FaturamentoModule,
+    ContratosModule,
   ],
 })
 export class AppModule {}

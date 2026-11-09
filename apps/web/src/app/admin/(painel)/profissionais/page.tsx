@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { ProfissionalResumo } from '@salonflow/shared';
+import type { ProfissionalResumo, SituacaoContrato } from '@salonflow/shared';
 import { SeloAcesso } from '@/components/profissionais/selo-acesso';
 import { classeBotaoPrimario } from '@/components/ui/campo';
 import { apiSalao } from '@/lib/api/salao';
@@ -13,6 +13,18 @@ export default async function ProfissionaisPage() {
     apiSalao<ProfissionalResumo[]>('/profissionais?incluirInativos=true'),
   ]);
   const ehDono = salao.papel === 'DONO';
+  // Dono: quem atende sem contrato de parceria ativo (risco de vínculo de emprego).
+  const semContrato = ehDono
+    ? new Set(
+        (
+          await apiSalao<SituacaoContrato[]>('/contratos/situacao').catch(
+            () => [] as SituacaoContrato[],
+          )
+        )
+          .filter((s) => s.contrato?.status !== 'ATIVO')
+          .map((s) => s.profissionalId),
+      )
+    : new Set<string>();
 
   return (
     <div className="flex flex-col gap-6">
@@ -49,6 +61,11 @@ export default async function ProfissionaisPage() {
                     {p.usuario ? `@${p.usuario}` : (p.telefone ?? 'Sem contato')}
                   </span>
                 </span>
+                {p.ativo && semContrato.has(p.id) && (
+                  <span className="rounded-full bg-perigo-suave px-2 py-0.5 text-xs text-perigo">
+                    Sem contrato
+                  </span>
+                )}
                 {p.ativo ? (
                   <SeloAcesso acesso={p.acessoApp} />
                 ) : (

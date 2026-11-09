@@ -552,6 +552,11 @@ function LinhaItem({
           {item.precoAPartirDe && (
             <span className="text-alerta"> · preço &ldquo;a partir de&rdquo;: confira o valor</span>
           )}
+          {item.foraDoContrato && (
+            <span className="block text-perigo">
+              Serviço fora do contrato de parceria deste profissional
+            </span>
+          )}
         </span>
       </span>
       <button

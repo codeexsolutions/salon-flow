@@ -172,6 +172,11 @@ export interface ItemComanda {
   valorCentavos: number;
   /** Serviço com preço "a partir de": conferir o valor cobrado. */
   precoAPartirDe: boolean;
+  /**
+   * O profissional tem contrato de parceria ativo e este serviço não está nele
+   * (função fora do contrato pode caracterizar vínculo: Lei 12.592, art. 1º-C, II).
+   */
+  foraDoContrato?: boolean;
   /** Preenchidos quando a comanda é fechada. */
   descontoRateadoCentavos: number | null;
   taxaRateadaCentavos: number | null;

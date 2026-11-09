@@ -1,5 +1,13 @@
 import Link from 'next/link';
-import { CalendarDays, CalendarPlus, HandCoins, Package, Receipt, Wallet } from 'lucide-react';
+import {
+  CalendarDays,
+  CalendarPlus,
+  FileSignature,
+  HandCoins,
+  Package,
+  Receipt,
+  Wallet,
+} from 'lucide-react';
 import {
   formatarPreco,
   type AgendaDia,
@@ -7,6 +15,7 @@ import {
   type ComandaResumo,
   type ExtratoComissoes,
   type ProdutoResumo,
+  type SituacaoContrato,
   type VinculoSalao,
 } from '@salonflow/shared';
 import { Indicador } from '@/components/ui/indicador';
@@ -31,7 +40,7 @@ async function carregarResumo(salao: VinculoSalao) {
     comissoes: pode(salao, 'COMISSOES'),
     faturamento: pode(salao, 'FATURAMENTO'),
   };
-  const [agenda, comandas, caixaAtual, produtos, extrato] = await Promise.all([
+  const [agenda, comandas, caixaAtual, produtos, extrato, contratos] = await Promise.all([
     ver.agenda
       ? apiSalao<AgendaDia>(`/agenda?data=${hoje}`)
       : Promise.resolve<AgendaDia>({
@@ -49,6 +58,10 @@ async function carregarResumo(salao: VinculoSalao) {
     ver.comissoes
       ? apiSalao<ExtratoComissoes>(`/comissoes/extrato?de=${hoje.slice(0, 8)}01&ate=${hoje}`)
       : Promise.resolve(null),
+    // Dono: profissionais sem contrato de parceria ativo.
+    salao.papel === 'DONO'
+      ? apiSalao<SituacaoContrato[]>('/contratos/situacao').catch(() => [] as SituacaoContrato[])
+      : Promise.resolve([] as SituacaoContrato[]),
   ]);
   const { caixa } = caixaAtual;
 
@@ -75,6 +88,7 @@ async function carregarResumo(salao: VinculoSalao) {
     quantidadeFechadas: fechadas.length,
     caixa,
     estoqueBaixo: produtos.filter((p) => p.estoqueBaixo),
+    semContrato: contratos.filter((c) => c.contrato?.status !== 'ATIVO').length,
     pendenteComissoes: extrato?.profissionais.reduce((s, p) => s + p.pendenteCentavos, 0) ?? null,
   };
 }
@@ -107,6 +121,20 @@ export default async function PainelInicioPage() {
           )}
         </div>
       </header>
+
+      {r.semContrato > 0 && (
+        <Link
+          href="/admin/contratos"
+          className="flex items-center gap-3 rounded-2xl border border-perigo/30 bg-perigo-suave px-4 py-3 text-sm hover:border-perigo/60"
+        >
+          <FileSignature className="size-5 shrink-0 text-perigo" aria-hidden />
+          <span className="flex-1">
+            <strong>{r.semContrato} profissional(is) sem contrato de parceria ativo.</strong> Sem
+            contrato formalizado, a relação pode ser reconhecida como vínculo de emprego.
+          </span>
+          <span className="shrink-0 font-medium text-perigo">Ver contratos</span>
+        </Link>
+      )}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Resumo do dia">
         {r.ver.agenda && (

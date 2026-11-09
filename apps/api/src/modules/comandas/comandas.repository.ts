@@ -9,7 +9,13 @@ export const comDetalhes = {
   cliente: { select: { id: true, nome: true } },
   itens: {
     include: {
-      profissional: { select: { id: true, nome: true } },
+      profissional: {
+        select: {
+          id: true,
+          nome: true,
+          contratos: { where: { status: 'ATIVO' }, select: { servicoIds: true }, take: 1 },
+        },
+      },
       servico: { select: { precoAPartirDe: true } },
     },
     orderBy: { id: 'asc' as const },

@@ -16,3 +16,5 @@ export * from './schemas/produto.schema.js';
 export * from './schemas/financeiro.schema.js';
 export * from './schemas/equipe.schema.js';
 export * from './schemas/faturamento.schema.js';
+export * from './schemas/contrato.schema.js';
+export * from './contrato-documento.js';

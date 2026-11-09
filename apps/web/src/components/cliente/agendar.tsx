@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import { Check, Clock } from 'lucide-react';
 import {
   formatarDuracao,
   formatarPrecoServico,
@@ -84,6 +85,10 @@ export function Agendar({
 
   function trocarServico(id: string) {
     setServicoId(id);
+    // Leva o cliente para a próxima etapa (no celular a grade é longa).
+    requestAnimationFrame(() =>
+      document.getElementById('etapa-2')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
     setProfissionalId(QUALQUER);
     setEscolha(null);
     setErro(null);
@@ -134,32 +139,7 @@ export function Agendar({
   return (
     <div className="flex flex-col gap-6">
       <Etapa numero={1} titulo="Escolha o serviço">
-        <ul className="flex flex-col divide-y divide-borda rounded-2xl border border-borda bg-superficie">
-          {servicos.map((s) => (
-            <li key={s.id}>
-              <button
-                type="button"
-                onClick={() => trocarServico(s.id)}
-                aria-pressed={s.id === servicoId}
-                className={`flex w-full items-center gap-3 px-4 py-3 text-left ${
-                  s.id === servicoId ? 'bg-nude' : ''
-                }`}
-              >
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="font-medium">{s.nome}</span>
-                  <span className="text-xs text-suave">
-                    {s.categoria && `${s.categoria} · `}
-                    {formatarDuracao(s.duracaoMin)}
-                    {s.descricao && ` · ${s.descricao}`}
-                  </span>
-                </span>
-                <span className="shrink-0 text-right font-medium">
-                  {formatarPrecoServico(s.precoCentavos, s.precoAPartirDe)}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <CatalogoServicos servicos={servicos} selecionado={servicoId} aoEscolher={trocarServico} />
       </Etapa>
 
       {servico && (
@@ -292,7 +272,7 @@ function Etapa({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-3">
+    <section id={`etapa-${numero}`} className="flex scroll-mt-4 flex-col gap-3">
       <h2 className="flex items-center gap-2 font-semibold">
         <span className="flex size-6 items-center justify-center rounded-full bg-botao text-xs text-botao-contraste">
           {numero}
@@ -324,5 +304,98 @@ function Chip({
     >
       {children}
     </button>
+  );
+}
+
+const SEM_CATEGORIA = 'Outros';
+
+/** Serviços em cards, agrupados por categoria, com filtro por categoria. */
+function CatalogoServicos({
+  servicos,
+  selecionado,
+  aoEscolher,
+}: {
+  servicos: ServicoOnline[];
+  selecionado: string;
+  aoEscolher: (id: string) => void;
+}) {
+  const grupos = useMemo(() => {
+    const mapa = new Map<string, ServicoOnline[]>();
+    for (const s of servicos) {
+      const c = s.categoria ?? SEM_CATEGORIA;
+      mapa.set(c, [...(mapa.get(c) ?? []), s]);
+    }
+    return [...mapa.entries()];
+  }, [servicos]);
+  const [filtro, setFiltro] = useState<string | null>(null);
+  const visiveis = filtro ? grupos.filter(([c]) => c === filtro) : grupos;
+
+  return (
+    <div className="flex flex-col gap-5">
+      {grupos.length > 1 && (
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+          {[null, ...grupos.map(([c]) => c)].map((c) => (
+            <Chip key={c ?? 'todos'} ativo={filtro === c} onClick={() => setFiltro(c)}>
+              {c ?? 'Todos'}
+            </Chip>
+          ))}
+        </div>
+      )}
+
+      {visiveis.map(([categoria, lista]) => (
+        <section key={categoria} className="flex flex-col gap-3">
+          {grupos.length > 1 && (
+            <h3 className="text-xs font-semibold tracking-wider text-suave uppercase">
+              {categoria}
+            </h3>
+          )}
+          <ul className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
+            {lista.map((s) => {
+              const ativo = s.id === selecionado;
+              return (
+                <li key={s.id} className="w-[78%] shrink-0 snap-start sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => aoEscolher(s.id)}
+                    aria-pressed={ativo}
+                    className={`relative flex h-full w-full flex-col gap-3 rounded-2xl border p-4 text-left transition ${
+                      ativo
+                        ? 'border-primaria bg-nude shadow-md'
+                        : 'border-borda bg-superficie hover:-translate-y-0.5 hover:border-primaria/50 hover:shadow-md'
+                    }`}
+                  >
+                    {ativo && (
+                      <span className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-primaria text-primaria-contraste">
+                        <Check className="size-4" aria-hidden />
+                      </span>
+                    )}
+                    <span className="flex flex-col gap-1 pr-7">
+                      <span className="font-semibold">{s.nome}</span>
+                      {s.descricao && (
+                        <span className="line-clamp-2 text-xs text-suave">{s.descricao}</span>
+                      )}
+                    </span>
+                    <span className="mt-auto flex items-end justify-between gap-2">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-borda px-2 py-0.5 text-xs text-suave">
+                        <Clock className="size-3" aria-hidden />
+                        {formatarDuracao(s.duracaoMin)}
+                      </span>
+                      <span className="flex flex-col items-end leading-tight">
+                        {s.precoAPartirDe && (
+                          <span className="text-[11px] text-suave">a partir de</span>
+                        )}
+                        <span className="font-display text-lg">
+                          {formatarPrecoServico(s.precoCentavos)}
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+    </div>
   );
 }

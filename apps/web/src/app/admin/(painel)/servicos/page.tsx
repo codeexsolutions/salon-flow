@@ -54,11 +54,9 @@ export default async function ServicosPage() {
                       <span className="truncate font-medium">{s.nome}</span>
                       <span className="text-xs text-suave">
                         {formatarDuracao(s.duracaoMin)} ·{' '}
-                        {s.totalProfissionais === 0 ? (
-                          <span className="text-alerta">nenhum profissional</span>
-                        ) : (
-                          `${s.totalProfissionais} profissional(is)`
-                        )}
+                        {s.totalProfissionais === 0
+                          ? 'todos os profissionais'
+                          : `${s.totalProfissionais} profissional(is)`}
                         {!s.visivelOnline && ' · só na recepção'}
                         {!s.ativo && ' · desativado'}
                       </span>

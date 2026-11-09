@@ -66,7 +66,7 @@ export default async function ServicoPage({ params }: PageProps<'/admin/servicos
 
           <Secao
             titulo="Quem faz este serviço"
-            descricao="Só os profissionais marcados aparecem para o cliente ao agendar."
+            descricao="Sem ninguém marcado, o serviço é do salão: qualquer profissional faz. Marque para restringir a alguns."
           >
             <EditorProfissionaisServico
               servicoId={servico.id}

@@ -12,6 +12,7 @@ import {
 } from '../../shared/errors/domain.error.js';
 import { ContextoSalao } from '../../shared/tenant/contexto-salao.js';
 import { ProfissionaisService } from '../profissionais/profissionais.service.js';
+import { quemFazOServico } from './domain/quem-faz.js';
 import { valoresDoProfissional } from './domain/valores.js';
 import { ServicosRepository } from './servicos.repository.js';
 
@@ -74,7 +75,14 @@ export class ServicosService {
       somenteOnline,
     );
     if (!servico) throw new NaoEncontradoError('Serviço');
-    if (profissionalId && servico.profissionais.length === 0) {
+    const quemFaz = quemFazOServico(
+      servico._count.profissionais,
+      servico.profissionais.map(paraVinculo),
+      servico._count.profissionais === 0
+        ? await this.repository.profissionaisAtivos(this.contexto.salaoId, profissionalId)
+        : [],
+    );
+    if (profissionalId && quemFaz.length === 0) {
       throw new RegraDeNegocioError(
         'PROFISSIONAL_NAO_FAZ_SERVICO',
         'Este profissional não faz o serviço escolhido.',
@@ -83,10 +91,10 @@ export class ServicosService {
 
     return {
       servico: { id: servico.id, nome: servico.nome },
-      profissionais: servico.profissionais.map((sp) => ({
-        profissionalId: sp.profissionalId,
-        nome: sp.profissional.nome,
-        ...valoresDoProfissional(servico, sp),
+      profissionais: quemFaz.map((v) => ({
+        profissionalId: v.profissionalId,
+        nome: v.nome,
+        ...valoresDoProfissional(servico, v),
       })),
     };
   }
@@ -99,24 +107,47 @@ export class ServicosService {
 
   /** Página pública do salão: serviços que o cliente pode agendar, com valores por profissional. */
   async catalogoOnline(): Promise<ServicoOnline[]> {
-    const servicos = await this.repository.catalogoOnline(this.contexto.salaoId);
-    return servicos.map((s) => ({
-      id: s.id,
-      nome: s.nome,
-      descricao: s.descricao,
-      categoria: s.categoria,
-      precoCentavos: s.precoCentavos,
-      precoAPartirDe: s.precoAPartirDe,
-      duracaoMin: s.duracaoMin,
-      profissionais: s.profissionais.map((sp) => ({
-        id: sp.profissionalId,
-        nome: sp.profissional.nome,
-        ...valoresDoProfissional(s, sp),
-      })),
-    }));
+    const salaoId = this.contexto.salaoId;
+    const [servicos, ativos] = await Promise.all([
+      this.repository.catalogoOnline(salaoId),
+      this.repository.profissionaisAtivos(salaoId),
+    ]);
+    return (
+      servicos
+        .map((s) => ({
+          id: s.id,
+          nome: s.nome,
+          descricao: s.descricao,
+          categoria: s.categoria,
+          precoCentavos: s.precoCentavos,
+          precoAPartirDe: s.precoAPartirDe,
+          duracaoMin: s.duracaoMin,
+          profissionais: quemFazOServico(
+            s._count.profissionais,
+            s.profissionais.map(paraVinculo),
+            ativos,
+          ).map((v) => ({ id: v.profissionalId, nome: v.nome, ...valoresDoProfissional(s, v) })),
+        }))
+        // Só aparece quem tem alguém para atender.
+        .filter((s) => s.profissionais.length > 0)
+    );
   }
 
   private nomeDuplicado() {
     return new ConflitoError('NOME_EM_USO', 'Já existe um serviço com este nome.');
   }
+}
+
+function paraVinculo(sp: {
+  profissionalId: string;
+  profissional: { nome: string };
+  precoCentavos: number | null;
+  duracaoMin: number | null;
+}) {
+  return {
+    profissionalId: sp.profissionalId,
+    nome: sp.profissional.nome,
+    precoCentavos: sp.precoCentavos,
+    duracaoMin: sp.duracaoMin,
+  };
 }

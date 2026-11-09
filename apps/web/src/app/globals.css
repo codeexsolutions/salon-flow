@@ -9,6 +9,7 @@
  * Contraste: botão grafite com texto âmbar ≈ 10:1; âmbar escuro (#8f5d00) no branco ≈ 5,4:1.
  */
 :root {
+  color-scheme: light;
   --background: #f6f6f4;
   --superficie: #ffffff;
   --nude: #f4ecdc;
@@ -37,6 +38,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Controles nativos (lista do select, calendário, rolagem) no tema escuro. */
+    color-scheme: dark;
     --background: #121213;
     --superficie: #1c1c1e;
     --nude: #2a2418;
@@ -143,4 +146,11 @@ h1 {
     background: #fff;
     color: #000;
   }
+}
+
+/* Lista do <select>: alguns navegadores ignoram o tema; força as cores do app. */
+select option,
+select optgroup {
+  background-color: var(--superficie);
+  color: var(--foreground);
 }

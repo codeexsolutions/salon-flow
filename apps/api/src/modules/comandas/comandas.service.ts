@@ -20,6 +20,7 @@ import { CaixaService } from '../caixa/caixa.service.js';
 import { ClientesService } from '../clientes/clientes.service.js';
 import { calcularFechamento } from '../comissoes/domain/calculo.js';
 import { ComissoesService } from '../comissoes/comissoes.service.js';
+import { MaquininhasService } from '../comissoes/maquininhas.service.js';
 import { ProdutosService } from '../produtos/produtos.service.js';
 import { ServicosService } from '../servicos/servicos.service.js';
 import { ComandasRepository, type DestinoCaixa, type NovoItem } from './comandas.repository.js';
@@ -38,6 +39,7 @@ export class ComandasService {
     private readonly clientes: ClientesService,
     private readonly servicos: ServicosService,
     private readonly comissoes: ComissoesService,
+    private readonly maquininhas: MaquininhasService,
     private readonly produtos: ProdutosService,
     private readonly caixa: CaixaService,
     private readonly contexto: ContextoSalao,
@@ -172,12 +174,15 @@ export class ComandasService {
     const dataAtendimento = comanda.competenciaEm
       ? utcParaLocal(comanda.competenciaEm, fuso).slice(0, 10)
       : null;
-    const [parametros, consumo, caixaAbertoAgora, caixaDoDia] = await Promise.all([
-      this.comissoes.parametrosDeCalculo(),
-      this.produtos.consumoDaComanda(comanda.itens),
-      this.caixa.idDoCaixaAberto(),
-      dataAtendimento ? this.caixa.caixaDoDia(dataAtendimento) : Promise.resolve(null),
-    ]);
+    const [parametros, consumo, caixaAbertoAgora, caixaDoDia, pagamentosComTaxa] =
+      await Promise.all([
+        this.comissoes.parametrosDeCalculo(),
+        this.produtos.consumoDaComanda(comanda.itens),
+        this.caixa.idDoCaixaAberto(),
+        dataAtendimento ? this.caixa.caixaDoDia(dataAtendimento) : Promise.resolve(null),
+        // Cartão com maquininha: taxa da tabela dela (débito ou crédito pelas parcelas).
+        this.maquininhas.aplicarTaxas(pagamentos),
+      ]);
 
     const plano = planoDeCaixa({ dataAtendimento, hoje, caixaAbertoAgora, caixaDoDia });
     if (plano.tipo === 'USAR' && plano.exigeConfirmacao && !confirmarCaixaFechado) {
@@ -204,7 +209,7 @@ export class ComandasService {
         custoProdutosCentavos: consumo.custoPorItem.get(i.id) ?? 0,
       })),
       descontoCentavos: comanda.descontoCentavos,
-      pagamentos,
+      pagamentos: pagamentosComTaxa,
       ...parametros,
     });
 

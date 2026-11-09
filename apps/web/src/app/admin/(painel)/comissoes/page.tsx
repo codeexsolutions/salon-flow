@@ -4,12 +4,14 @@ import {
   formatarPreco,
   ROTULO_FORMA_PAGAMENTO,
   type ConfiguracaoComissao,
+  type MaquininhaDto,
   type ExtratoComissoes,
   type ProfissionalResumo,
   type RegraComissaoDto,
   type RepasseResumo,
   type ServicoResumo,
 } from '@salonflow/shared';
+import { EditorMaquininhas } from '@/components/comissoes/editor-maquininhas';
 import { EditorRegras } from '@/components/comissoes/editor-regras';
 import { FormConfiguracao } from '@/components/comissoes/form-configuracao';
 import { TabelaExtrato } from '@/components/comissoes/tabela-extrato';
@@ -33,14 +35,16 @@ export default async function ComissoesPage({ searchParams }: PageProps<'/admin/
   const de = valida(consulta.de, `${hoje.slice(0, 8)}01`);
   const ate = valida(consulta.ate, hoje);
 
-  const [extrato, configuracao, regras, profissionais, servicos, repasses] = await Promise.all([
-    apiSalao<ExtratoComissoes>(`/comissoes/extrato?de=${de}&ate=${ate}`),
-    apiSalao<ConfiguracaoComissao>('/comissoes/configuracao'),
-    apiSalao<RegraComissaoDto[]>('/comissoes/regras'),
-    apiSalao<ProfissionalResumo[]>('/profissionais'),
-    apiSalao<ServicoResumo[]>('/servicos'),
-    apiSalao<RepasseResumo[]>('/comissoes/repasses'),
-  ]);
+  const [extrato, configuracao, regras, profissionais, servicos, repasses, maquininhas] =
+    await Promise.all([
+      apiSalao<ExtratoComissoes>(`/comissoes/extrato?de=${de}&ate=${ate}`),
+      apiSalao<ConfiguracaoComissao>('/comissoes/configuracao'),
+      apiSalao<RegraComissaoDto[]>('/comissoes/regras'),
+      apiSalao<ProfissionalResumo[]>('/profissionais'),
+      apiSalao<ServicoResumo[]>('/servicos'),
+      apiSalao<RepasseResumo[]>('/comissoes/repasses'),
+      apiSalao<MaquininhaDto[]>('/maquininhas').catch(() => [] as MaquininhaDto[]),
+    ]);
 
   return (
     <div className="flex max-w-4xl flex-col gap-8">
@@ -111,6 +115,13 @@ export default async function ComissoesPage({ searchParams }: PageProps<'/admin/
         <>
           <Secao titulo="Configuração">
             <FormConfiguracao configuracao={configuracao} />
+          </Secao>
+
+          <Secao
+            titulo="Maquininhas"
+            descricao="Taxa do débito e do crédito por número de parcelas. Ao fechar a comanda no cartão, escolha a maquininha e as parcelas: a taxa sai desta tabela."
+          >
+            <EditorMaquininhas maquininhas={maquininhas} />
           </Secao>
 
           <Secao

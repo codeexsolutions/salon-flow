@@ -12,7 +12,7 @@ type ComandaCompleta = Comanda & {
     profissional: { id: string; nome: string } | null;
     servico?: { precoAPartirDe: boolean } | null;
   })[];
-  pagamentos: Pagamento[];
+  pagamentos: (Pagamento & { maquininha?: { id: string; nome: string } | null })[];
   reaberturas?: ReaberturaComanda[];
 };
 
@@ -65,6 +65,8 @@ export function paraComandaDetalhe(c: ComandaCompleta): ComandaDetalhe {
       valorCentavos: p.valorCentavos,
       taxaBps: p.taxaBps,
       taxaCentavos: p.taxaCentavos,
+      maquininha: p.maquininha ?? null,
+      parcelas: p.parcelas,
     })),
     reaberturas: (c.reaberturas ?? []).map((r) => ({
       reabertaEm: r.reabertaEm.toISOString(),

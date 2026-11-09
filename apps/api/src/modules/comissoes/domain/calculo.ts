@@ -72,6 +72,10 @@ export interface ItemParaFechar {
 export interface PagamentoParaFechar {
   forma: string;
   valorCentavos: number;
+  /** Taxa já definida (ex.: pela maquininha); sem ela vale a taxa da forma. */
+  taxaBps?: number;
+  maquininhaId?: string | null;
+  parcelas?: number | null;
 }
 
 export interface EntradaFechamento {
@@ -127,7 +131,7 @@ export function calcularFechamento(entrada: EntradaFechamento): Fechamento {
   }
 
   const pagamentosComTaxa = pagamentos.map((p) => {
-    const taxaBps = entrada.taxas[p.forma] ?? 0;
+    const taxaBps = p.taxaBps ?? entrada.taxas[p.forma] ?? 0;
     return { ...p, taxaBps, taxaCentavos: aplicarBps(p.valorCentavos, taxaBps) };
   });
   const taxaTotal = pagamentosComTaxa.reduce((s, p) => s + p.taxaCentavos, 0);

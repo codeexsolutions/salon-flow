@@ -5,12 +5,15 @@ import { useState, useTransition } from 'react';
 import {
   centavosParaTexto,
   FORMAS_PAGAMENTO,
+  formatarPercentual,
   formatarPreco,
+  PARCELAS_MAXIMAS,
   ROTULO_FORMA_PAGAMENTO,
   textoParaCentavos,
   type ComandaDetalhe,
   type FormaPagamento,
   type ItemComanda,
+  type MaquininhaDto,
   type ProfissionalResumo,
   type ProdutoResumo,
   type ServicoResumo,
@@ -31,7 +34,12 @@ import { Secao } from '@/components/ui/secao';
 interface LinhaPagamento {
   forma: FormaPagamento;
   valor: string;
+  /** Cartão: maquininha (a taxa vem da tabela dela) e parcelas no crédito. */
+  maquininhaId: string;
+  parcelas: number;
 }
+
+const ehCartao = (forma: FormaPagamento) => forma === 'DEBITO' || forma === 'CREDITO';
 
 /** Comanda ABERTA: cliente, itens, desconto e fechamento com pagamentos. */
 export function EditorComanda({
@@ -39,6 +47,7 @@ export function EditorComanda({
   servicos,
   profissionais,
   produtos,
+  maquininhas = [],
   cabecalho,
 }: {
   comanda: ComandaDetalhe;
@@ -46,6 +55,8 @@ export function EditorComanda({
   profissionais: ProfissionalResumo[];
   /** Produtos à venda (ativos e com preço de venda). */
   produtos: ProdutoResumo[];
+  /** Maquininhas ativas (taxa do cartão por parcelas). */
+  maquininhas?: MaquininhaDto[];
   /** Conteúdo extra no topo (ex.: data do atendimento, só para o dono). */
   cabecalho?: React.ReactNode;
 }) {
@@ -59,9 +70,17 @@ export function EditorComanda({
   const [novoProduto, setNovoProduto] = useState('');
   const [quantidadeProduto, setQuantidadeProduto] = useState('1');
   const [desconto, setDesconto] = useState(centavosParaTexto(comanda.descontoCentavos));
-  const [pagamentos, setPagamentos] = useState<LinhaPagamento[]>([
-    { forma: 'PIX', valor: centavosParaTexto(comanda.totalCentavos) },
+  const novaLinha = (forma: FormaPagamento, valorCentavos: number): LinhaPagamento => ({
+    forma,
+    valor: centavosParaTexto(valorCentavos),
+    maquininhaId: maquininhas[0]?.id ?? '',
+    parcelas: 1,
+  });
+  const [pagamentos, setPagamentos] = useState<LinhaPagamento[]>(() => [
+    novaLinha('PIX', comanda.totalCentavos),
   ]);
+  const alterarLinha = (i: number, mudanca: Partial<LinhaPagamento>) =>
+    setPagamentos((l) => l.map((x, j) => (j === i ? { ...x, ...mudanca } : x)));
 
   const total = comanda.totalCentavos;
   // Total mudou (item editado/adicionado, desconto): com uma forma só, acompanha o novo total.
@@ -137,6 +156,12 @@ export function EditorComanda({
         pagamentos: pagamentos.map((p) => ({
           forma: p.forma,
           valorCentavos: textoParaCentavos(p.valor),
+          ...(ehCartao(p.forma) && p.maquininhaId
+            ? {
+                maquininhaId: p.maquininhaId,
+                parcelas: p.forma === 'CREDITO' ? p.parcelas : undefined,
+              }
+            : {}),
         })),
       });
     // Serviço "a partir de": o valor final precisa ser conferido antes de fechar.
@@ -320,55 +345,55 @@ export function EditorComanda({
 
         <div className="flex flex-col gap-2">
           {pagamentos.map((p, i) => (
-            <div key={i} className="flex gap-2">
-              <select
-                value={p.forma}
-                onChange={(e) =>
-                  setPagamentos((l) =>
-                    l.map((x, j) =>
-                      j === i ? { ...x, forma: e.target.value as FormaPagamento } : x,
-                    ),
-                  )
-                }
-                aria-label="Forma de pagamento"
-                className={classeInput}
-              >
-                {FORMAS_PAGAMENTO.map((f) => (
-                  <option key={f} value={f}>
-                    {ROTULO_FORMA_PAGAMENTO[f]}
-                  </option>
-                ))}
-              </select>
-              <input
-                value={p.valor}
-                onChange={(e) =>
-                  setPagamentos((l) =>
-                    l.map((x, j) => (j === i ? { ...x, valor: e.target.value } : x)),
-                  )
-                }
-                inputMode="decimal"
-                aria-label="Valor pago"
-                className={`${classeInput} w-32`}
-              />
-              {pagamentos.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setPagamentos((l) => l.filter((_, j) => j !== i))}
-                  aria-label="Remover pagamento"
-                  className="px-1 text-suave"
+            <div key={i} className="flex flex-col gap-1.5">
+              <div className="flex gap-2">
+                <select
+                  value={p.forma}
+                  onChange={(e) => alterarLinha(i, { forma: e.target.value as FormaPagamento })}
+                  aria-label="Forma de pagamento"
+                  className={classeInput}
                 >
-                  ✕
-                </button>
+                  {FORMAS_PAGAMENTO.map((f) => (
+                    <option key={f} value={f}>
+                      {ROTULO_FORMA_PAGAMENTO[f]}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={p.valor}
+                  onChange={(e) =>
+                    setPagamentos((l) =>
+                      l.map((x, j) => (j === i ? { ...x, valor: e.target.value } : x)),
+                    )
+                  }
+                  inputMode="decimal"
+                  aria-label="Valor pago"
+                  className={`${classeInput} w-32`}
+                />
+                {pagamentos.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setPagamentos((l) => l.filter((_, j) => j !== i))}
+                    aria-label="Remover pagamento"
+                    className="px-1 text-suave"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {ehCartao(p.forma) && maquininhas.length > 0 && (
+                <TaxaDoCartao
+                  linha={p}
+                  maquininhas={maquininhas}
+                  aoMudar={(mudanca) => alterarLinha(i, mudanca)}
+                />
               )}
             </div>
           ))}
           <button
             type="button"
             onClick={() =>
-              setPagamentos((l) => [
-                ...l,
-                { forma: 'DINHEIRO', valor: centavosParaTexto(Math.max(0, total - somaPagos)) },
-              ])
+              setPagamentos((l) => [...l, novaLinha('DINHEIRO', Math.max(0, total - somaPagos))])
             }
             className="self-start text-xs text-primaria"
           >
@@ -556,5 +581,61 @@ function LinhaItem({
         ✕
       </button>
     </li>
+  );
+}
+
+/** Maquininha e parcelas do pagamento no cartão, com a taxa que será aplicada. */
+function TaxaDoCartao({
+  linha,
+  maquininhas,
+  aoMudar,
+}: {
+  linha: LinhaPagamento;
+  maquininhas: MaquininhaDto[];
+  aoMudar: (mudanca: Partial<LinhaPagamento>) => void;
+}) {
+  const maquininha = maquininhas.find((m) => m.id === linha.maquininhaId);
+  const taxaBps = !maquininha
+    ? null
+    : linha.forma === 'DEBITO'
+      ? maquininha.taxaDebitoBps
+      : (maquininha.taxasCreditoBps[linha.parcelas - 1] ?? 0);
+  const valor = textoParaCentavos(linha.valor) ?? 0;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 pl-1 text-xs text-suave">
+      <select
+        value={linha.maquininhaId}
+        onChange={(e) => aoMudar({ maquininhaId: e.target.value })}
+        aria-label="Maquininha"
+        className="rounded-md border border-borda bg-transparent px-2 py-1 text-sm text-foreground"
+      >
+        {maquininhas.map((m) => (
+          <option key={m.id} value={m.id}>
+            {m.nome}
+          </option>
+        ))}
+      </select>
+      {linha.forma === 'CREDITO' && (
+        <select
+          value={linha.parcelas}
+          onChange={(e) => aoMudar({ parcelas: Number(e.target.value) })}
+          aria-label="Parcelas"
+          className="rounded-md border border-borda bg-transparent px-2 py-1 text-sm text-foreground"
+        >
+          {Array.from({ length: PARCELAS_MAXIMAS }, (_, k) => k + 1).map((n) => (
+            <option key={n} value={n}>
+              {n === 1 ? 'À vista (1x)' : `${n}x`}
+            </option>
+          ))}
+        </select>
+      )}
+      {taxaBps !== null && (
+        <span>
+          taxa {formatarPercentual(taxaBps)} ={' '}
+          {formatarPreco(Math.round((valor * taxaBps) / 10_000))}
+        </span>
+      )}
+    </div>
   );
 }

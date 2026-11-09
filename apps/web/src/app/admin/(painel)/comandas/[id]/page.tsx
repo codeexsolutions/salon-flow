@@ -5,6 +5,7 @@ import {
   formatarPreco,
   ROTULO_FORMA_PAGAMENTO,
   type ComandaDetalhe,
+  type MaquininhaDto,
   type ProdutoResumo,
   type ProfissionalResumo,
   type ServicoResumo,
@@ -83,10 +84,12 @@ async function EditorAberta({
 }) {
   const hoje = hojeNoFuso(fuso);
   const dataAtendimento = comanda.competenciaEm ? dataLocal(comanda.competenciaEm, fuso) : null;
-  const [servicos, profissionais, produtos] = await Promise.all([
+  const [servicos, profissionais, produtos, maquininhas] = await Promise.all([
     apiSalao<ServicoResumo[]>('/servicos'),
     apiSalao<ProfissionalResumo[]>('/profissionais'),
     apiSalao<ProdutoResumo[]>('/produtos'),
+    // API antiga (sem maquininhas): segue com a taxa por forma de pagamento.
+    apiSalao<MaquininhaDto[]>('/maquininhas').catch(() => [] as MaquininhaDto[]),
   ]);
   // A chave recria o editor quando o total muda (pagamento sugerido acompanha).
   return (
@@ -96,6 +99,7 @@ async function EditorAberta({
       servicos={servicos}
       profissionais={profissionais}
       produtos={produtos.filter((p) => p.precoVendaCentavos !== null)}
+      maquininhas={maquininhas.filter((m) => m.ativo)}
       cabecalho={
         ehDono ? (
           <DataAtendimento
@@ -192,6 +196,13 @@ function ComandaEncerrada({
               <li key={p.id} className="flex justify-between">
                 <span>
                   {ROTULO_FORMA_PAGAMENTO[p.forma]}
+                  {p.maquininha && (
+                    <span className="text-suave">
+                      {' '}
+                      · {p.maquininha.nome}
+                      {p.parcelas && p.parcelas > 1 ? ` · ${p.parcelas}x` : ''}
+                    </span>
+                  )}
                   {p.taxaCentavos > 0 && (
                     <span className="text-suave">
                       {' '}

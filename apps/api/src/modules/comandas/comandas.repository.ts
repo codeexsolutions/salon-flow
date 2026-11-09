@@ -14,7 +14,10 @@ export const comDetalhes = {
     },
     orderBy: { id: 'asc' as const },
   },
-  pagamentos: { orderBy: { id: 'asc' as const } },
+  pagamentos: {
+    include: { maquininha: { select: { id: true, nome: true } } },
+    orderBy: { id: 'asc' as const },
+  },
   reaberturas: { orderBy: { reabertaEm: 'asc' as const } },
 } satisfies Prisma.ComandaInclude;
 
@@ -166,6 +169,8 @@ export class ComandasRepository {
           valorCentavos: p.valorCentavos,
           taxaBps: p.taxaBps,
           taxaCentavos: p.taxaCentavos,
+          maquininhaId: p.maquininhaId ?? null,
+          parcelas: p.parcelas ?? null,
           caixaId,
         })),
       });

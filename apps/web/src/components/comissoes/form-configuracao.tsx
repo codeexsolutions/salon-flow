@@ -70,7 +70,11 @@ export function FormConfiguracao({ configuracao }: { configuracao: ConfiguracaoC
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 font-medium">
-          Taxas por forma de pagamento (maquininha, etc.)
+          Taxas por forma de pagamento
+          <span className="block text-xs font-normal text-suave">
+            Valem quando não há maquininha escolhida (ex.: Pix). No cartão com maquininha, vale a
+            tabela da seção Maquininhas.
+          </span>
         </legend>
         <div className="flex flex-wrap gap-3">
           {FORMAS_PAGAMENTO.map((forma) => (

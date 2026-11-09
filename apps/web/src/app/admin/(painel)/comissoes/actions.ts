@@ -5,6 +5,7 @@ import {
   configuracaoComissaoSchema,
   definirRegrasComissaoSchema,
   gerarRepasseSchema,
+  maquininhaSchema,
   type RepasseDetalhe,
 } from '@salonflow/shared';
 import { falha, falhaDeValidacao, sucesso, type Resultado } from '@/lib/api/resultado';
@@ -52,4 +53,20 @@ export async function gerarRepasse(entrada: unknown): Promise<Resultado<string>>
 export async function cancelarRepasse(id: string) {
   await apiSalao(`/comissoes/repasses/${id}/cancelar`, { method: 'POST' });
   revalidatePath('/admin/comissoes', 'layout');
+}
+
+/** Cadastra (id null) ou atualiza uma maquininha com a tabela de taxas. */
+export async function salvarMaquininha(id: string | null, entrada: unknown): Promise<Resultado> {
+  const validacao = maquininhaSchema.safeParse(entrada);
+  if (!validacao.success) return falhaDeValidacao(validacao.error);
+  try {
+    await apiSalao(id ? `/maquininhas/${id}` : '/maquininhas', {
+      method: id ? 'PUT' : 'POST',
+      body: validacao.data,
+    });
+  } catch (erro) {
+    return falha(erro);
+  }
+  revalidatePath('/admin/comissoes');
+  return sucesso(undefined);
 }

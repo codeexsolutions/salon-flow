@@ -1,12 +1,24 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import {
   configuracaoComissaoSchema,
   dataLocalSchema,
   definirRegrasComissaoSchema,
   gerarRepasseSchema,
+  maquininhaSchema,
   type ConfiguracaoComissao,
   type DefinirRegrasComissaoInput,
   type GerarRepasseInput,
+  type MaquininhaInput,
 } from '@salonflow/shared';
 import { z } from 'zod';
 import { UsuarioAtual } from '../../shared/auth/decorators.js';
@@ -18,6 +30,7 @@ import {
   SomentePapeis,
 } from '../../shared/tenant/rota-do-salao.decorator.js';
 import { ComissoesService } from './comissoes.service.js';
+import { MaquininhasService } from './maquininhas.service.js';
 
 const periodoSchema = z.object({
   de: dataLocalSchema,
@@ -121,5 +134,34 @@ export class ProComissoesController {
   @Get('repasses/:id')
   repasse(@UsuarioAtual() usuario: UsuarioAutenticado, @Param('id', ParseUUIDPipe) id: string) {
     return this.service.repasseDoUsuario(usuario.id, id);
+  }
+}
+
+/** Maquininhas e suas taxas: a equipe que fecha comandas consulta; só o dono altera. */
+@RotaDoSalao()
+@ExigePermissao('COMANDAS', 'COMISSOES')
+@Controller('maquininhas')
+export class MaquininhasController {
+  constructor(private readonly service: MaquininhasService) {}
+
+  @Get()
+  listar() {
+    return this.service.listar();
+  }
+
+  @SomentePapeis('DONO')
+  @Post()
+  criar(@Body(new ZodValidationPipe(maquininhaSchema)) dados: MaquininhaInput) {
+    return this.service.criar(dados);
+  }
+
+  @SomentePapeis('DONO')
+  @Put(':id')
+  @HttpCode(204)
+  atualizar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(maquininhaSchema)) dados: MaquininhaInput,
+  ) {
+    return this.service.atualizar(id, dados);
   }
 }

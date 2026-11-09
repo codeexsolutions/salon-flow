@@ -13,6 +13,9 @@ export const ROTULO_FORMA_PAGAMENTO: Record<FormaPagamento, string> = {
 
 export type StatusComanda = 'ABERTA' | 'FECHADA' | 'CANCELADA';
 
+/** Crédito parcelado: até 12x. */
+export const PARCELAS_MAXIMAS = 12;
+
 const centavos = z.number().int().min(0).max(100_000_000);
 const bps = z.number().int().min(0, 'Mínimo 0%').max(10_000, 'Máximo 100%');
 
@@ -129,6 +132,10 @@ export const fecharComandaSchema = z.object({
       z.object({
         forma: z.enum(FORMAS_PAGAMENTO),
         valorCentavos: centavos.min(1, 'Valor do pagamento deve ser maior que zero'),
+        /** Cartão: maquininha usada (a taxa vem da tabela dela). */
+        maquininhaId: z.uuid().optional(),
+        /** Crédito: número de parcelas (1 a 12). */
+        parcelas: z.number().int().min(1).max(PARCELAS_MAXIMAS).optional(),
       }),
     )
     .max(10),
@@ -181,6 +188,27 @@ export interface PagamentoComanda {
   valorCentavos: number;
   taxaBps: number;
   taxaCentavos: number;
+  maquininha: { id: string; nome: string } | null;
+  parcelas: number | null;
+}
+
+// ---------- Maquininhas (taxas por parcela) ----------
+
+export const maquininhaSchema = z.object({
+  nome: z.string().trim().min(2, 'Informe o nome da maquininha').max(60),
+  taxaDebitoBps: bps,
+  /** Crédito 1x ... 12x. */
+  taxasCreditoBps: z.array(bps).length(PARCELAS_MAXIMAS),
+  ativo: z.boolean().default(true),
+});
+export type MaquininhaInput = z.infer<typeof maquininhaSchema>;
+
+export interface MaquininhaDto {
+  id: string;
+  nome: string;
+  taxaDebitoBps: number;
+  taxasCreditoBps: number[];
+  ativo: boolean;
 }
 
 export interface ComandaDetalhe extends ComandaResumo {

@@ -100,6 +100,7 @@ model Salao {
   caixas               Caixa[]
   movimentosCaixa      MovimentoCaixa[]
   reaberturasCaixa     ReaberturaCaixa[]
+  maquininhas          Maquininha[]
   reaberturasComanda   ReaberturaComanda[]
 
   @@index([cidade, uf])
@@ -453,14 +454,36 @@ model Pagamento {
   taxaCentavos  Int            @default(0) @map("taxa_centavos")
   /// Caixa aberto no momento do pagamento (se o salão usa caixa).
   caixaId       String?        @map("caixa_id") @db.Uuid
+  /// Cartão: maquininha usada (a taxa vem da tabela dela) e parcelas no crédito.
+  maquininhaId  String?        @map("maquininha_id") @db.Uuid
+  parcelas      Int?           @db.SmallInt
 
-  comanda Comanda @relation(fields: [comandaId], references: [id], onDelete: Cascade)
-  salao   Salao   @relation(fields: [salaoId], references: [id], onDelete: Cascade)
-  caixa   Caixa?  @relation(fields: [caixaId], references: [id], onDelete: SetNull)
+  comanda    Comanda     @relation(fields: [comandaId], references: [id], onDelete: Cascade)
+  salao      Salao       @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  caixa      Caixa?      @relation(fields: [caixaId], references: [id], onDelete: SetNull)
+  maquininha Maquininha? @relation(fields: [maquininhaId], references: [id], onDelete: SetNull)
 
   @@index([comandaId])
   @@index([caixaId])
   @@map("pagamentos")
+}
+
+/// Maquininha de cartão com a tabela de taxas (débito e crédito de 1x a 12x).
+model Maquininha {
+  id              String   @id @default(uuid()) @db.Uuid
+  salaoId         String   @map("salao_id") @db.Uuid
+  nome            String
+  taxaDebitoBps   Int      @default(0) @map("taxa_debito_bps")
+  /// Crédito: posição 0 = 1x ... posição 11 = 12x (bps).
+  taxasCreditoBps Int[]    @map("taxas_credito_bps")
+  ativo           Boolean  @default(true)
+  criadoEm        DateTime @default(now()) @map("criado_em")
+
+  salao      Salao       @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  pagamentos Pagamento[]
+
+  @@unique([salaoId, nome])
+  @@map("maquininhas")
 }
 
 enum TipoItemComanda {

@@ -23,9 +23,8 @@ export const metadata = { title: 'Comissões' };
 
 export default async function ComissoesPage({ searchParams }: PageProps<'/admin/comissoes'>) {
   const { salao } = await obterContextoAdmin();
-  if (salao.papel !== 'DONO') {
-    return <p className="text-sm text-suave">Apenas o dono do salão acessa as comissões.</p>;
-  }
+  // Quem não é dono só consulta (a área é liberada pelo dono).
+  const ehDono = salao.papel === 'DONO';
 
   const hoje = hojeNoFuso(salao.fusoHorario);
   const consulta = await searchParams;
@@ -71,7 +70,7 @@ export default async function ComissoesPage({ searchParams }: PageProps<'/admin/
             Ver
           </button>
         </form>
-        <TabelaExtrato extrato={extrato} fuso={salao.fusoHorario} podePagar />
+        <TabelaExtrato extrato={extrato} fuso={salao.fusoHorario} podePagar={ehDono} />
       </Secao>
 
       <Secao
@@ -108,16 +107,20 @@ export default async function ComissoesPage({ searchParams }: PageProps<'/admin/
         )}
       </Secao>
 
-      <Secao titulo="Configuração">
-        <FormConfiguracao configuracao={configuracao} />
-      </Secao>
+      {ehDono && (
+        <>
+          <Secao titulo="Configuração">
+            <FormConfiguracao configuracao={configuracao} />
+          </Secao>
 
-      <Secao
-        titulo="Regras específicas"
-        descricao="Percentuais diferentes por profissional, por serviço ou pelos dois."
-      >
-        <EditorRegras regras={regras} profissionais={profissionais} servicos={servicos} />
-      </Secao>
+          <Secao
+            titulo="Regras específicas"
+            descricao="Percentuais diferentes por profissional, por serviço ou pelos dois."
+          >
+            <EditorRegras regras={regras} profissionais={profissionais} servicos={servicos} />
+          </Secao>
+        </>
+      )}
     </div>
   );
 }

@@ -27,7 +27,8 @@ async function carregar(id: string) {
       apiSalao<ServicoResumo[]>('/servicos?incluirInativos=true'),
       apiSalao<ProfissionalResumo[]>('/profissionais'),
       apiSalao<FichaTecnica>(`/servicos/${id}/ficha-tecnica`),
-      apiSalao<ProdutoResumo[]>('/produtos'),
+      // Lista de produtos só serve para o dono editar a ficha; sem acesso ao estoque, fica vazia.
+      apiSalao<ProdutoResumo[]>('/produtos').catch(() => [] as ProdutoResumo[]),
     ]);
   } catch (erro) {
     if (erro instanceof ApiError && [400, 404].includes(erro.erro.statusCode)) notFound();

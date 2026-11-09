@@ -7,7 +7,7 @@ import {
 } from '@salonflow/shared';
 import Link from 'next/link';
 import { api } from '@/lib/api/client';
-import { obterContextoPro } from '@/lib/auth/contexto';
+import { obterContextoPro, pode } from '@/lib/auth/contexto';
 import { exigirSessao } from '@/lib/auth/sessao';
 import { dataLocal, hojeNoFuso, horaLocal } from '@/lib/data-hora';
 
@@ -17,6 +17,13 @@ export default async function ProComissoesPage({ searchParams }: PageProps<'/pro
   const { salao } = await obterContextoPro();
   if (!salao) {
     return <p className="text-sm text-suave">Você ainda não está vinculado a um salão.</p>;
+  }
+  if (!pode(salao, 'MINHAS_COMISSOES')) {
+    return (
+      <p className="text-sm text-suave">
+        A consulta das comissões não está liberada para você. Fale com o dono do salão.
+      </p>
+    );
   }
 
   const hoje = hojeNoFuso(salao.fusoHorario);

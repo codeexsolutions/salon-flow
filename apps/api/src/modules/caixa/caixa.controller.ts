@@ -13,11 +13,16 @@ import {
 import { UsuarioAtual } from '../../shared/auth/decorators.js';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe.js';
-import { RotaDoSalao, SomentePapeis } from '../../shared/tenant/rota-do-salao.decorator.js';
+import {
+  ExigePermissao,
+  RotaDoSalao,
+  SomentePapeis,
+} from '../../shared/tenant/rota-do-salao.decorator.js';
 import { CaixaService } from './caixa.service.js';
 
 /** Caixa diário: abertura, sangrias/reforços e fechamento com conferência. */
-@RotaDoSalao('DONO', 'RECEPCAO')
+@RotaDoSalao()
+@ExigePermissao('CAIXA')
 @Controller('caixa')
 export class CaixaController {
   constructor(private readonly service: CaixaService) {}

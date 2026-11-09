@@ -4,6 +4,7 @@ export * from './usuario.js';
 export * from './login.js';
 export * from './dinheiro.js';
 export * from './regras.js';
+export * from './permissoes.js';
 export * from './schemas/comum.schema.js';
 export * from './schemas/salao.schema.js';
 export * from './schemas/profissional.schema.js';

@@ -59,6 +59,7 @@ export class UsuariosRepository {
       where: { usuarioId, ativo: true, salao: { ativo: true } },
       select: {
         papel: true,
+        permissoes: true,
         salao: {
           select: {
             id: true,

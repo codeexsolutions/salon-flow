@@ -3,6 +3,7 @@ import { Clock, Scissors } from 'lucide-react';
 import type { EquipeSalao, MembroEquipe, Papel } from '@salonflow/shared';
 import { AdicionarRecepcao } from '@/components/equipe/adicionar-recepcao';
 import { AlternarAcesso, CancelarConvite } from '@/components/equipe/acoes-acesso';
+import { EditarPermissoes } from '@/components/equipe/permissoes';
 import { RedefinirSenha } from '@/components/equipe/redefinir-senha';
 import { CabecalhoPagina } from '@/components/ui/cabecalho-pagina';
 import { Secao } from '@/components/ui/secao';
@@ -13,8 +14,11 @@ export const metadata = { title: 'Equipe e acessos' };
 
 const PAPEIS: Record<Papel, { rotulo: string; descricao: string }> = {
   DONO: { rotulo: 'Dono', descricao: 'Acesso total ao painel' },
-  RECEPCAO: { rotulo: 'Recepção', descricao: 'Agenda, comandas, caixa e estoque' },
-  PROFISSIONAL: { rotulo: 'Profissional', descricao: 'App do profissional' },
+  RECEPCAO: { rotulo: 'Recepção', descricao: 'Usa o painel nas áreas liberadas' },
+  PROFISSIONAL: {
+    rotulo: 'Profissional',
+    descricao: 'App do profissional (e áreas do painel liberadas)',
+  },
 };
 
 const dataCurta = (iso: string) =>
@@ -38,7 +42,7 @@ export default async function EquipePage() {
 
       <Secao
         titulo="Adicionar recepção"
-        descricao="A recepção usa o painel: agenda, comandas, caixa e estoque. Não vê comissões nem configurações."
+        descricao="A recepção usa o painel. Marque as áreas liberadas; depois dá para mudar em “Editar acessos”. Equipe e configurações são só do dono."
       >
         <AdicionarRecepcao />
         <p className="text-xs text-suave">
@@ -61,7 +65,10 @@ export default async function EquipePage() {
         >
           <ul className="flex flex-col divide-y divide-borda">
             {convites.map((c) => (
-              <li key={c.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+              <li
+                key={c.id}
+                className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+              >
                 <div className="min-w-0">
                   <p className="truncate font-medium">{c.nome ?? c.usuario}</p>
                   <p className="truncate text-sm text-suave">
@@ -94,36 +101,50 @@ function ListaMembros({ membros }: { membros: MembroEquipe[] }) {
       {membros.map((m) => {
         const nome = m.nome ?? m.usuario;
         return (
-          <li key={m.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-nude font-display text-primaria">
-                {nome.charAt(0).toUpperCase()}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate font-medium">
-                  {nome}
-                  {m.ehVoce && <span className="ml-1.5 text-xs font-normal text-suave">(você)</span>}
-                </p>
-                <p className="truncate text-sm text-suave">@{m.usuario}</p>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  <span
-                    title={PAPEIS[m.papel].descricao}
-                    className="rounded-full bg-nude px-2 py-0.5 text-xs font-medium text-primaria"
-                  >
-                    {PAPEIS[m.papel].rotulo}
-                  </span>
-                  {m.ehProfissional && m.papel !== 'PROFISSIONAL' && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-borda px-2 py-0.5 text-xs text-suave">
-                      <Scissors className="size-3" aria-hidden /> Também atende
+          <li key={m.id} className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-nude font-display text-primaria">
+                  {nome.charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">
+                    {nome}
+                    {m.ehVoce && (
+                      <span className="ml-1.5 text-xs font-normal text-suave">(você)</span>
+                    )}
+                  </p>
+                  <p className="truncate text-sm text-suave">@{m.usuario}</p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    <span
+                      title={PAPEIS[m.papel].descricao}
+                      className="rounded-full bg-nude px-2 py-0.5 text-xs font-medium text-primaria"
+                    >
+                      {PAPEIS[m.papel].rotulo}
                     </span>
-                  )}
+                    {m.ehProfissional && m.papel !== 'PROFISSIONAL' && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-borda px-2 py-0.5 text-xs text-suave">
+                        <Scissors className="size-3" aria-hidden /> Também atende
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
+              {!m.ehVoce && m.papel !== 'DONO' && (
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  {m.ativo && <RedefinirSenha id={m.id} nome={nome} usuario={m.usuario} />}
+                  <AlternarAcesso id={m.id} nome={nome} ativo={m.ativo} />
+                </div>
+              )}
             </div>
-            {!m.ehVoce && m.papel !== 'DONO' && (
-              <div className="flex shrink-0 flex-col items-end gap-1.5">
-                {m.ativo && <RedefinirSenha id={m.id} nome={nome} usuario={m.usuario} />}
-                <AlternarAcesso id={m.id} nome={nome} ativo={m.ativo} />
+            {m.ativo && !m.ehVoce && m.papel !== 'DONO' && m.permissoes && (
+              <div className="pl-[52px]">
+                <EditarPermissoes
+                  id={m.id}
+                  nome={nome}
+                  permissoes={m.permissoes}
+                  atende={m.ehProfissional || m.papel === 'PROFISSIONAL'}
+                />
               </div>
             )}
           </li>

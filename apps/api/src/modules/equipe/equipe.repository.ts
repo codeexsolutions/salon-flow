@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { Papel } from '@salonflow/shared';
+import type { Papel, Permissao } from '@salonflow/shared';
+import { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../shared/database/prisma.service.js';
 import { papelAoAceitarConvite } from './domain/acesso.js';
 
@@ -13,6 +14,7 @@ export class EquipeRepository {
       select: {
         id: true,
         papel: true,
+        permissoes: true,
         ativo: true,
         criadoEm: true,
         usuario: {
@@ -47,20 +49,30 @@ export class EquipeRepository {
   }
 
   /** Dá (ou devolve) o acesso a um usuário que já tem conta. */
-  liberarAcesso(salaoId: string, usuarioId: string, papel: Papel) {
+  liberarAcesso(salaoId: string, usuarioId: string, papel: Papel, permissoes?: Permissao[]) {
+    const lista = permissoes ?? Prisma.DbNull;
     return this.prisma.membroSalao.upsert({
       where: { salaoId_usuarioId: { salaoId, usuarioId } },
-      create: { salaoId, usuarioId, papel },
-      update: { papel, ativo: true },
+      create: { salaoId, usuarioId, papel, permissoes: lista },
+      update: { papel, ativo: true, permissoes: lista },
     });
   }
 
-  salvarConvite(salaoId: string, dados: { email: string; nome: string; papel: Papel }) {
+  salvarConvite(
+    salaoId: string,
+    dados: { email: string; nome: string; papel: Papel; permissoes?: Permissao[] },
+  ) {
+    const permissoes = dados.permissoes ?? Prisma.DbNull;
     return this.prisma.conviteAcesso.upsert({
       where: { salaoId_email: { salaoId, email: dados.email } },
-      create: { salaoId, ...dados },
-      update: { nome: dados.nome, papel: dados.papel },
+      create: { salaoId, ...dados, permissoes },
+      update: { nome: dados.nome, papel: dados.papel, permissoes },
     });
+  }
+
+  /** O dono marca o que está liberado para a pessoa. */
+  definirPermissoes(salaoId: string, id: string, permissoes: Permissao[]) {
+    return this.prisma.membroSalao.update({ where: { id, salaoId }, data: { permissoes } });
   }
 
   removerConvite(salaoId: string, id: string) {
@@ -91,10 +103,12 @@ export class EquipeRepository {
         const chave = { salaoId_usuarioId: { salaoId: convite.salaoId, usuarioId } };
         const atual = await tx.membroSalao.findUnique({ where: chave, select: { papel: true } });
         const papel = papelAoAceitarConvite(atual?.papel ?? null, convite.papel);
+        // As marcadas no convite valem (sem = padrão do papel).
+        const permissoes = convite.permissoes ?? Prisma.DbNull;
         await tx.membroSalao.upsert({
           where: chave,
-          create: { salaoId: convite.salaoId, usuarioId, papel },
-          update: { papel, ativo: true },
+          create: { salaoId: convite.salaoId, usuarioId, papel, permissoes },
+          update: { papel, ativo: true, permissoes },
         });
         await tx.conviteAcesso.delete({ where: { id: convite.id } });
       }

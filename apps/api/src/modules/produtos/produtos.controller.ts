@@ -22,16 +22,23 @@ import {
 import { UsuarioAtual } from '../../shared/auth/decorators.js';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe.js';
-import { RotaDoSalao, SomentePapeis } from '../../shared/tenant/rota-do-salao.decorator.js';
+import {
+  ExigePermissao,
+  RotaDoSalao,
+  SomentePapeis,
+} from '../../shared/tenant/rota-do-salao.decorator.js';
 import { paraMovimento, paraProdutoResumo } from './produtos.mapper.js';
 import { ProdutosService } from './produtos.service.js';
 
 /** Produtos e estoque. Recepção consulta e lança entradas; só o dono cadastra/edita. */
-@RotaDoSalao('DONO', 'RECEPCAO')
+@RotaDoSalao()
+@ExigePermissao('ESTOQUE')
 @Controller('produtos')
 export class ProdutosController {
   constructor(private readonly service: ProdutosService) {}
 
+  /** A lista também serve para vender produto na comanda. */
+  @ExigePermissao('ESTOQUE', 'COMANDAS')
   @Get()
   async listar(@Query('incluirInativos') incluirInativos?: string) {
     return (await this.service.listar(incluirInativos === 'true')).map(paraProdutoResumo);
@@ -74,7 +81,7 @@ export class ProdutosController {
 }
 
 /** Ficha técnica de um serviço (produtos consumidos em cada atendimento). */
-@RotaDoSalao('DONO', 'RECEPCAO')
+@RotaDoSalao('DONO', 'RECEPCAO', 'PROFISSIONAL')
 @Controller('servicos/:servicoId/ficha-tecnica')
 export class FichaTecnicaController {
   constructor(private readonly service: ProdutosService) {}

@@ -108,12 +108,14 @@ model Salao {
 
 /// Vínculo de um usuário com um salão e o papel dele lá dentro.
 model MembroSalao {
-  id        String   @id @default(uuid()) @db.Uuid
-  salaoId   String   @map("salao_id") @db.Uuid
-  usuarioId String   @map("usuario_id") @db.Uuid
-  papel     Papel
-  ativo     Boolean  @default(true)
-  criadoEm  DateTime @default(now()) @map("criado_em")
+  id         String   @id @default(uuid()) @db.Uuid
+  salaoId    String   @map("salao_id") @db.Uuid
+  usuarioId  String   @map("usuario_id") @db.Uuid
+  papel      Papel
+  ativo      Boolean  @default(true)
+  /// O que o dono liberou para a pessoa (lista de Permissao). null = padrão do papel.
+  permissoes Json?
+  criadoEm   DateTime @default(now()) @map("criado_em")
 
   salao   Salao   @relation(fields: [salaoId], references: [id], onDelete: Cascade)
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
@@ -126,12 +128,14 @@ model MembroSalao {
 /// Acesso ao painel liberado pelo dono para um e-mail que ainda não entrou no SalonFlow.
 /// Vira MembroSalao no primeiro login com esse e-mail (e o convite é apagado).
 model ConviteAcesso {
-  id       String   @id @default(uuid()) @db.Uuid
-  salaoId  String   @map("salao_id") @db.Uuid
-  email    String
-  nome     String?
-  papel    Papel
-  criadoEm DateTime @default(now()) @map("criado_em")
+  id         String   @id @default(uuid()) @db.Uuid
+  salaoId    String   @map("salao_id") @db.Uuid
+  email      String
+  nome       String?
+  papel      Papel
+  /// Permissões marcadas no convite (null = padrão do papel).
+  permissoes Json?
+  criadoEm   DateTime @default(now()) @map("criado_em")
 
   salao Salao @relation(fields: [salaoId], references: [id], onDelete: Cascade)
 

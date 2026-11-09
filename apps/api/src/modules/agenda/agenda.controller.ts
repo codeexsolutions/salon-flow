@@ -26,14 +26,15 @@ import {
 import { Publica, UsuarioAtual } from '../../shared/auth/decorators.js';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe.js';
-import { RotaDoSalao } from '../../shared/tenant/rota-do-salao.decorator.js';
+import { ExigePermissao, RotaDoSalao } from '../../shared/tenant/rota-do-salao.decorator.js';
 import { SalaoPublicoGuard } from '../../shared/tenant/salao-publico.guard.js';
 import { ServicosService } from '../servicos/servicos.service.js';
 import { paraAgendamentoAgenda } from './agenda.mapper.js';
 import { AgendaService } from './agenda.service.js';
 
 /** Visão da agenda e horários livres (painel do salão). */
-@RotaDoSalao('DONO', 'RECEPCAO')
+@RotaDoSalao()
+@ExigePermissao('AGENDA')
 @Controller('agenda')
 export class AgendaController {
   constructor(private readonly service: AgendaService) {}
@@ -54,7 +55,8 @@ export class AgendaController {
 }
 
 /** Criação e manutenção de agendamentos pela equipe. */
-@RotaDoSalao('DONO', 'RECEPCAO')
+@RotaDoSalao()
+@ExigePermissao('AGENDA')
 @Controller('agendamentos')
 export class AgendamentosController {
   constructor(private readonly service: AgendaService) {}

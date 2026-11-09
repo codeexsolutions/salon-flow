@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { emailDeLogin, type ConvidarRecepcaoInput, type ResultadoConvite } from '@salonflow/shared';
+import {
+  emailDeLogin,
+  type ConvidarRecepcaoInput,
+  type Permissao,
+  type ResultadoConvite,
+} from '@salonflow/shared';
 import { SupabaseAdminService } from '../../shared/auth/supabase-admin.service.js';
 import { ConflitoError, NaoEncontradoError } from '../../shared/errors/domain.error.js';
 import { ContextoSalao } from '../../shared/tenant/contexto-salao.js';
@@ -31,7 +36,11 @@ export class EquipeService {
    * Libera o painel para a recepção. Se o usuário já tem conta, o acesso vale na
    * hora; senão fica pendente até a pessoa entrar pela primeira vez.
    */
-  async convidarRecepcao({ nome, usuario: login }: ConvidarRecepcaoInput): Promise<ResultadoConvite> {
+  async convidarRecepcao({
+    nome,
+    usuario: login,
+    permissoes,
+  }: ConvidarRecepcaoInput): Promise<ResultadoConvite> {
     const salaoId = this.contexto.salaoId;
     const email = emailDeLogin(login);
     const usuario = await this.repository.buscarUsuarioPorEmail(email);
@@ -41,6 +50,7 @@ export class EquipeService {
         nome,
         email,
         papel: 'RECEPCAO',
+        permissoes,
       });
       return { situacao: 'PENDENTE', conviteId: convite.id };
     }
@@ -57,6 +67,7 @@ export class EquipeService {
       salaoId,
       usuario.id,
       papelAoAceitarConvite(atual.papel, 'RECEPCAO'),
+      permissoes,
     );
     return { situacao: 'LIBERADO' };
   }
@@ -72,6 +83,15 @@ export class EquipeService {
     if (!membro) throw new NaoEncontradoError('Membro');
     validarAlteracaoAcesso({ papel: membro.papel, ehVoce: membro.usuarioId === usuarioLogadoId });
     await this.repository.alterarAtivo(salaoId, id, ativo);
+  }
+
+  /** O dono marca o que está liberado para alguém da equipe. */
+  async definirPermissoes(id: string, permissoes: Permissao[], usuarioLogadoId: string) {
+    const salaoId = this.contexto.salaoId;
+    const membro = await this.repository.buscarMembro(salaoId, id);
+    if (!membro) throw new NaoEncontradoError('Membro');
+    validarAlteracaoAcesso({ papel: membro.papel, ehVoce: membro.usuarioId === usuarioLogadoId });
+    await this.repository.definirPermissoes(salaoId, id, permissoes);
   }
 
   /** Senha nova para alguém da equipe que esqueceu a dele (só o dono). */

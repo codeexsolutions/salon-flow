@@ -3,7 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { useState, useTransition } from 'react';
 import { Check, Copy, MessageCircle, Shuffle, UserPlus } from 'lucide-react';
-import { emailDeLogin } from '@salonflow/shared';
+import { emailDeLogin, permissoesPadrao, type Permissao } from '@salonflow/shared';
 import { cancelarConvite, convidarRecepcao } from '@/app/admin/(painel)/equipe/actions';
 import { traduzirErroAuth } from '@/components/auth/erros-auth';
 import {
@@ -14,6 +14,7 @@ import {
   MensagemForm,
 } from '@/components/ui/campo';
 import { gerarSenhaProvisoria } from '@/lib/auth/senha-provisoria';
+import { CheckboxesPermissoes, opcoesPermissao } from './permissoes';
 import { env } from '@/lib/env';
 
 type Concluido =
@@ -29,6 +30,7 @@ export function AdicionarRecepcao() {
   const [nome, setNome] = useState('');
   const [usuario, setUsuario] = useState('');
   const [senha, setSenha] = useState(gerarSenhaProvisoria);
+  const [permissoes, setPermissoes] = useState<Permissao[]>(() => permissoesPadrao('RECEPCAO'));
   const [concluido, setConcluido] = useState<Concluido | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
@@ -37,6 +39,7 @@ export function AdicionarRecepcao() {
     setNome('');
     setUsuario('');
     setSenha(gerarSenhaProvisoria());
+    setPermissoes(permissoesPadrao('RECEPCAO'));
     setConcluido(null);
     setErro(null);
   }
@@ -45,7 +48,12 @@ export function AdicionarRecepcao() {
     evento.preventDefault();
     setErro(null);
     iniciar(async () => {
-      const r = await convidarRecepcao({ nome, usuario });
+      // "Próprias comissões" fica liberado caso a pessoa também passe a atender.
+      const r = await convidarRecepcao({
+        nome,
+        usuario,
+        permissoes: [...new Set<Permissao>([...permissoes, 'MINHAS_COMISSOES'])],
+      });
       if (!r.ok) {
         setErro(r.erro);
         return;
@@ -142,10 +150,20 @@ export function AdicionarRecepcao() {
           </div>
         </Campo>
       </div>
+      <div className="flex flex-col gap-2">
+        <span className="font-medium">O que esta pessoa pode ver e fazer</span>
+        <CheckboxesPermissoes
+          opcoes={opcoesPermissao(false)}
+          valor={permissoes}
+          aoMudar={setPermissoes}
+        />
+      </div>
       {erro && <MensagemForm mensagem={erro} />}
       <button
         type="submit"
-        disabled={pendente || nome.trim().length < 2 || usuario.trim().length < 3 || senha.length < 6}
+        disabled={
+          pendente || nome.trim().length < 2 || usuario.trim().length < 3 || senha.length < 6
+        }
         className={`${classeBotaoPrimario} self-start`}
       >
         <UserPlus className="size-4" aria-hidden />
@@ -196,7 +214,11 @@ export function DadosDeAcesso({
           }}
           className={classeBotaoSecundario}
         >
-          {copiado ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+          {copiado ? (
+            <Check className="size-4" aria-hidden />
+          ) : (
+            <Copy className="size-4" aria-hidden />
+          )}
           {copiado ? 'Copiado' : 'Copiar'}
         </button>
         <a
@@ -214,8 +236,8 @@ export function DadosDeAcesso({
         )}
       </div>
       <p className="text-xs text-suave">
-        Por segurança, esta senha não fica salva no painel. A pessoa cria a própria senha no primeiro
-        acesso.
+        Por segurança, esta senha não fica salva no painel. A pessoa cria a própria senha no
+        primeiro acesso.
       </p>
     </div>
   );

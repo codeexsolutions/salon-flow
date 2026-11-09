@@ -11,8 +11,9 @@ const ABAS = [
 ];
 
 /** Barra inferior do app do profissional. */
-export function AbasPro() {
+export function AbasPro({ verComissoes = true }: { verComissoes?: boolean }) {
   const caminho = usePathname();
+  const abas = verComissoes ? ABAS : ABAS.filter((a) => a.href !== '/pro/comissoes');
   const ativo = (href: string) =>
     href === '/pro'
       ? caminho === '/pro'
@@ -25,7 +26,7 @@ export function AbasPro() {
       className="fixed inset-x-0 bottom-0 z-30 border-t border-borda bg-superficie/95 backdrop-blur print:hidden"
     >
       <div className="mx-auto flex max-w-md justify-around py-2">
-        {ABAS.map(({ rotulo, href, icone: Icone }) => (
+        {abas.map(({ rotulo, href, icone: Icone }) => (
           <Link
             key={href}
             href={href}

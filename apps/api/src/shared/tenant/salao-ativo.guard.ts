@@ -2,10 +2,10 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { z } from 'zod';
-import { HEADER_SALAO_ID, type Papel } from '@salonflow/shared';
+import { HEADER_SALAO_ID, type Papel, type Permissao } from '@salonflow/shared';
 import { AcessoNegadoError } from '../errors/domain.error.js';
 import { ContextoSalao } from './contexto-salao.js';
-import { PAPEIS_PERMITIDOS } from './tenant.constants.js';
+import { PAPEIS_PERMITIDOS, PERMISSOES_EXIGIDAS } from './tenant.constants.js';
 import { VinculosRepository } from './vinculos.repository.js';
 
 /**
@@ -29,7 +29,7 @@ export class SalaoAtivoGuard implements CanActivate {
 
     const vinculo = await this.vinculos.buscarVinculoAtivo(req.usuario.id, salaoId.data);
     if (!vinculo) throw new AcessoNegadoError('Você não faz parte deste salão');
-    const { papel, fusoHorario } = vinculo;
+    const { papel, fusoHorario, permissoes } = vinculo;
 
     const permitidos = this.reflector.getAllAndOverride<Papel[]>(PAPEIS_PERMITIDOS, [
       ctx.getHandler(),
@@ -39,7 +39,15 @@ export class SalaoAtivoGuard implements CanActivate {
       throw new AcessoNegadoError();
     }
 
-    this.contexto.definir(salaoId.data, papel, fusoHorario);
+    const exigidas = this.reflector.getAllAndOverride<Permissao[]>(PERMISSOES_EXIGIDAS, [
+      ctx.getHandler(),
+      ctx.getClass(),
+    ]);
+    if (papel !== 'DONO' && exigidas?.length && !exigidas.some((p) => permissoes.includes(p))) {
+      throw new AcessoNegadoError('Esta área não está liberada para você.');
+    }
+
+    this.contexto.definir(salaoId.data, papel, fusoHorario, permissoes);
     return true;
   }
 }

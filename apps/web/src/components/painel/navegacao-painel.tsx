@@ -24,7 +24,8 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import type { Papel, VinculoSalao } from '@salonflow/shared';
+import type { Papel, Permissao, VinculoSalao } from '@salonflow/shared';
+import { pode } from '@/lib/auth/permissoes';
 import { sair, trocarSalao } from '@/lib/auth/actions';
 import { Marca } from '@/components/ui/marca';
 
@@ -34,18 +35,30 @@ interface Item {
   icone: LucideIcon;
   /** Papéis que veem o item (sem = todos). */
   papeis?: Papel[];
+  /** Área que o dono precisa ter liberado para a pessoa. */
+  permissao?: Permissao;
 }
 
 const ITENS: Item[] = [
   { rotulo: 'Início', href: '/admin', icone: LayoutDashboard },
-  { rotulo: 'Agenda', href: '/admin/agenda', icone: CalendarDays },
-  { rotulo: 'Comandas', href: '/admin/comandas', icone: Receipt },
-  { rotulo: 'Caixa', href: '/admin/caixa', icone: Wallet },
-  { rotulo: 'Profissionais', href: '/admin/profissionais', icone: Users },
+  { rotulo: 'Agenda', href: '/admin/agenda', icone: CalendarDays, permissao: 'AGENDA' },
+  { rotulo: 'Comandas', href: '/admin/comandas', icone: Receipt, permissao: 'COMANDAS' },
+  { rotulo: 'Caixa', href: '/admin/caixa', icone: Wallet, permissao: 'CAIXA' },
+  {
+    rotulo: 'Profissionais',
+    href: '/admin/profissionais',
+    icone: Users,
+    permissao: 'PROFISSIONAIS',
+  },
   { rotulo: 'Serviços', href: '/admin/servicos', icone: Scissors },
-  { rotulo: 'Estoque', href: '/admin/estoque', icone: Package },
-  { rotulo: 'Faturamento', href: '/admin/faturamento', icone: TrendingUp, papeis: ['DONO'] },
-  { rotulo: 'Comissões', href: '/admin/comissoes', icone: HandCoins, papeis: ['DONO'] },
+  { rotulo: 'Estoque', href: '/admin/estoque', icone: Package, permissao: 'ESTOQUE' },
+  {
+    rotulo: 'Faturamento',
+    href: '/admin/faturamento',
+    icone: TrendingUp,
+    permissao: 'FATURAMENTO',
+  },
+  { rotulo: 'Comissões', href: '/admin/comissoes', icone: HandCoins, permissao: 'COMISSOES' },
   { rotulo: 'Equipe e acessos', href: '/admin/equipe', icone: ShieldCheck, papeis: ['DONO'] },
   { rotulo: 'Configurações', href: '/admin/configuracoes', icone: Settings, papeis: ['DONO'] },
 ];
@@ -119,7 +132,10 @@ function ConteudoMenu({
   const caminho = usePathname();
   const ativo = (href: string) =>
     href === '/admin' ? caminho === '/admin' : caminho === href || caminho.startsWith(`${href}/`);
-  const itens = ITENS.filter((i) => !i.papeis || i.papeis.includes(salao.papel));
+  const itens = ITENS.filter(
+    (i) =>
+      (!i.papeis || i.papeis.includes(salao.papel)) && (!i.permissao || pode(salao, i.permissao)),
+  );
 
   return (
     <div className="flex h-full flex-col gap-6 overflow-y-auto p-5">

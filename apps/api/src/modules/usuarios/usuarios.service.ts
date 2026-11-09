@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { usuarioDeLogin, type PerfilUsuario } from '@salonflow/shared';
+import { permissoesEfetivas, usuarioDeLogin, type PerfilUsuario } from '@salonflow/shared';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { EquipeService } from '../equipe/equipe.service.js';
 import { ProfissionaisService } from '../profissionais/profissionais.service.js';
@@ -34,10 +34,11 @@ export class UsuariosService {
       nome: cadastro.nome,
       avatarUrl: cadastro.avatarUrl,
       temRecuperacao: cadastro.recuperacaoHash !== null,
-      saloes: vinculos.map(({ papel, salao: { profissionais, ...salao } }) => ({
+      saloes: vinculos.map(({ papel, permissoes, salao: { profissionais, ...salao } }) => ({
         ...salao,
         papel,
         ehProfissional: profissionais.length > 0,
+        permissoes: permissoesEfetivas(papel, permissoes),
       })),
     };
   }

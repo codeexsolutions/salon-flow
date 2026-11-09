@@ -12,7 +12,11 @@ import { z } from 'zod';
 import { UsuarioAtual } from '../../shared/auth/decorators.js';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe.js';
-import { RotaDoSalao } from '../../shared/tenant/rota-do-salao.decorator.js';
+import {
+  ExigePermissao,
+  RotaDoSalao,
+  SomentePapeis,
+} from '../../shared/tenant/rota-do-salao.decorator.js';
 import { ComissoesService } from './comissoes.service.js';
 
 const periodoSchema = z.object({
@@ -22,8 +26,9 @@ const periodoSchema = z.object({
 });
 type Periodo = z.infer<typeof periodoSchema>;
 
-/** Configuração, regras e extrato de comissões — só o dono. */
-@RotaDoSalao('DONO')
+/** Comissões: consulta para quem tem a permissão; alterar e pagar, só o dono. */
+@RotaDoSalao()
+@ExigePermissao('COMISSOES')
 @Controller('comissoes')
 export class ComissoesController {
   constructor(private readonly service: ComissoesService) {}
@@ -33,6 +38,7 @@ export class ComissoesController {
     return this.service.configuracao();
   }
 
+  @SomentePapeis('DONO')
   @Put('configuracao')
   salvarConfiguracao(
     @Body(new ZodValidationPipe(configuracaoComissaoSchema)) dados: ConfiguracaoComissao,
@@ -46,6 +52,7 @@ export class ComissoesController {
   }
 
   /** Substitui todas as regras do salão. */
+  @SomentePapeis('DONO')
   @Put('regras')
   definirRegras(
     @Body(new ZodValidationPipe(definirRegrasComissaoSchema)) dados: DefinirRegrasComissaoInput,
@@ -60,6 +67,7 @@ export class ComissoesController {
   }
 
   /** Paga as comissões pendentes do período a um profissional. */
+  @SomentePapeis('DONO')
   @Post('repasses')
   async gerarRepasse(
     @UsuarioAtual() usuario: UsuarioAutenticado,
@@ -82,6 +90,7 @@ export class ComissoesController {
     return this.service.repasse(id);
   }
 
+  @SomentePapeis('DONO')
   @Post('repasses/:id/cancelar')
   cancelarRepasse(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.cancelarRepasse(id);
@@ -90,6 +99,7 @@ export class ComissoesController {
 
 /** App do profissional: o próprio extrato. */
 @RotaDoSalao()
+@ExigePermissao('MINHAS_COMISSOES')
 @Controller('pro/comissoes')
 export class ProComissoesController {
   constructor(private readonly service: ComissoesService) {}

@@ -1,4 +1,5 @@
 import type { Papel } from './enums.js';
+import type { Permissao } from './permissoes.js';
 
 /** Salão em que o usuário atua e o papel dele lá. */
 export interface VinculoSalao {
@@ -10,6 +11,8 @@ export interface VinculoSalao {
   papel: Papel;
   /** Também atende como profissional neste salão (pode usar o app do profissional). */
   ehProfissional: boolean;
+  /** O que está liberado para a pessoa neste salão (dono = tudo). */
+  permissoes: Permissao[];
 }
 
 /** Resposta de GET /me. Sem salões = usuário apenas cliente. */

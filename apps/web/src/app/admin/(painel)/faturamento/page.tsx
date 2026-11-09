@@ -121,9 +121,6 @@ function Ranking({ itens, unidade }: { itens: FaturamentoItemRanking[]; unidade:
 
 export default async function FaturamentoPage({ searchParams }: PageProps<'/admin/faturamento'>) {
   const { salao } = await obterContextoAdmin();
-  if (salao.papel !== 'DONO') {
-    return <p className="text-sm text-suave">Apenas o dono do salão acessa o faturamento.</p>;
-  }
 
   const hoje = hojeNoFuso(salao.fusoHorario);
   const consulta = await searchParams;

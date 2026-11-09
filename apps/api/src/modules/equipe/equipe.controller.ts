@@ -8,13 +8,16 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import {
   alterarAcessoSchema,
   convidarRecepcaoSchema,
+  definirPermissoesSchema,
   redefinirSenhaSchema,
   type AlterarAcessoInput,
   type ConvidarRecepcaoInput,
+  type DefinirPermissoesInput,
   type RedefinirSenhaInput,
   type EquipeSalao,
   type ResultadoConvite,
@@ -58,6 +61,16 @@ export class EquipeController {
     @Body(new ZodValidationPipe(alterarAcessoSchema)) { ativo }: AlterarAcessoInput,
   ) {
     return this.service.alterarAcesso(id, ativo, usuario.id);
+  }
+
+  @Put('membros/:id/permissoes')
+  @HttpCode(204)
+  definirPermissoes(
+    @UsuarioAtual() usuario: UsuarioAutenticado,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(definirPermissoesSchema)) { permissoes }: DefinirPermissoesInput,
+  ) {
+    return this.service.definirPermissoes(id, permissoes, usuario.id);
   }
 
   @Post('membros/:id/senha')

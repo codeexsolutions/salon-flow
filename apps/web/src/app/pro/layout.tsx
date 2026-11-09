@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { AbasPro } from '@/components/pro/abas-pro';
+import { obterContextoPro, pode } from '@/lib/auth/contexto';
 import { AvisoSenhaProvisoria } from '@/components/auth/aviso-senha-provisoria';
 import { LinkPainel } from '@/components/pro/link-painel';
 import { Marca } from '@/components/ui/marca';
@@ -11,7 +12,10 @@ export const metadata: Metadata = {
   manifest: '/manifests/pro.webmanifest',
 };
 
-export default function ProLayout({ children }: { children: React.ReactNode }) {
+export default async function ProLayout({ children }: { children: React.ReactNode }) {
+  const { salao } = await obterContextoPro();
+  const verComissoes = !salao || pode(salao, 'MINHAS_COMISSOES');
+
   return (
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-30 border-b border-borda bg-superficie/95 backdrop-blur print:hidden">
@@ -33,7 +37,7 @@ export default function ProLayout({ children }: { children: React.ReactNode }) {
         </Suspense>
         {children}
       </main>
-      <AbasPro />
+      <AbasPro verComissoes={verComissoes} />
     </div>
   );
 }

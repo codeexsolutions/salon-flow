@@ -29,12 +29,17 @@ import {
 import { UsuarioAtual } from '../../shared/auth/decorators.js';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe.js';
-import { RotaDoSalao, SomentePapeis } from '../../shared/tenant/rota-do-salao.decorator.js';
+import {
+  ExigePermissao,
+  RotaDoSalao,
+  SomentePapeis,
+} from '../../shared/tenant/rota-do-salao.decorator.js';
 import { paraComandaDetalhe, paraComandaResumo } from './comandas.mapper.js';
 import { ComandasService } from './comandas.service.js';
 
 /** Comandas: abertura, itens, desconto, fechamento (com comissões) e cancelamento. */
-@RotaDoSalao('DONO', 'RECEPCAO')
+@RotaDoSalao()
+@ExigePermissao('COMANDAS')
 @Controller('comandas')
 export class ComandasController {
   constructor(private readonly service: ComandasService) {}

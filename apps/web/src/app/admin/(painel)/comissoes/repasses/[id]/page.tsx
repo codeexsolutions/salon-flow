@@ -14,9 +14,7 @@ export const metadata = { title: 'Repasse' };
 export default async function RepassePage({ params }: PageProps<'/admin/comissoes/repasses/[id]'>) {
   const { id } = await params;
   const { salao } = await obterContextoAdmin();
-  if (salao.papel !== 'DONO') {
-    return <p className="text-sm text-suave">Apenas o dono do salão acessa os repasses.</p>;
-  }
+  const ehDono = salao.papel === 'DONO';
 
   let repasse: RepasseDetalhe;
   try {
@@ -34,7 +32,7 @@ export default async function RepassePage({ params }: PageProps<'/admin/comissoe
         </Link>
         <div className="flex gap-2">
           <BotaoImprimir />
-          {repasse.status === 'PAGO' && (
+          {ehDono && repasse.status === 'PAGO' && (
             <form action={cancelarRepasse.bind(null, repasse.id)}>
               <button type="submit" className={`${classeBotaoSecundario} text-perigo`}>
                 Cancelar repasse

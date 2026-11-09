@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import {
   convidarRecepcaoSchema,
+  definirPermissoesSchema,
   redefinirSenhaSchema,
   type ResultadoConvite,
 } from '@salonflow/shared';
@@ -51,6 +52,19 @@ export async function redefinirSenhaMembro(id: string, senha: string): Promise<R
 export async function alterarAcesso(id: string, ativo: boolean): Promise<Resultado> {
   try {
     await apiSalao(`/equipe/membros/${id}`, { method: 'PATCH', body: { ativo } });
+    revalidatePath('/admin/equipe');
+    return sucesso(undefined);
+  } catch (erro) {
+    return falha(erro);
+  }
+}
+
+/** O dono marca o que está liberado para alguém da equipe. */
+export async function definirPermissoes(id: string, permissoes: unknown): Promise<Resultado> {
+  const validacao = definirPermissoesSchema.safeParse({ permissoes });
+  if (!validacao.success) return falhaDeValidacao(validacao.error);
+  try {
+    await apiSalao(`/equipe/membros/${id}/permissoes`, { method: 'PUT', body: validacao.data });
     revalidatePath('/admin/equipe');
     return sucesso(undefined);
   } catch (erro) {

@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ClsService, type ClsStore } from 'nestjs-cls';
-import type { Papel } from '@salonflow/shared';
+import type { Papel, Permissao } from '@salonflow/shared';
 import { AcessoNegadoError } from '../errors/domain.error.js';
 
 export interface SalaoClsStore extends ClsStore {
   salaoId?: string;
   papel?: Papel;
   fusoHorario?: string;
+  permissoes?: Permissao[];
 }
 
 /**
@@ -44,9 +45,15 @@ export class ContextoSalao {
     this.cls.set('fusoHorario', fusoHorario);
   }
 
-  definir(salaoId: string, papel: Papel, fusoHorario: string) {
+  /** O que está liberado para quem faz a requisição (dono = tudo). */
+  pode(permissao: Permissao): boolean {
+    return this.papel === 'DONO' || (this.cls.get('permissoes') ?? []).includes(permissao);
+  }
+
+  definir(salaoId: string, papel: Papel, fusoHorario: string, permissoes: Permissao[] = []) {
     this.cls.set('salaoId', salaoId);
     this.cls.set('papel', papel);
     this.cls.set('fusoHorario', fusoHorario);
+    this.cls.set('permissoes', permissoes);
   }
 }

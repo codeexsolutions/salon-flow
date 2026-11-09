@@ -22,7 +22,11 @@ import {
   type DefinirJornadaInput,
 } from '@salonflow/shared';
 import { ZodValidationPipe } from '../../shared/http/zod-validation.pipe.js';
-import { RotaDoSalao, SomentePapeis } from '../../shared/tenant/rota-do-salao.decorator.js';
+import {
+  ExigePermissao,
+  RotaDoSalao,
+  SomentePapeis,
+} from '../../shared/tenant/rota-do-salao.decorator.js';
 import {
   paraBloqueio,
   paraProfissionalDetalhe,
@@ -31,11 +35,14 @@ import {
 import { ProfissionaisService } from './profissionais.service.js';
 
 /** Gestão da equipe. Dono e recepção consultam e ajustam agenda; só o dono cadastra/edita. */
-@RotaDoSalao('DONO', 'RECEPCAO')
+@RotaDoSalao()
+@ExigePermissao('PROFISSIONAIS')
 @Controller('profissionais')
 export class ProfissionaisController {
   constructor(private readonly service: ProfissionaisService) {}
 
+  /** Quem é da equipe: usado na agenda, comandas, serviços (qualquer membro). */
+  @ExigePermissao()
   @Get()
   async listar(@Query('incluirInativos') incluirInativos?: string) {
     const lista = await this.service.listar(incluirInativos === 'true');
@@ -48,6 +55,7 @@ export class ProfissionaisController {
     return paraProfissionalResumo(await this.service.criar(dados));
   }
 
+  @ExigePermissao('PROFISSIONAIS', 'AGENDA', 'COMANDAS')
   @Get(':id')
   async buscar(@Param('id', ParseUUIDPipe) id: string) {
     return paraProfissionalDetalhe(await this.service.buscar(id));

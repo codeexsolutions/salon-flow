@@ -106,6 +106,7 @@ export class ServicosService {
       descricao: s.descricao,
       categoria: s.categoria,
       precoCentavos: s.precoCentavos,
+      precoAPartirDe: s.precoAPartirDe,
       duracaoMin: s.duracaoMin,
       profissionais: s.profissionais.map((sp) => ({
         id: sp.profissionalId,

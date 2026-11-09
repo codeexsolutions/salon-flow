@@ -139,6 +139,21 @@ export function EditorComanda({
           valorCentavos: textoParaCentavos(p.valor),
         })),
       });
+    // Serviço "a partir de": o valor final precisa ser conferido antes de fechar.
+    const aConferir = comanda.itens.filter((i) => i.precoAPartirDe);
+    if (
+      aConferir.length > 0 &&
+      !confirm(
+        [
+          'Serviço com preço "a partir de":',
+          ...aConferir.map((i) => `• ${i.descricao}: ${formatarPreco(i.valorCentavos)}`),
+          '',
+          'O valor cobrado está correto? Para mudar, toque no valor do item.',
+        ].join('\n'),
+      )
+    ) {
+      return;
+    }
     setErro(null);
     iniciar(async () => {
       let r = await enviar(false);
@@ -509,6 +524,9 @@ function LinhaItem({
         <span className="text-xs text-suave">
           {item.tipo === 'PRODUTO' ? 'Venda de produto' : item.profissional?.nome}
           {item.agendamentoId && ' · do agendamento'}
+          {item.precoAPartirDe && (
+            <span className="text-alerta"> · preço &ldquo;a partir de&rdquo;: confira o valor</span>
+          )}
         </span>
       </span>
       <button

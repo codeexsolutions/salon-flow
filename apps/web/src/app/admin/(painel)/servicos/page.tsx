@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { formatarDuracao, formatarPreco, type ServicoResumo } from '@salonflow/shared';
+import { formatarDuracao, formatarPrecoServico, type ServicoResumo } from '@salonflow/shared';
 import { classeBotaoPrimario } from '@/components/ui/campo';
 import { apiSalao } from '@/lib/api/salao';
 import { obterContextoAdmin } from '@/lib/auth/contexto';
@@ -63,7 +63,9 @@ export default async function ServicosPage() {
                         {!s.ativo && ' · desativado'}
                       </span>
                     </span>
-                    <span className="font-medium">{formatarPreco(s.precoCentavos)}</span>
+                    <span className="font-medium">
+                      {formatarPrecoServico(s.precoCentavos, s.precoAPartirDe)}
+                    </span>
                   </Link>
                 </li>
               ))}

@@ -28,6 +28,7 @@ function lerServico(formData: FormData) {
     precoCentavos: preco === '' ? undefined : (textoParaCentavos(preco) ?? Number.NaN),
     duracaoMin: duracao === '' ? undefined : Number(duracao),
     visivelOnline: formData.get('visivelOnline') === 'on',
+    precoAPartirDe: formData.get('precoAPartirDe') === 'on',
   };
 }
 

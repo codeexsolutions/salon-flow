@@ -163,6 +163,8 @@ export interface ItemComanda {
   profissional: { id: string; nome: string } | null;
   agendamentoId: string | null;
   valorCentavos: number;
+  /** Serviço com preço "a partir de": conferir o valor cobrado. */
+  precoAPartirDe: boolean;
   /** Preenchidos quando a comanda é fechada. */
   descontoRateadoCentavos: number | null;
   taxaRateadaCentavos: number | null;

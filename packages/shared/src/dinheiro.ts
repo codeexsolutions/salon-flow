@@ -57,3 +57,8 @@ export function textoParaBps(texto: string): number | null {
   const bps = Math.round(Number(limpo) * 100);
   return bps <= 10_000 ? bps : null;
 }
+
+/** Preço de serviço: "a partir de R$ 50,00" quando o valor final sai no atendimento. */
+export function formatarPrecoServico(centavos: number, aPartirDe?: boolean): string {
+  return aPartirDe ? `a partir de ${formatarPreco(centavos)}` : formatarPreco(centavos);
+}

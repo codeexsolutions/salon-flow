@@ -20,6 +20,8 @@ export const criarServicoSchema = z.object({
   precoCentavos,
   duracaoMin,
   visivelOnline: z.boolean().default(true),
+  /** Preço mínimo: o valor final é definido no atendimento ("a partir de"). */
+  precoAPartirDe: z.boolean().default(false),
 });
 export type CriarServicoInput = z.infer<typeof criarServicoSchema>;
 
@@ -31,6 +33,7 @@ export const atualizarServicoSchema = z.object({
   precoCentavos: precoCentavos.optional(),
   duracaoMin: duracaoMin.optional(),
   visivelOnline: z.boolean().optional(),
+  precoAPartirDe: z.boolean().optional(),
   ativo: z.boolean().optional(),
 });
 export type AtualizarServicoInput = z.infer<typeof atualizarServicoSchema>;
@@ -60,6 +63,8 @@ export interface ServicoResumo {
   descricao: string | null;
   categoria: string | null;
   precoCentavos: number;
+  /** O preço é o mínimo ("a partir de"); o valor final sai no atendimento. */
+  precoAPartirDe: boolean;
   duracaoMin: number;
   visivelOnline: boolean;
   ativo: boolean;

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import {
   formatarDuracao,
-  formatarPreco,
+  formatarPrecoServico,
   JANELA_AGENDAMENTO_APP_DIAS,
   type HorariosLivresProfissional,
   type ServicoOnline,
@@ -153,7 +153,9 @@ export function Agendar({
                     {s.descricao && ` · ${s.descricao}`}
                   </span>
                 </span>
-                <span className="font-medium">{formatarPreco(s.precoCentavos)}</span>
+                <span className="shrink-0 text-right font-medium">
+                  {formatarPrecoServico(s.precoCentavos, s.precoAPartirDe)}
+                </span>
               </button>
             </li>
           ))}
@@ -176,7 +178,7 @@ export function Agendar({
                   {p.nome}
                   {'precoCentavos' in p && p.precoCentavos !== servico.precoCentavos && (
                     <span className="ml-1 text-xs opacity-75">
-                      {formatarPreco(p.precoCentavos)}
+                      {formatarPrecoServico(p.precoCentavos, servico.precoAPartirDe)}
                     </span>
                   )}
                 </Chip>
@@ -250,7 +252,10 @@ export function Agendar({
             <strong>{servico.nome}</strong> com {profissionalEscolhido?.nome}
             <br />
             {dataPorExtenso(escolha.inicio.slice(0, 10))} às {escolha.inicio.slice(11)} ·{' '}
-            {formatarPreco(profissionalEscolhido?.precoCentavos ?? servico.precoCentavos)}
+            {formatarPrecoServico(
+              profissionalEscolhido?.precoCentavos ?? servico.precoCentavos,
+              servico.precoAPartirDe,
+            )}
           </p>
           {erro && (
             <p role="alert" className="text-sm text-perigo">

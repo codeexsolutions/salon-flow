@@ -105,6 +105,8 @@ export interface ServicoOnline {
   categoria: string | null;
   /** Valores do serviço; cada profissional pode ter os próprios. */
   precoCentavos: number;
+  /** Preço "a partir de" (o valor final sai no atendimento). */
+  precoAPartirDe: boolean;
   duracaoMin: number;
   profissionais: { id: string; nome: string; precoCentavos: number; duracaoMin: number }[];
 }

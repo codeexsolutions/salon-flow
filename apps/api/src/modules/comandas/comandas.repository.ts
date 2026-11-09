@@ -8,7 +8,10 @@ import { ajustarConferencia } from './domain/lancamento.js';
 export const comDetalhes = {
   cliente: { select: { id: true, nome: true } },
   itens: {
-    include: { profissional: { select: { id: true, nome: true } } },
+    include: {
+      profissional: { select: { id: true, nome: true } },
+      servico: { select: { precoAPartirDe: true } },
+    },
     orderBy: { id: 'asc' as const },
   },
   pagamentos: { orderBy: { id: 'asc' as const } },

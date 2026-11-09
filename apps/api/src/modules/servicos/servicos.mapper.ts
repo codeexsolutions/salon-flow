@@ -16,6 +16,7 @@ export function paraServicoResumo(s: ServicoComContagem): ServicoResumo {
     descricao: s.descricao,
     categoria: s.categoria,
     precoCentavos: s.precoCentavos,
+    precoAPartirDe: s.precoAPartirDe,
     duracaoMin: s.duracaoMin,
     visivelOnline: s.visivelOnline,
     ativo: s.ativo,

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   formatarDuracao,
-  formatarPreco,
+  formatarPrecoServico,
   type ProfissionalResumo,
   type ServicoDetalhe,
   type FichaTecnica,
@@ -52,7 +52,8 @@ export default async function ServicoPage({ params }: PageProps<'/admin/servicos
         </Link>
         <h1 className="mt-2 text-3xl">{servico.nome}</h1>
         <p className="text-sm text-suave">
-          {formatarPreco(servico.precoCentavos)} · {formatarDuracao(servico.duracaoMin)}
+          {formatarPrecoServico(servico.precoCentavos, servico.precoAPartirDe)} ·{' '}
+          {formatarDuracao(servico.duracaoMin)}
           {!servico.ativo && ' · desativado'}
         </p>
       </div>
@@ -115,8 +116,12 @@ export default async function ServicoPage({ params }: PageProps<'/admin/servicos
                   {(p.precoCentavos !== null || p.duracaoMin !== null) && (
                     <span className="text-suave">
                       {' '}
-                      · {formatarPreco(p.precoCentavos ?? servico.precoCentavos)} ·{' '}
-                      {formatarDuracao(p.duracaoMin ?? servico.duracaoMin)}
+                      ·{' '}
+                      {formatarPrecoServico(
+                        p.precoCentavos ?? servico.precoCentavos,
+                        servico.precoAPartirDe,
+                      )}{' '}
+                      · {formatarDuracao(p.duracaoMin ?? servico.duracaoMin)}
                     </span>
                   )}
                 </li>

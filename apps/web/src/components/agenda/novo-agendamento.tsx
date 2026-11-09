@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import {
   formatarDuracao,
-  formatarPreco,
+  formatarPrecoServico,
   type ClienteResumo,
   type HorariosLivresProfissional,
   type ServicoResumo,
@@ -111,7 +111,8 @@ export function NovoAgendamento({
           <option value="">Escolha o serviço…</option>
           {servicos.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.nome} · {formatarDuracao(s.duracaoMin)} · {formatarPreco(s.precoCentavos)}
+              {s.nome} · {formatarDuracao(s.duracaoMin)} ·{' '}
+              {formatarPrecoServico(s.precoCentavos, s.precoAPartirDe)}
             </option>
           ))}
         </select>
@@ -140,7 +141,8 @@ export function NovoAgendamento({
                 <p className="mb-2 font-medium">
                   {o.nome}{' '}
                   <span className="font-normal text-suave">
-                    · {formatarDuracao(o.duracaoMin)} · {formatarPreco(o.precoCentavos)}
+                    · {formatarDuracao(o.duracaoMin)} ·{' '}
+                    {formatarPrecoServico(o.precoCentavos, servico.precoAPartirDe)}
                   </span>
                 </p>
                 {o.horarios.length === 0 ? (
@@ -163,9 +165,7 @@ export function NovoAgendamento({
                           }
                           aria-pressed={ativo}
                           className={`rounded-md border px-2 py-1 text-xs ${
-                            ativo
-                              ? 'border-botao bg-botao text-botao-contraste'
-                              : 'border-borda'
+                            ativo ? 'border-botao bg-botao text-botao-contraste' : 'border-borda'
                           }`}
                         >
                           {h.inicioLocal.slice(11)}

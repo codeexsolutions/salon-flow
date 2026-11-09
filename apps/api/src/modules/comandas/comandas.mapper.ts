@@ -8,7 +8,10 @@ import type {
 
 type ComandaCompleta = Comanda & {
   cliente: { id: string; nome: string } | null;
-  itens: (ComandaItem & { profissional: { id: string; nome: string } | null })[];
+  itens: (ComandaItem & {
+    profissional: { id: string; nome: string } | null;
+    servico?: { precoAPartirDe: boolean } | null;
+  })[];
   pagamentos: Pagamento[];
   reaberturas?: ReaberturaComanda[];
 };
@@ -48,6 +51,7 @@ export function paraComandaDetalhe(c: ComandaCompleta): ComandaDetalhe {
       profissional: i.profissional,
       agendamentoId: i.agendamentoId,
       valorCentavos: i.valorCentavos,
+      precoAPartirDe: i.servico?.precoAPartirDe ?? false,
       descontoRateadoCentavos: i.descontoRateadoCentavos,
       taxaRateadaCentavos: i.taxaRateadaCentavos,
       baseComissaoCentavos: i.baseComissaoCentavos,

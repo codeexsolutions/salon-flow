@@ -103,6 +103,21 @@ export function FormServico({
         Cliente pode agendar este serviço pelo app
       </label>
 
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="precoAPartirDe"
+          defaultChecked={servico?.precoAPartirDe ?? false}
+          className="mt-0.5"
+        />
+        <span>
+          Preço &ldquo;a partir de&rdquo;
+          <span className="block text-xs text-suave">
+            O cliente vê &ldquo;a partir de&rdquo; esse valor; o valor final é conferido na comanda.
+          </span>
+        </span>
+      </label>
+
       <MensagemForm sucesso={estado.sucesso} mensagem={estado.mensagem} />
 
       <button type="submit" disabled={enviando} className={`${classeBotaoPrimario} self-start`}>

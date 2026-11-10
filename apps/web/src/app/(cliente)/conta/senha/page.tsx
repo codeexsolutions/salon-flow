@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LayoutDashboard, LogOut, Smartphone } from 'lucide-react';
+import { ChevronRight, IdCard, LayoutDashboard, LogOut, Smartphone } from 'lucide-react';
 import { FormDefinirSenha } from '@/components/auth/form-definir-senha';
 import { GerarCodigoRecuperacao } from '@/components/auth/gerar-codigo-recuperacao';
 import { CabecalhoPagina } from '@/components/ui/cabecalho-pagina';
@@ -37,6 +37,19 @@ export default async function ContaPage() {
           )}
         </div>
       )}
+      <Link
+        href="/conta/dados"
+        className="flex items-center gap-3 rounded-2xl border border-borda bg-superficie p-4 transition hover:border-primaria/40"
+      >
+        <IdCard className="size-5 text-primaria" aria-hidden />
+        <span className="flex flex-1 flex-col">
+          <span className="font-medium">Meus dados</span>
+          <span className="text-xs text-suave">
+            Celular, nascimento e e-mail para os salões (opcional)
+          </span>
+        </span>
+        <ChevronRight className="size-4 text-suave" aria-hidden />
+      </Link>
       <Secao titulo="Nova senha">
         <FormDefinirSenha />
       </Secao>

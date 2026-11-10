@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { MeuAgendamento } from '@salonflow/shared';
+import type { MeuAgendamento, PerfilCliente } from '@salonflow/shared';
 import { CartaoAgendamento } from '@/components/cliente/cartao-agendamento';
 import { ConviteInstalarApp } from '@/components/pwa/convite-instalar-app';
 import { api } from '@/lib/api/client';
@@ -15,20 +15,40 @@ async function carregar() {
     cache: 'no-store',
   });
 
+  // Cadastro incompleto: convite (opcional) para completar. API antiga: não mostra.
+  const perfil = await api<PerfilCliente>('/me/perfil-cliente', {
+    token: sessao.token,
+    cache: 'no-store',
+  }).catch(() => null);
+  const convidarCadastro = !!perfil && (!perfil.telefone || !perfil.nascimento);
+
   const agora = Date.now();
   const proximos = lista.filter(
     (a) => new Date(a.fim).getTime() >= agora && ['AGENDADO', 'CONFIRMADO'].includes(a.status),
   );
-  return { proximos, historico: lista.filter((a) => !proximos.includes(a)).reverse() };
+  return {
+    proximos,
+    historico: lista.filter((a) => !proximos.includes(a)).reverse(),
+    convidarCadastro,
+  };
 }
 
 export default async function MeusAgendamentosPage() {
-  const { proximos, historico } = await carregar();
+  const { proximos, historico, convidarCadastro } = await carregar();
 
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
         <h1 className="text-3xl">Meus agendamentos</h1>
+        {convidarCadastro && (
+          <Link
+            href="/conta/dados"
+            className="rounded-xl border border-primaria/30 bg-nude/50 px-4 py-3 text-sm hover:border-primaria/60"
+          >
+            <strong>Complete seu cadastro (opcional):</strong> celular e data de nascimento vão para
+            todos os salões em que você agenda.
+          </Link>
+        )}
         {/* Convite para instalar o app só depois do primeiro agendamento. */}
         {(proximos.length > 0 || historico.length > 0) && <ConviteInstalarApp />}
         {proximos.length === 0 ? (

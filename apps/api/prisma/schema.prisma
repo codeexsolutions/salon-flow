@@ -43,6 +43,7 @@ model Usuario {
   vinculos      MembroSalao[]
   profissionais Profissional[]
   clientes      Cliente[]
+  perfilCliente PerfilCliente?
 
   @@map("usuarios")
 }
@@ -897,4 +898,21 @@ model MovimentoPontos {
 
   @@index([salaoId, clienteId, data])
   @@map("movimentos_pontos")
+}
+
+/// Cadastro do cliente no app (opcional), compartilhado com todos os salões em
+/// que ele agenda: ao preencher, atualiza a ficha dele em cada salão. Serviços,
+/// histórico e ficha técnica continuam em cada salão.
+model PerfilCliente {
+  usuarioId    String    @id @map("usuario_id") @db.Uuid
+  nome         String?
+  telefone     String?
+  /// E-mail de contato (o de login pode ser interno).
+  email        String?
+  nascimento   DateTime? @db.Date
+  atualizadoEm DateTime  @updatedAt @map("atualizado_em")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("perfis_cliente")
 }

@@ -127,3 +127,28 @@ export interface FichaClientePro {
   anotacoes: AnotacaoCliente[];
   servicos: { id: string; nome: string }[];
 }
+
+/** Cadastro opcional do cliente no app (vale para todos os salões). Vazio = não informado. */
+export const perfilClienteSchema = z.object({
+  nome: textoOpcional(120).refine((v) => v === null || v.length >= 2, 'Nome muito curto'),
+  telefone: textoOpcional(20),
+  email: z
+    .union([z.literal(''), z.email('E-mail inválido').trim().toLowerCase()])
+    .transform((v) => v || null)
+    .nullable(),
+  nascimento: z
+    .union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida')])
+    .transform((v) => v || null)
+    .nullable(),
+});
+export type PerfilClienteInput = z.infer<typeof perfilClienteSchema>;
+
+export interface PerfilCliente {
+  nome: string | null;
+  telefone: string | null;
+  email: string | null;
+  /** AAAA-MM-DD */
+  nascimento: string | null;
+  /** Em quantos salões o cliente já tem ficha (recebem estes dados). */
+  saloes: number;
+}

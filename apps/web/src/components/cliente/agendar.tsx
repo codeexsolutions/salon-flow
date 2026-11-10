@@ -125,6 +125,9 @@ export function Agendar({
         <Link href="/meus-agendamentos" className={`${classeBotaoPrimario} self-center`}>
           Ver meus agendamentos
         </Link>
+        <Link href="/conta/dados" className="text-sm text-primaria underline">
+          Completar meus dados (opcional)
+        </Link>
         <ConviteInstalarApp className="mt-2" />
       </div>
     );

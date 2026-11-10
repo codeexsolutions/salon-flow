@@ -252,6 +252,17 @@ export class ClientesRepository {
    */
   garantirParaUsuario(salaoId: string, usuario: { id: string; email: string; nome: string }) {
     return this.prisma.$transaction(async (tx) => {
+      // Cadastro do cliente no app: os campos preenchidos valem para todos os salões.
+      const perfil = await tx.perfilCliente.findUnique({ where: { usuarioId: usuario.id } });
+      const doPerfil = Object.fromEntries(
+        Object.entries({
+          nome: perfil?.nome,
+          telefone: perfil?.telefone,
+          email: perfil?.email,
+          nascimento: perfil?.nascimento,
+        }).filter(([, v]) => v != null),
+      );
+
       const vinculada = await tx.cliente.findUnique({
         where: { salaoId_usuarioId: { salaoId, usuarioId: usuario.id } },
       });
@@ -262,11 +273,20 @@ export class ClientesRepository {
         orderBy: { criadoEm: 'asc' },
       });
       if (mesmoEmail) {
-        return tx.cliente.update({ where: { id: mesmoEmail.id }, data: { usuarioId: usuario.id } });
+        return tx.cliente.update({
+          where: { id: mesmoEmail.id },
+          data: { usuarioId: usuario.id, ...doPerfil },
+        });
       }
 
       return tx.cliente.create({
-        data: { salaoId, usuarioId: usuario.id, nome: usuario.nome, email: usuario.email },
+        data: {
+          salaoId,
+          usuarioId: usuario.id,
+          nome: usuario.nome,
+          email: usuario.email,
+          ...doPerfil,
+        },
       });
     });
   }

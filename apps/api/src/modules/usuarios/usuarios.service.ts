@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { permissoesEfetivas, usuarioDeLogin, type PerfilUsuario } from '@salonflow/shared';
+import {
+  permissoesEfetivas,
+  usuarioDeLogin,
+  type PerfilCliente,
+  type PerfilClienteInput,
+  type PerfilUsuario,
+} from '@salonflow/shared';
 import type { UsuarioAutenticado } from '../../shared/auth/usuario-autenticado.js';
 import { EquipeService } from '../equipe/equipe.service.js';
 import { ProfissionaisService } from '../profissionais/profissionais.service.js';
@@ -16,6 +22,25 @@ export class UsuariosService {
   /** Garante que o usuário do Supabase existe no nosso banco. */
   garantirCadastro(usuario: UsuarioAutenticado) {
     return this.repository.upsert(usuario);
+  }
+
+  /** Cadastro opcional do cliente (compartilhado com os salões em que agenda). */
+  async perfilCliente(usuario: UsuarioAutenticado): Promise<PerfilCliente> {
+    await this.garantirCadastro(usuario);
+    const { perfil, saloes } = await this.repository.perfilCliente(usuario.id);
+    return {
+      nome: perfil?.nome ?? null,
+      telefone: perfil?.telefone ?? null,
+      email: perfil?.email ?? null,
+      nascimento: perfil?.nascimento?.toISOString().slice(0, 10) ?? null,
+      saloes,
+    };
+  }
+
+  async salvarPerfilCliente(usuario: UsuarioAutenticado, dados: PerfilClienteInput) {
+    await this.garantirCadastro(usuario);
+    await this.repository.salvarPerfilCliente(usuario.id, dados);
+    return this.perfilCliente(usuario);
   }
 
   /** Perfil + salões em que o usuário atua. Sem salões = usuário apenas cliente. */

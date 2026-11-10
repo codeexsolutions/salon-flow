@@ -4,7 +4,7 @@ self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', () => {});
 
-// Push enviado pela API: { titulo, corpo, url, tag }.
+// Push enviado pela API: { titulo, corpo, url, tag, icone }. O ícone é a logo do salão.
 self.addEventListener('push', (event) => {
   let dados = {};
   try {
@@ -15,7 +15,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(dados.titulo || 'SalonFlow', {
       body: dados.corpo || '',
-      icon: '/icons/icon-192.png',
+      icon: dados.icone || '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
       tag: dados.tag,
       data: { url: dados.url || '/' },

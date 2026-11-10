@@ -97,7 +97,8 @@ export class AgendadorNotificacoes implements OnApplicationBootstrap, OnModuleDe
       if (decisao === 'DISPENSAR') continue;
       await this.push.enviar(a.cliente.usuarioId!, {
         titulo: `Lembrete: ${a.servico.nome}`,
-        corpo: `${a.salao.nome} · ${quando(a.inicio, a.salao.fusoHorario)} com ${a.profissional.nome}`,
+        corpo: `${quando(a.inicio, a.salao.fusoHorario)} com ${a.profissional.nome}`,
+        salao: a.salao,
         url: '/meus-agendamentos',
         tag: `lembrete-${a.id}`,
       });
@@ -113,6 +114,7 @@ export class AgendadorNotificacoes implements OnApplicationBootstrap, OnModuleDe
         titulo: `Como foi no ${a.salao.nome}?`,
         corpo: 'Conte pra gente com uma nota de 1 a 5. Leva menos de 1 minuto.',
         url: `/avaliar/${a.token}`,
+        salao: a.salao,
         tag: `avaliacao-${a.id}`,
       });
     }

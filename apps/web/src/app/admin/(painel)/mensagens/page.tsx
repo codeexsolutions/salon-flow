@@ -5,6 +5,7 @@ import {
   type AssinantePush,
   type ClienteNaLista,
   type ConfigMensagens,
+  type SalaoConfiguracao,
 } from '@salonflow/shared';
 import { EnviarMensagem } from '@/components/mensagens/enviar-mensagem';
 import { FormMensagens } from '@/components/mensagens/form-mensagens';
@@ -67,15 +68,17 @@ export default async function MensagensPage({ searchParams }: PageProps<'/admin/
 }
 
 async function AbaEnviar({ nome, slug }: { nome: string; slug: string }) {
-  const [assinantes, clientes, config, origem] = await Promise.all([
+  const [assinantes, clientes, config, origem, dadosSalao] = await Promise.all([
     apiSalao<AssinantePush[]>('/mensagens/assinantes').catch(() => [] as AssinantePush[]),
     apiSalao<ClienteNaLista[]>('/clientes/todos'),
     apiSalao<ConfigMensagens>('/mensagens/config'),
     origemDoSite(),
+    apiSalao<SalaoConfiguracao>('/saloes/atual').catch(() => null),
   ]);
   return (
     <EnviarMensagem
       salao={nome}
+      logoUrl={dadosSalao?.logoUrl ?? null}
       slug={slug}
       origem={origem}
       assinantes={assinantes}

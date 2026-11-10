@@ -159,6 +159,7 @@ export function PontosDoCliente({
                       </span>
                       <span className="text-xs text-suave">
                         {dataCurta(m.data)} · {ROTULO_MOVIMENTO_PONTOS[m.tipo]}
+                        {m.feitoPor && ` por ${m.feitoPor}`}
                         {m.expiraEm && ` · vence ${dataCurta(m.expiraEm)}`}
                       </span>
                     </span>

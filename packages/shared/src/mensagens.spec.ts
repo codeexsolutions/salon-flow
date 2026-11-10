@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { linkWhatsApp, montarMensagem } from './schemas/mensagens.schema.js';
+import { linkWhatsApp, montarMensagem, tituloComSalao } from './schemas/mensagens.schema.js';
 
 describe('mensagens do WhatsApp', () => {
   it('monta o texto trocando as variáveis', () => {
@@ -23,5 +23,15 @@ describe('mensagens do WhatsApp', () => {
     expect(linkWhatsApp('+351 912 345 678')).toBe('https://wa.me/351912345678');
     expect(linkWhatsApp('1234')).toBeNull();
     expect(linkWhatsApp(null)).toBeNull();
+  });
+
+  it('título da notificação sempre cita o salão', () => {
+    expect(tituloComSalao('Semana da hidratação', 'Studio Bela')).toBe(
+      'Studio Bela · Semana da hidratação',
+    );
+    expect(tituloComSalao('Como foi no Studio Bela?', 'Studio Bela')).toBe(
+      'Como foi no Studio Bela?',
+    );
+    expect(tituloComSalao('  ', 'Studio Bela')).toBe('Studio Bela');
   });
 });

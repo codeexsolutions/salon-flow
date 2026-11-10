@@ -84,6 +84,8 @@ export interface MovimentoPontosDto {
   data: string;
   expiraEm: string | null;
   comandaId: string | null;
+  /** Quem da equipe fez o resgate/ajuste (só no painel; null no app do cliente). */
+  feitoPor: string | null;
 }
 
 export interface PontosCliente extends SaldoPontos {

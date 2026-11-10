@@ -23,6 +23,7 @@ const SELECT_MOVIMENTO = {
   data: true,
   expiraEm: true,
   comandaId: true,
+  criadoPorId: true,
 } as const;
 
 /** Todas as consultas filtram por salaoId (isolamento entre salões). */
@@ -59,6 +60,23 @@ export class FidelidadeRepository {
 
   atualizarPremio(salaoId: string, id: string, dados: PremioFidelidadeInput) {
     return this.prisma.premioFidelidade.update({ where: { id, salaoId }, data: dados });
+  }
+
+  /** Nomes de quem fez os movimentos (nome do cadastro ou o usuário de login). */
+  usuarios(ids: string[]) {
+    if (ids.length === 0) return Promise.resolve([]);
+    return this.prisma.usuario.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, nome: true, email: true },
+    });
+  }
+
+  /** Para avisar o cliente no app: conta dele e dados do salão. */
+  destinoAviso(salaoId: string, clienteId: string) {
+    return this.prisma.cliente.findFirst({
+      where: { id: clienteId, salaoId },
+      select: { usuarioId: true, salao: { select: { nome: true, logoUrl: true } } },
+    });
   }
 
   clienteExiste(salaoId: string, id: string) {

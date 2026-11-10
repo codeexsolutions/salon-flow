@@ -8,6 +8,7 @@ import {
   montarMensagem,
   TAMANHO_MENSAGEM_PUSH,
   TAMANHO_TITULO_PUSH,
+  tituloComSalao,
   type AssinantePush,
   type ModeloMensagem,
 } from '@salonflow/shared';
@@ -31,6 +32,7 @@ const ehCelular = () => /android|iphone|ipad|ipod|mobile/i.test(navigator.userAg
  */
 export function EnviarMensagem({
   salao,
+  logoUrl,
   origem,
   slug,
   assinantes,
@@ -38,6 +40,8 @@ export function EnviarMensagem({
   modelos,
 }: {
   salao: string;
+  /** Logo do salão: é o ícone da notificação no celular. */
+  logoUrl: string | null;
   origem: string;
   slug: string;
   assinantes: AssinantePush[];
@@ -238,8 +242,11 @@ export function EnviarMensagem({
               placeholder="Ex.: Semana da hidratação"
               className={classeInput}
             />
-            <span className="self-end text-xs text-suave">
-              {titulo.length}/{TAMANHO_TITULO_PUSH}
+            <span className="flex justify-between gap-2 text-xs text-suave">
+              <span>Se o título não citar o salão, o nome dele entra na frente.</span>
+              <span>
+                {titulo.length}/{TAMANHO_TITULO_PUSH}
+              </span>
             </span>
           </Campo>
 
@@ -316,13 +323,22 @@ export function EnviarMensagem({
         <Secao titulo="Pré-visualização">
           <div className="rounded-2xl border border-borda bg-nude/40 p-3">
             <div className="flex gap-3 rounded-xl bg-superficie p-3 shadow-sm">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-nude text-primaria">
-                <Bell className="size-4" aria-hidden />
-              </span>
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoUrl}
+                  alt=""
+                  className="size-9 shrink-0 rounded-lg border border-borda object-cover"
+                />
+              ) : (
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-nude text-primaria">
+                  <Bell className="size-4" aria-hidden />
+                </span>
+              )}
               <span className="flex min-w-0 flex-col">
-                <span className="text-xs text-suave">{salao} · agora</span>
+                <span className="text-xs text-suave">SalonFlow · agora</span>
                 <span className="truncate font-medium">
-                  {tituloPrevia || 'Título da notificação'}
+                  {tituloComSalao(tituloPrevia || 'Título da notificação', salao)}
                 </span>
                 <span className="line-clamp-3 text-sm text-suave">
                   {mensagemPrevia || 'A mensagem aparece aqui…'}

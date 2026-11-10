@@ -56,7 +56,7 @@ export class NotificacoesRepository {
   salao(salaoId: string) {
     return this.prisma.salao.findUniqueOrThrow({
       where: { id: salaoId },
-      select: { nome: true, slug: true },
+      select: { nome: true, slug: true, logoUrl: true },
     });
   }
 
@@ -227,6 +227,7 @@ export class NotificacoesRepository {
         salao: {
           select: {
             nome: true,
+            logoUrl: true,
             fusoHorario: true,
             configMensagens: { select: { lembreteHorasAntes: true } },
           },
@@ -258,7 +259,7 @@ export class NotificacoesRepository {
         id: true,
         token: true,
         cliente: { select: { usuarioId: true } },
-        salao: { select: { nome: true } },
+        salao: { select: { nome: true, logoUrl: true } },
       },
       take: 500,
     });

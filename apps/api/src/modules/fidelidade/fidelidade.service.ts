@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
   pontosPorValor,
+  usuarioDeLogin,
   type AjustePontosInput,
   type ConfigFidelidade,
   type MeusPontosSalao,
@@ -13,13 +14,17 @@ import {
 } from '@salonflow/shared';
 import { NaoEncontradoError, RegraDeNegocioError } from '../../shared/errors/domain.error.js';
 import { ContextoSalao } from '../../shared/tenant/contexto-salao.js';
+import { PushService } from '../notificacoes/push.service.js';
 import { calcularSaldo, somarMeses, type MovimentoSaldo } from './domain/saldo.js';
 import { FidelidadeRepository } from './fidelidade.repository.js';
 
-type MovimentoDoBanco = Omit<MovimentoPontosDto, 'data' | 'expiraEm'> & {
+type MovimentoDoBanco = Omit<MovimentoPontosDto, 'data' | 'expiraEm' | 'feitoPor'> & {
   data: Date;
   expiraEm: Date | null;
+  criadoPorId: string | null;
 };
+
+const pts = (n: number) => `${n.toLocaleString('pt-BR')} ${Math.abs(n) === 1 ? 'ponto' : 'pontos'}`;
 
 const paraPrograma = (p: ProgramaFidelidade): ProgramaFidelidade => ({
   ativo: p.ativo,
@@ -36,19 +41,24 @@ const paraPremio = (p: PremioFidelidade): PremioFidelidade => ({
   ativo: p.ativo,
 });
 
-const paraMovimento = (m: MovimentoDoBanco): MovimentoPontosDto => ({
+const paraMovimento = (
+  { criadoPorId, ...m }: MovimentoDoBanco,
+  nomes?: Map<string, string>,
+): MovimentoPontosDto => ({
   ...m,
   data: m.data.toISOString(),
   expiraEm: m.expiraEm?.toISOString() ?? null,
+  // Ganho vem da comanda; só resgate e ajuste mostram quem fez.
+  feitoPor: m.tipo !== 'GANHO' && criadoPorId ? (nomes?.get(criadoPorId) ?? null) : null,
 });
 
-/** Saldo de agora + o extrato recente para mostrar. */
-function resumo(movimentos: MovimentoDoBanco[]) {
+/** Saldo de agora + o extrato recente. `nomes`: quem fez (só no painel). */
+function resumo(movimentos: MovimentoDoBanco[], nomes?: Map<string, string>) {
   const r = calcularSaldo(movimentos, new Date());
   return {
     saldo: r.saldo,
     aVencer: r.aVencer && { pontos: r.aVencer.pontos, em: r.aVencer.em.toISOString() },
-    extrato: movimentos.slice(0, 100).map(paraMovimento),
+    extrato: movimentos.slice(0, 100).map((m) => paraMovimento(m, nomes)),
   };
 }
 
@@ -59,7 +69,38 @@ export class FidelidadeService {
   constructor(
     private readonly repository: FidelidadeRepository,
     private readonly contexto: ContextoSalao,
+    private readonly push: PushService,
   ) {}
+
+  /** Nome de quem fez cada movimento do extrato (equipe do salão). */
+  private async nomesDaEquipe(movimentos: MovimentoDoBanco[]) {
+    const ids = [
+      ...new Set(
+        movimentos
+          .slice(0, 100)
+          .filter((m) => m.tipo !== 'GANHO' && m.criadoPorId)
+          .map((m) => m.criadoPorId!),
+      ),
+    ];
+    const usuarios = await this.repository.usuarios(ids);
+    return new Map(usuarios.map((u) => [u.id, u.nome?.trim() || `@${usuarioDeLogin(u.email)}`]));
+  }
+
+  /** Avisa o cliente no app (push + sino). Falha aqui não desfaz o resgate. */
+  private async avisarCliente(clienteId: string, titulo: string, corpo: string) {
+    try {
+      const destino = await this.repository.destinoAviso(this.contexto.salaoId, clienteId);
+      if (!destino?.usuarioId) return;
+      await this.push.enviar(destino.usuarioId, {
+        titulo,
+        corpo,
+        url: '/meus-pontos',
+        salao: destino.salao,
+      });
+    } catch (erro) {
+      this.logger.error(`Falha ao avisar o cliente ${clienteId} sobre pontos`, erro as Error);
+    }
+  }
 
   // ---- Configuração (dono) ----
 
@@ -103,7 +144,7 @@ export class FidelidadeService {
       this.repository.premios(salaoId, true),
       this.repository.movimentos(salaoId, clienteId),
     ]);
-    const r = resumo(movimentos);
+    const r = resumo(movimentos, await this.nomesDaEquipe(movimentos));
     return {
       ...r,
       programa: programa && paraPrograma(programa),
@@ -138,6 +179,15 @@ export class FidelidadeService {
         `O cliente não tem pontos suficientes para "${premio.nome}" (${premio.pontos} pontos).`,
       );
     }
+    const saldo = calcularSaldo(
+      await this.repository.movimentos(salaoId, clienteId),
+      new Date(),
+    ).saldo;
+    await this.avisarCliente(
+      clienteId,
+      `Resgate: ${premio.nome}`,
+      `Você usou ${pts(premio.pontos)}. Saldo agora: ${pts(Math.max(saldo, 0))}. Não foi você? Fale com o salão.`,
+    );
     return paraMovimento(feito);
   }
 
@@ -158,6 +208,11 @@ export class FidelidadeService {
         pontos > 0 && programa?.validadeMeses ? somarMeses(agora, programa.validadeMeses) : null,
       criadoPorId: usuarioId,
     });
+    await this.avisarCliente(
+      clienteId,
+      pontos > 0 ? `Você ganhou ${pts(pontos)}` : 'Ajuste nos seus pontos',
+      `${pontos > 0 ? '+' : ''}${pontos.toLocaleString('pt-BR')} · ${motivo}`,
+    );
     return paraMovimento(m);
   }
 

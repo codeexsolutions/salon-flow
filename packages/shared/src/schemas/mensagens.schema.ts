@@ -203,3 +203,15 @@ export interface NotificacaoDto {
   corpo: string;
   criadoEm: string;
 }
+
+/**
+ * Título da notificação sempre com o nome do salão (o cliente pode ser de
+ * vários salões): se o texto ainda não cita o salão, ele vai na frente.
+ */
+export function tituloComSalao(titulo: string, salao: string): string {
+  const limpo = titulo.trim();
+  if (!limpo) return salao;
+  return limpo.toLocaleLowerCase('pt-BR').includes(salao.trim().toLocaleLowerCase('pt-BR'))
+    ? limpo
+    : `${salao.trim()} · ${limpo}`;
+}

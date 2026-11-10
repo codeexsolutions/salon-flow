@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import webpush from 'web-push';
+import { tituloComSalao } from '@salonflow/shared';
 import type { Env } from '../../config/env.js';
 import { NotificacoesRepository } from './notificacoes.repository.js';
 
@@ -11,6 +12,8 @@ export interface MensagemPush {
   url: string;
   /** Mesma tag substitui a notificação anterior no aparelho. */
   tag?: string;
+  /** Quem envia: o nome entra no título (se faltar) e a logo vira o ícone. */
+  salao: { nome: string; logoUrl: string | null };
 }
 
 /** Envio de push (Web Push / VAPID) para todos os aparelhos do usuário. */
@@ -48,14 +51,21 @@ export class PushService {
    * Devolve quantos aparelhos receberam.
    */
   async enviar(usuarioId: string, mensagem: MensagemPush): Promise<number> {
+    const titulo = tituloComSalao(mensagem.titulo, mensagem.salao.nome);
     const guardada = await this.repository.guardarNotificacao(usuarioId, {
-      titulo: mensagem.titulo,
+      titulo,
       corpo: mensagem.corpo,
       url: mensagem.url,
     });
     if (!this.configurado) return 0;
     const assinaturas = await this.repository.assinaturas(usuarioId);
-    const corpo = JSON.stringify({ ...mensagem, url: `/notificacoes/abrir/${guardada.id}` });
+    const corpo = JSON.stringify({
+      titulo,
+      corpo: mensagem.corpo,
+      tag: mensagem.tag,
+      icone: mensagem.salao.logoUrl,
+      url: `/notificacoes/abrir/${guardada.id}`,
+    });
     let entregues = 0;
     await Promise.all(
       assinaturas.map(async (a) => {

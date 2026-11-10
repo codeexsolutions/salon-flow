@@ -113,6 +113,7 @@ export class NotificacoesService {
         titulo: montarMensagem(dados.titulo, variaveis),
         corpo: montarMensagem(dados.mensagem, variaveis),
         url: dados.url ?? `/s/${salao.slug}`,
+        salao,
       });
     }
     return { clientes: clientes.length, entregues };

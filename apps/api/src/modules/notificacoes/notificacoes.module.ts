@@ -18,6 +18,6 @@ import { PushService } from './push.service.js';
     AvaliacaoPublicaController,
   ],
   providers: [NotificacoesService, NotificacoesRepository, PushService, AgendadorNotificacoes],
-  exports: [NotificacoesService],
+  exports: [NotificacoesService, PushService],
 })
 export class NotificacoesModule {}

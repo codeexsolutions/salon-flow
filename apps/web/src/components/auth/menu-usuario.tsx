@@ -1,11 +1,10 @@
 import Link from 'next/link';
-import { CalendarHeart, Gift, UserRound } from 'lucide-react';
 import { SinoNotificacoes } from '@/components/pwa/sino-notificacoes';
 import { obterSessao } from '@/lib/auth/sessao';
 
 /**
- * Links do cabeçalho conforme o usuário esteja logado ou não. Senha, código de
- * recuperação e "Sair" ficam na página da conta, não no cabeçalho.
+ * Canto direito do cabeçalho: sino (logado) ou "Entrar". A navegação fica na
+ * barra inferior (celular) ou no menu do topo (computador).
  */
 export async function MenuUsuario() {
   const sessao = await obterSessao();
@@ -21,30 +20,5 @@ export async function MenuUsuario() {
     );
   }
 
-  return (
-    <>
-      <SinoNotificacoes />
-      <Link
-        href="/meus-agendamentos"
-        className="inline-flex items-center gap-1.5 hover:text-primaria"
-      >
-        <CalendarHeart className="size-4" aria-hidden />
-        <span className="hidden sm:inline">Meus agendamentos</span>
-        <span className="sm:hidden">Agenda</span>
-      </Link>
-      <Link href="/meus-pontos" className="inline-flex items-center gap-1.5 hover:text-primaria">
-        <Gift className="size-4" aria-hidden />
-        <span className="hidden sm:inline">Meus pontos</span>
-        <span className="sm:hidden">Pontos</span>
-      </Link>
-      <Link
-        href="/conta/senha"
-        className="inline-flex items-center gap-1.5 hover:text-primaria"
-        title={`Minha conta (@${sessao.usuario})`}
-      >
-        <UserRound className="size-4" aria-hidden />
-        Conta
-      </Link>
-    </>
-  );
+  return <SinoNotificacoes />;
 }

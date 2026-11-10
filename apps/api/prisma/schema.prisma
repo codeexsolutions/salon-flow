@@ -104,6 +104,9 @@ model Salao {
   reaberturasComanda   ReaberturaComanda[]
   contratoParcerias    ContratoParceria[]
   anotacoesCliente     AnotacaoCliente[]
+  programaFidelidade   ProgramaFidelidade?
+  premiosFidelidade    PremioFidelidade[]
+  movimentosPontos     MovimentoPontos[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -299,6 +302,7 @@ model Cliente {
   agendamentos Agendamento[]
   comandas     Comanda[]
   anotacoes    AnotacaoCliente[]
+  pontos       MovimentoPontos[]
 
   @@unique([salaoId, usuarioId])
   @@index([salaoId, nome])
@@ -408,6 +412,7 @@ model Comanda {
   itens       ComandaItem[]
   pagamentos  Pagamento[]
   reaberturas ReaberturaComanda[]
+  pontos      MovimentoPontos?
 
   @@unique([salaoId, numero])
   @@index([salaoId, status])
@@ -824,4 +829,72 @@ model AnotacaoCliente {
 
   @@index([salaoId, clienteId, data])
   @@map("anotacoes_cliente")
+}
+
+/// Programa de pontos do salão: a cada `centavosPorPonto` gastos (total da comanda) = 1 ponto.
+model ProgramaFidelidade {
+  salaoId          String   @id @map("salao_id") @db.Uuid
+  ativo            Boolean  @default(true)
+  centavosPorPonto Int      @default(100) @map("centavos_por_ponto")
+  /// Meses até os pontos vencerem (null = não vencem).
+  validadeMeses    Int?     @map("validade_meses") @db.SmallInt
+  /// Regras em texto livre, mostradas ao cliente.
+  regras           String?
+  criadoEm         DateTime @default(now()) @map("criado_em")
+  atualizadoEm     DateTime @updatedAt @map("atualizado_em")
+
+  salao Salao @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@map("programas_fidelidade")
+}
+
+model PremioFidelidade {
+  id           String   @id @default(uuid()) @db.Uuid
+  salaoId      String   @map("salao_id") @db.Uuid
+  nome         String
+  descricao    String?
+  pontos       Int
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  salao      Salao             @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  movimentos MovimentoPontos[]
+
+  @@index([salaoId, ativo])
+  @@map("premios_fidelidade")
+}
+
+enum TipoMovimentoPontos {
+  GANHO
+  RESGATE
+  AJUSTE
+}
+
+/// Extrato de pontos do cliente. Positivo = crédito (com validade), negativo = débito.
+/// O saldo é calculado gastando primeiro os pontos que vencem antes.
+model MovimentoPontos {
+  id          String              @id @default(uuid()) @db.Uuid
+  salaoId     String              @map("salao_id") @db.Uuid
+  clienteId   String              @map("cliente_id") @db.Uuid
+  tipo        TipoMovimentoPontos
+  pontos      Int
+  descricao   String
+  /// Quando vale (no ganho: data do atendimento).
+  data        DateTime
+  /// Créditos: quando vencem (null = não vencem).
+  expiraEm    DateTime?           @map("expira_em")
+  /// Ganho de uma comanda (sai se a comanda for reaberta).
+  comandaId   String?             @unique @map("comanda_id") @db.Uuid
+  premioId    String?             @map("premio_id") @db.Uuid
+  criadoPorId String?             @map("criado_por_id") @db.Uuid
+  criadoEm    DateTime            @default(now()) @map("criado_em")
+
+  salao   Salao             @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  cliente Cliente           @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  comanda Comanda?          @relation(fields: [comandaId], references: [id], onDelete: Cascade)
+  premio  PremioFidelidade? @relation(fields: [premioId], references: [id], onDelete: SetNull)
+
+  @@index([salaoId, clienteId, data])
+  @@map("movimentos_pontos")
 }

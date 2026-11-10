@@ -6,6 +6,7 @@ import {
   ROTULO_FORMA_PAGAMENTO,
   type AnotacaoCliente,
   type ComandaDetalhe,
+  type PontosCliente,
   type MaquininhaDto,
   type ProdutoResumo,
   type ProfissionalResumo,
@@ -14,6 +15,7 @@ import {
 import { DataAtendimento } from '@/components/comandas/data-atendimento';
 import { EditorComanda } from '@/components/comandas/editor-comanda';
 import { ReabrirComanda } from '@/components/comandas/reabrir-comanda';
+import { PontosDoCliente } from '@/components/fidelidade/pontos-cliente';
 import { Secao } from '@/components/ui/secao';
 import { ApiError } from '@/lib/api/client';
 import { apiSalao } from '@/lib/api/salao';
@@ -54,6 +56,9 @@ export default async function ComandaPage({ params }: PageProps<'/admin/comandas
       {comanda.cliente && (
         <FichaResumo clienteId={comanda.cliente.id} verFicha={pode(salao, 'CLIENTES')} />
       )}
+      {comanda.cliente && (
+        <PontosResumo clienteId={comanda.cliente.id} ehDono={salao.papel === 'DONO'} />
+      )}
 
       {comanda.status === 'ABERTA' ? (
         <EditorAberta comanda={comanda} ehDono={salao.papel === 'DONO'} fuso={fuso} />
@@ -61,6 +66,29 @@ export default async function ComandaPage({ params }: PageProps<'/admin/comandas
         <ComandaEncerrada comanda={comanda} ehDono={salao.papel === 'DONO'} fuso={fuso} />
       )}
     </div>
+  );
+}
+
+/** Pontos do cliente com resgate de prêmio (só com programa ativo). */
+async function PontosResumo({ clienteId, ehDono }: { clienteId: string; ehDono: boolean }) {
+  const pontos = await apiSalao<PontosCliente>(`/fidelidade/clientes/${clienteId}`).catch(
+    () => null,
+  );
+  if (!pontos?.programa?.ativo) return null;
+  return (
+    <details className="rounded-xl border border-borda bg-superficie p-3 text-sm print:hidden">
+      <summary className="cursor-pointer font-medium">
+        Pontos de fidelidade: {pontos.saldo.toLocaleString('pt-BR')}
+        {pontos.premios.some((p) => p.podeResgatar) && (
+          <span className="ml-2 rounded-full bg-nude px-2 py-0.5 text-xs text-primaria">
+            prêmio disponível
+          </span>
+        )}
+      </summary>
+      <div className="mt-3">
+        <PontosDoCliente clienteId={clienteId} pontos={pontos} ehDono={ehDono} compacto />
+      </div>
+    </details>
   );
 }
 

@@ -4,12 +4,14 @@ import { CalendarClock, Footprints, MessageCircle, Receipt, Wallet } from 'lucid
 import {
   formatarPreco,
   type ClienteDetalhe,
+  type PontosCliente,
   type ProfissionalResumo,
   type ServicoResumo,
 } from '@salonflow/shared';
 import { excluirAnotacao, salvarAnotacao } from '@/app/admin/(painel)/clientes/actions';
 import { EditarCliente } from '@/components/clientes/editar-cliente';
 import { FichaTecnica } from '@/components/clientes/ficha-tecnica';
+import { PontosDoCliente } from '@/components/fidelidade/pontos-cliente';
 import { CabecalhoPagina } from '@/components/ui/cabecalho-pagina';
 import { classeBotaoSecundario } from '@/components/ui/campo';
 import { Indicador } from '@/components/ui/indicador';
@@ -75,9 +77,10 @@ export default async function ClientePage({ params }: PageProps<'/admin/clientes
     if (erro instanceof ApiError && [400, 404].includes(erro.erro.statusCode)) notFound();
     throw erro;
   }
-  const [servicos, profissionais] = await Promise.all([
+  const [servicos, profissionais, pontos] = await Promise.all([
     apiSalao<ServicoResumo[]>('/servicos').catch(() => []),
     apiSalao<ProfissionalResumo[]>('/profissionais').catch(() => []),
+    apiSalao<PontosCliente>(`/fidelidade/clientes/${id}`).catch(() => null),
   ]);
 
   const fuso = salao.fusoHorario;
@@ -212,6 +215,16 @@ export default async function ClientePage({ params }: PageProps<'/admin/clientes
         </div>
 
         <div className="flex flex-col gap-6">
+          {pontos && (
+            <Secao titulo="Pontos de fidelidade">
+              <PontosDoCliente
+                clienteId={cliente.id}
+                pontos={pontos}
+                ehDono={salao.papel === 'DONO'}
+              />
+            </Secao>
+          )}
+
           <Secao titulo="Próximos horários">
             {cliente.proximosAgendamentos.length === 0 ? (
               <p className="text-sm text-suave">Nenhum horário marcado.</p>

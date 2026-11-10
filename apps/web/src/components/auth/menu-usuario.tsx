@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CalendarHeart, UserRound } from 'lucide-react';
+import { CalendarHeart, Gift, UserRound } from 'lucide-react';
 import { obterSessao } from '@/lib/auth/sessao';
 
 /**
@@ -29,6 +29,11 @@ export async function MenuUsuario() {
         <CalendarHeart className="size-4" aria-hidden />
         <span className="hidden sm:inline">Meus agendamentos</span>
         <span className="sm:hidden">Agenda</span>
+      </Link>
+      <Link href="/meus-pontos" className="inline-flex items-center gap-1.5 hover:text-primaria">
+        <Gift className="size-4" aria-hidden />
+        <span className="hidden sm:inline">Meus pontos</span>
+        <span className="sm:hidden">Pontos</span>
       </Link>
       <Link
         href="/conta/senha"

@@ -3,6 +3,7 @@ import { AgendaModule } from '../agenda/agenda.module.js';
 import { CaixaModule } from '../caixa/caixa.module.js';
 import { ClientesModule } from '../clientes/clientes.module.js';
 import { ComissoesModule } from '../comissoes/comissoes.module.js';
+import { FidelidadeModule } from '../fidelidade/fidelidade.module.js';
 import { ProdutosModule } from '../produtos/produtos.module.js';
 import { ServicosModule } from '../servicos/servicos.module.js';
 import { ComandasController } from './comandas.controller.js';
@@ -15,6 +16,7 @@ import { ComandasService } from './comandas.service.js';
     CaixaModule,
     ClientesModule,
     ComissoesModule,
+    FidelidadeModule,
     ProdutosModule,
     ServicosModule,
   ],

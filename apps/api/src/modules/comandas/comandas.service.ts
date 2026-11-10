@@ -21,6 +21,7 @@ import { ClientesService } from '../clientes/clientes.service.js';
 import { calcularFechamento } from '../comissoes/domain/calculo.js';
 import { ComissoesService } from '../comissoes/comissoes.service.js';
 import { MaquininhasService } from '../comissoes/maquininhas.service.js';
+import { FidelidadeService } from '../fidelidade/fidelidade.service.js';
 import { ProdutosService } from '../produtos/produtos.service.js';
 import { ServicosService } from '../servicos/servicos.service.js';
 import { ComandasRepository, type DestinoCaixa, type NovoItem } from './comandas.repository.js';
@@ -42,6 +43,7 @@ export class ComandasService {
     private readonly maquininhas: MaquininhasService,
     private readonly produtos: ProdutosService,
     private readonly caixa: CaixaService,
+    private readonly fidelidade: FidelidadeService,
     private readonly contexto: ContextoSalao,
   ) {}
 
@@ -227,6 +229,7 @@ export class ComandasService {
     await this.agenda.concluirDaComanda(
       comanda.itens.map((i) => i.agendamentoId).filter((a): a is string => !!a),
     );
+    await this.fidelidade.creditarComanda(id, usuarioId);
     return fechada;
   }
 
@@ -278,6 +281,7 @@ export class ComandasService {
     if (r === 'NAO_FECHADA') {
       throw new ConflitoError('COMANDA_NAO_FECHADA', 'Só é possível reabrir comanda fechada.');
     }
+    await this.fidelidade.estornarComanda(id);
     return this.buscar(id);
   }
 

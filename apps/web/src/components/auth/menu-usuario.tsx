@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CalendarHeart, Gift, UserRound } from 'lucide-react';
+import { SinoNotificacoes } from '@/components/pwa/sino-notificacoes';
 import { obterSessao } from '@/lib/auth/sessao';
 
 /**
@@ -22,6 +23,7 @@ export async function MenuUsuario() {
 
   return (
     <>
+      <SinoNotificacoes />
       <Link
         href="/meus-agendamentos"
         className="inline-flex items-center gap-1.5 hover:text-primaria"

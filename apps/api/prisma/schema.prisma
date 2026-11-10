@@ -45,6 +45,7 @@ model Usuario {
   clientes        Cliente[]
   perfilCliente   PerfilCliente?
   assinaturasPush AssinaturaPush[]
+  notificacoes    Notificacao[]
 
   @@map("usuarios")
 }
@@ -979,4 +980,21 @@ model Avaliacao {
   @@index([salaoId, respondidaEm])
   @@index([pushEnviadoEm, pedirEm])
   @@map("avaliacoes")
+}
+
+/// Caixa de notificações do usuário (o sino do app). Some ao ser aberta e,
+/// sem uso, é apagada depois de 5 dias.
+model Notificacao {
+  id        String   @id @default(uuid()) @db.Uuid
+  usuarioId String   @map("usuario_id") @db.Uuid
+  titulo    String
+  corpo     String
+  url       String
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, criadoEm])
+  @@index([criadoEm])
+  @@map("notificacoes")
 }

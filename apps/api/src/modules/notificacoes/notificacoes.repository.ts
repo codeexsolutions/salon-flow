@@ -34,6 +34,70 @@ export class NotificacoesRepository {
     return this.prisma.assinaturaPush.findMany({ where: { usuarioId } });
   }
 
+  /** Clientes do salão que têm o app com notificações ativas (ou um só). */
+  assinantesDoSalao(salaoId: string, clienteId?: string) {
+    return this.prisma.cliente.findMany({
+      where: {
+        salaoId,
+        ...(clienteId && { id: clienteId }),
+        usuario: { assinaturasPush: { some: {} } },
+      },
+      orderBy: { nome: 'asc' },
+      select: {
+        id: true,
+        nome: true,
+        telefone: true,
+        usuarioId: true,
+        usuario: { select: { _count: { select: { assinaturasPush: true } } } },
+      },
+    });
+  }
+
+  salao(salaoId: string) {
+    return this.prisma.salao.findUniqueOrThrow({
+      where: { id: salaoId },
+      select: { nome: true, slug: true },
+    });
+  }
+
+  // ---- Caixa de notificações (do usuário) ----
+
+  guardarNotificacao(usuarioId: string, dados: { titulo: string; corpo: string; url: string }) {
+    return this.prisma.notificacao.create({ data: { usuarioId, ...dados } });
+  }
+
+  notificacoes(usuarioId: string, desde: Date) {
+    return this.prisma.notificacao.findMany({
+      where: { usuarioId, criadoEm: { gte: desde } },
+      orderBy: { criadoEm: 'desc' },
+      take: 50,
+      select: { id: true, titulo: true, corpo: true, criadoEm: true },
+    });
+  }
+
+  contarNotificacoes(usuarioId: string, desde: Date) {
+    return this.prisma.notificacao.count({ where: { usuarioId, criadoEm: { gte: desde } } });
+  }
+
+  /** Abrir = sair da caixa. Devolve o destino (null se já não existe). */
+  async abrirNotificacao(usuarioId: string, id: string) {
+    const n = await this.prisma.notificacao.findFirst({ where: { id, usuarioId } });
+    if (!n) return null;
+    await this.prisma.notificacao.deleteMany({ where: { id, usuarioId } });
+    return n.url;
+  }
+
+  limparNotificacoes(usuarioId: string) {
+    return this.prisma.notificacao.deleteMany({ where: { usuarioId } });
+  }
+
+  /** Limpeza: notificações antigas (sistema todo, ou de um usuário). */
+  apagarNotificacoesAntigas(antes: Date, usuarioId?: string) {
+    return this.prisma.notificacao.deleteMany({
+      where: { criadoEm: { lt: antes }, ...(usuarioId && { usuarioId }) },
+    });
+  }
+
   // ---- Configuração de mensagens (salão) ----
 
   config(salaoId: string) {

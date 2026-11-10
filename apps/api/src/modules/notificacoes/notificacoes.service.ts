@@ -2,7 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   CONFIG_MENSAGENS_PADRAO,
   MODELOS_MENSAGEM,
+  montarMensagem,
+  type AssinantePush,
   type AssinaturaPushInput,
+  DIAS_GUARDAR_NOTIFICACAO,
+  type EnviarPushInput,
+  type NotificacaoDto,
+  type ResultadoEnvioPush,
   type AvaliacaoPublica,
   type ConfigMensagens,
   type ConfigMensagensInput,
@@ -16,6 +22,7 @@ import { ConflitoError, NaoEncontradoError } from '../../shared/errors/domain.er
 import { ContextoSalao } from '../../shared/tenant/contexto-salao.js';
 import { quandoPedirAvaliacao } from './domain/lembretes.js';
 import { NotificacoesRepository } from './notificacoes.repository.js';
+import { PushService } from './push.service.js';
 
 const media = (notas: number[]) =>
   notas.length ? Math.round((notas.reduce((s, n) => s + n, 0) / notas.length) * 10) / 10 : null;
@@ -27,6 +34,7 @@ export class NotificacoesService {
   constructor(
     private readonly repository: NotificacoesRepository,
     private readonly contexto: ContextoSalao,
+    private readonly push: PushService,
   ) {}
 
   // ---- Push: aparelhos do usuário ----
@@ -37,6 +45,77 @@ export class NotificacoesService {
 
   cancelar(usuarioId: string, endpoint: string) {
     return this.repository.removerAssinatura(usuarioId, endpoint);
+  }
+
+  // ---- Caixa de notificações (sino) ----
+
+  private limiteCaixa = () => new Date(Date.now() - DIAS_GUARDAR_NOTIFICACAO * 86_400_000);
+
+  async minhasNotificacoes(usuarioId: string): Promise<NotificacaoDto[]> {
+    const limite = this.limiteCaixa();
+    await this.repository.apagarNotificacoesAntigas(limite, usuarioId);
+    const lista = await this.repository.notificacoes(usuarioId, limite);
+    return lista.map((n) => ({ ...n, criadoEm: n.criadoEm.toISOString() }));
+  }
+
+  async contarNotificacoes(usuarioId: string) {
+    return { total: await this.repository.contarNotificacoes(usuarioId, this.limiteCaixa()) };
+  }
+
+  async abrirNotificacao(usuarioId: string, id: string) {
+    const url = await this.repository.abrirNotificacao(usuarioId, id);
+    if (!url) throw new NaoEncontradoError('Notificação');
+    return { url };
+  }
+
+  limparNotificacoes(usuarioId: string) {
+    return this.repository.limparNotificacoes(usuarioId);
+  }
+
+  // ---- Envio manual (tela Mensagens) ----
+
+  async assinantes(): Promise<AssinantePush[]> {
+    const lista = await this.repository.assinantesDoSalao(this.contexto.salaoId);
+    return lista.map((c) => ({
+      clienteId: c.id,
+      nome: c.nome,
+      telefone: c.telefone,
+      aparelhos: c.usuario?._count.assinaturasPush ?? 0,
+    }));
+  }
+
+  /** Push escrito pelo salão, para um cliente ou todos; {nome} e {salao} por cliente. */
+  async enviarPush(dados: EnviarPushInput): Promise<ResultadoEnvioPush> {
+    if (!this.push.ativo) {
+      throw new ConflitoError(
+        'PUSH_DESLIGADO',
+        'As notificações ainda não estão configuradas no servidor (chaves VAPID).',
+      );
+    }
+    const salaoId = this.contexto.salaoId;
+    const [salao, clientes] = await Promise.all([
+      this.repository.salao(salaoId),
+      this.repository.assinantesDoSalao(
+        salaoId,
+        dados.destino === 'TODOS' ? undefined : dados.destino,
+      ),
+    ]);
+    if (dados.destino !== 'TODOS' && clientes.length === 0) {
+      throw new ConflitoError(
+        'CLIENTE_SEM_PUSH',
+        'Este cliente não ativou as notificações no app. Use o WhatsApp.',
+      );
+    }
+    let entregues = 0;
+    for (const c of clientes) {
+      const variaveis = { nome: c.nome.trim().split(/\s+/)[0], salao: salao.nome };
+      entregues += await this.push.enviar(c.usuarioId!, {
+        titulo: montarMensagem(dados.titulo, variaveis),
+        corpo: montarMensagem(dados.mensagem, variaveis),
+        url: dados.url ?? `/s/${salao.slug}`,
+      });
+    }
+    return { clientes: clientes.length, entregues };
   }
 
   // ---- Configuração de mensagens ----

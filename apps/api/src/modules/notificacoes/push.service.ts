@@ -42,11 +42,20 @@ export class PushService {
     return this.configurado;
   }
 
-  /** Envia para todos os aparelhos do usuário. Devolve quantos receberam. */
+  /**
+   * Guarda na caixa do usuário (sino do app) e envia para todos os aparelhos.
+   * Tocar no push abre pela caixa, que apaga a notificação e segue para a página.
+   * Devolve quantos aparelhos receberam.
+   */
   async enviar(usuarioId: string, mensagem: MensagemPush): Promise<number> {
+    const guardada = await this.repository.guardarNotificacao(usuarioId, {
+      titulo: mensagem.titulo,
+      corpo: mensagem.corpo,
+      url: mensagem.url,
+    });
     if (!this.configurado) return 0;
     const assinaturas = await this.repository.assinaturas(usuarioId);
-    const corpo = JSON.stringify(mensagem);
+    const corpo = JSON.stringify({ ...mensagem, url: `/notificacoes/abrir/${guardada.id}` });
     let entregues = 0;
     await Promise.all(
       assinaturas.map(async (a) => {

@@ -5,6 +5,7 @@ import {
   type OnModuleDestroy,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DIAS_GUARDAR_NOTIFICACAO } from '@salonflow/shared';
 import type { Env } from '../../config/env.js';
 import {
   decidirLembrete,
@@ -67,6 +68,10 @@ export class AgendadorNotificacoes implements OnApplicationBootstrap, OnModuleDe
     try {
       await this.lembretes(agora);
       await this.avaliacoes(agora);
+      // Caixa de notificações: o que não foi aberto em 5 dias sai do banco.
+      await this.repository.apagarNotificacoesAntigas(
+        new Date(agora.getTime() - DIAS_GUARDAR_NOTIFICACAO * 24 * HORA),
+      );
     } catch (erro) {
       this.logger.error('Falha no agendador de notificações', erro as Error);
     } finally {

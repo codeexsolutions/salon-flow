@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -13,10 +14,12 @@ import {
   assinaturaPushSchema,
   cancelarPushSchema,
   configMensagensSchema,
+  enviarPushSchema,
   dataLocalSchema,
   responderAvaliacaoSchema,
   type AssinaturaPushInput,
   type ConfigMensagensInput,
+  type EnviarPushInput,
   type ResponderAvaliacaoInput,
 } from '@salonflow/shared';
 import { Publica, UsuarioAtual } from '../../shared/auth/decorators.js';
@@ -56,6 +59,29 @@ export class PushController {
     await this.service.inscrever(usuario.id, dados);
   }
 
+  /** Sino do app: notificações dos últimos dias (as antigas são apagadas). */
+  @Get('me/notificacoes')
+  notificacoes(@UsuarioAtual() usuario: UsuarioAutenticado) {
+    return this.service.minhasNotificacoes(usuario.id);
+  }
+
+  @Get('me/notificacoes/contagem')
+  contagem(@UsuarioAtual() usuario: UsuarioAutenticado) {
+    return this.service.contarNotificacoes(usuario.id);
+  }
+
+  /** Abrir = apagar da caixa e devolver a página de destino. */
+  @Post('me/notificacoes/:id/abrir')
+  abrir(@UsuarioAtual() usuario: UsuarioAutenticado, @Param('id', uuid) id: string) {
+    return this.service.abrirNotificacao(usuario.id, id);
+  }
+
+  @Delete('me/notificacoes')
+  @HttpCode(204)
+  async limpar(@UsuarioAtual() usuario: UsuarioAutenticado) {
+    await this.service.limparNotificacoes(usuario.id);
+  }
+
   @Post('me/push/cancelar')
   @HttpCode(204)
   async cancelar(
@@ -76,6 +102,18 @@ export class MensagensController {
   @Get('config')
   config() {
     return this.service.config();
+  }
+
+  @Get('assinantes')
+  @SomentePapeis('DONO')
+  assinantes() {
+    return this.service.assinantes();
+  }
+
+  @Post('push')
+  @SomentePapeis('DONO')
+  enviarPush(@Body(new ZodValidationPipe(enviarPushSchema)) dados: EnviarPushInput) {
+    return this.service.enviarPush(dados);
   }
 
   @Put('config')

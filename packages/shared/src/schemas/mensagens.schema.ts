@@ -37,12 +37,28 @@ export function montarMensagem(
     .trim();
 }
 
-/** Link do WhatsApp com o texto pronto (null se o telefone não serve). Sem DDI = Brasil. */
-export function linkWhatsApp(telefone: string | null | undefined, texto?: string): string | null {
+/** Número no formato do WhatsApp (só dígitos, com DDI). Sem DDI = Brasil. */
+export function numeroWhatsApp(telefone: string | null | undefined): string | null {
   const digitos = telefone?.replace(/\D/g, '') ?? '';
   if (digitos.length < 10) return null;
-  const numero = digitos.length <= 11 ? `55${digitos}` : digitos;
+  return digitos.length <= 11 ? `55${digitos}` : digitos;
+}
+
+/** Link do WhatsApp com o texto pronto (null se o telefone não serve). */
+export function linkWhatsApp(telefone: string | null | undefined, texto?: string): string | null {
+  const numero = numeroWhatsApp(telefone);
+  if (!numero) return null;
   return `https://wa.me/${numero}${texto ? `?text=${encodeURIComponent(texto)}` : ''}`;
+}
+
+/** Link do WhatsApp Web (computador), com o texto pronto. */
+export function linkWhatsAppWeb(
+  telefone: string | null | undefined,
+  texto?: string,
+): string | null {
+  const numero = numeroWhatsApp(telefone);
+  if (!numero) return null;
+  return `https://web.whatsapp.com/send?phone=${numero}${texto ? `&text=${encodeURIComponent(texto)}` : ''}`;
 }
 
 // ---- Configuração ----
@@ -136,4 +152,54 @@ export interface RelatorioAvaliacoes {
 export interface LinkAvaliacao {
   token: string;
   respondida: boolean;
+}
+
+// ---- Envio manual de push (tela Mensagens → Enviar) ----
+
+export const TAMANHO_TITULO_PUSH = 65;
+export const TAMANHO_MENSAGEM_PUSH = 240;
+
+export const enviarPushSchema = z.object({
+  /** 'TODOS' = clientes do salão com notificações ativas; senão, o id do cliente. */
+  destino: z.union([z.literal('TODOS'), z.uuid()]),
+  titulo: z.string().trim().min(2, 'Escreva o título').max(TAMANHO_TITULO_PUSH),
+  mensagem: z.string().trim().min(2, 'Escreva a mensagem').max(TAMANHO_MENSAGEM_PUSH),
+  /** Página aberta ao tocar: caminho do site (/s/...) ou https://... */
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .refine(
+      (v) => v === '' || v.startsWith('/') || /^https:\/\//.test(v),
+      'Use /caminho ou https://',
+    )
+    .transform((v) => v || null)
+    .nullable(),
+});
+export type EnviarPushInput = z.infer<typeof enviarPushSchema>;
+
+export interface ResultadoEnvioPush {
+  /** Clientes que tinham notificações ativas. */
+  clientes: number;
+  /** Aparelhos que receberam. */
+  entregues: number;
+}
+
+export interface AssinantePush {
+  clienteId: string;
+  nome: string;
+  telefone: string | null;
+  aparelhos: number;
+}
+
+// ---- Caixa de notificações (sino do app) ----
+
+/** Notificação não aberta é apagada depois deste prazo. */
+export const DIAS_GUARDAR_NOTIFICACAO = 5;
+
+export interface NotificacaoDto {
+  id: string;
+  titulo: string;
+  corpo: string;
+  criadoEm: string;
 }

@@ -101,9 +101,10 @@ export function NovoCliente({ abrirFicha }: { abrirFicha: boolean }) {
           onChange={(e) => mudar('recebeNotificacoes', e.target.checked)}
         />
         <span>
-          <span className="font-medium">Notificações e pedido de feedback</span>
+          <span className="font-medium">Pedido de avaliação por push</span>
           <span className="block text-xs text-suave">
-            Lembretes de horário, pedido de avaliação após o atendimento e avisos do salão.
+            Depois do atendimento, o app pede uma nota de 1 a 5. Desmarque se o cliente não quiser
+            receber.
           </span>
         </span>
       </label>

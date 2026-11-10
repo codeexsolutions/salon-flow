@@ -17,6 +17,14 @@ export const envSchema = z.object({
    */
   SUPABASE_SECRET_KEY: z.string().min(1).optional(),
 
+  /**
+   * Chaves VAPID do push (web-push). Opcionais: sem elas a API sobe e os pushes
+   * não são enviados. SUBJECT: URL do site ou mailto: de contato.
+   */
+  VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+  VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+  VAPID_SUBJECT: z.string().min(1).optional(),
+
   /** Origens liberadas no CORS, separadas por vírgula. */
   CORS_ORIGINS: z
     .string()

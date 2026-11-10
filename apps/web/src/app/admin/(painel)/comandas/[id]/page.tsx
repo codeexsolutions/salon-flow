@@ -3,9 +3,12 @@ import { notFound } from 'next/navigation';
 import {
   formatarPercentual,
   formatarPreco,
+  linkWhatsApp,
+  montarMensagem,
   ROTULO_FORMA_PAGAMENTO,
   type AnotacaoCliente,
   type ComandaDetalhe,
+  type LinkAvaliacao,
   type PontosCliente,
   type MaquininhaDto,
   type ProdutoResumo,
@@ -21,6 +24,8 @@ import { ApiError } from '@/lib/api/client';
 import { apiSalao } from '@/lib/api/salao';
 import { obterContextoAdmin, pode } from '@/lib/auth/contexto';
 import { dataLocal, dataPorExtenso, hojeNoFuso, horaLocal, somarDias } from '@/lib/data-hora';
+import { configMensagens, primeiroNome } from '@/lib/mensagens';
+import { origemDoSite } from '@/lib/site';
 
 const dma = (data: string) => data.split('-').reverse().join('/');
 
@@ -56,6 +61,9 @@ export default async function ComandaPage({ params }: PageProps<'/admin/comandas
       {comanda.cliente && (
         <FichaResumo clienteId={comanda.cliente.id} verFicha={pode(salao, 'CLIENTES')} />
       )}
+      {comanda.status === 'FECHADA' && comanda.cliente && (
+        <PedirAvaliacao comanda={comanda} salao={salao.nome} />
+      )}
       {comanda.cliente && (
         <PontosResumo clienteId={comanda.cliente.id} ehDono={salao.papel === 'DONO'} />
       )}
@@ -66,6 +74,38 @@ export default async function ComandaPage({ params }: PageProps<'/admin/comandas
         <ComandaEncerrada comanda={comanda} ehDono={salao.papel === 'DONO'} fuso={fuso} />
       )}
     </div>
+  );
+}
+
+/** Comanda fechada: link do WhatsApp com o pedido de avaliação pronto. */
+async function PedirAvaliacao({ comanda, salao }: { comanda: ComandaDetalhe; salao: string }) {
+  const cliente = comanda.cliente!;
+  if (!linkWhatsApp(cliente.telefone)) return null;
+  const [link, mensagens, origem] = await Promise.all([
+    apiSalao<LinkAvaliacao>(`/avaliacoes/comanda/${comanda.id}`).catch(() => null),
+    configMensagens(),
+    origemDoSite(),
+  ]);
+  if (!link) return null;
+  if (link.respondida) {
+    return (
+      <p className="text-sm text-sucesso print:hidden">O cliente já avaliou este atendimento.</p>
+    );
+  }
+  const texto = montarMensagem(mensagens.modelos.avaliacao, {
+    nome: primeiroNome(cliente.nome),
+    salao,
+    link: `${origem}/avaliar/${link.token}`,
+  });
+  return (
+    <a
+      href={linkWhatsApp(cliente.telefone, texto)!}
+      target="_blank"
+      rel="noreferrer"
+      className="self-start text-sm text-sucesso underline print:hidden"
+    >
+      Pedir avaliação pelo WhatsApp
+    </a>
   );
 }
 

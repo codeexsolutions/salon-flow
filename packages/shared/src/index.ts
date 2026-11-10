@@ -18,4 +18,5 @@ export * from './schemas/equipe.schema.js';
 export * from './schemas/faturamento.schema.js';
 export * from './schemas/contrato.schema.js';
 export * from './schemas/fidelidade.schema.js';
+export * from './schemas/mensagens.schema.js';
 export * from './contrato-documento.js';

@@ -6,7 +6,7 @@ import type { SaidaEstoque } from '../produtos/produtos.service.js';
 import { ajustarConferencia } from './domain/lancamento.js';
 
 export const comDetalhes = {
-  cliente: { select: { id: true, nome: true } },
+  cliente: { select: { id: true, nome: true, telefone: true } },
   itens: {
     include: {
       profissional: {

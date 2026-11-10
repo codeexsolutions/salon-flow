@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { CalendarClock, Footprints, MessageCircle, Receipt, Wallet } from 'lucide-react';
+import { CalendarClock, Footprints, Receipt, Wallet } from 'lucide-react';
 import {
   formatarPreco,
+  montarMensagem,
   type ClienteDetalhe,
   type PontosCliente,
   type ProfissionalResumo,
@@ -12,25 +13,20 @@ import { excluirAnotacao, salvarAnotacao } from '@/app/admin/(painel)/clientes/a
 import { EditarCliente } from '@/components/clientes/editar-cliente';
 import { FichaTecnica } from '@/components/clientes/ficha-tecnica';
 import { PontosDoCliente } from '@/components/fidelidade/pontos-cliente';
+import { MenuWhatsApp } from '@/components/mensagens/menu-whatsapp';
 import { CabecalhoPagina } from '@/components/ui/cabecalho-pagina';
-import { classeBotaoSecundario } from '@/components/ui/campo';
 import { Indicador } from '@/components/ui/indicador';
 import { Secao } from '@/components/ui/secao';
 import { ApiError } from '@/lib/api/client';
 import { apiSalao } from '@/lib/api/salao';
 import { obterContextoAdmin, pode } from '@/lib/auth/contexto';
 import { dataPorExtenso, hojeNoFuso, horaLocal, dataLocal } from '@/lib/data-hora';
+import { configMensagens, primeiroNome } from '@/lib/mensagens';
+import { origemDoSite } from '@/lib/site';
 
 export const metadata = { title: 'Cliente' };
 
 const dataCurta = (d: string) => d.split('-').reverse().join('/');
-
-/** Link do WhatsApp (assume Brasil quando o número vem sem DDI). */
-function linkWhatsApp(telefone: string | null) {
-  const digitos = telefone?.replace(/\D/g, '') ?? '';
-  if (digitos.length < 10) return null;
-  return `https://wa.me/${digitos.length <= 11 ? `55${digitos}` : digitos}`;
-}
 
 function idade(nascimento: string, hoje: string) {
   const [a, m, d] = nascimento.split('-').map(Number);
@@ -82,10 +78,38 @@ export default async function ClientePage({ params }: PageProps<'/admin/clientes
     apiSalao<ProfissionalResumo[]>('/profissionais').catch(() => []),
     apiSalao<PontosCliente>(`/fidelidade/clientes/${id}`).catch(() => null),
   ]);
+  const [mensagens, origem] = await Promise.all([configMensagens(), origemDoSite()]);
 
   const fuso = salao.fusoHorario;
   const hoje = hojeNoFuso(fuso);
-  const whatsapp = linkWhatsApp(cliente.telefone);
+  const variaveis = {
+    nome: primeiroNome(cliente.nome),
+    salao: salao.nome,
+    link: `${origem}/s/${salao.slug}`,
+  };
+  const proximo = cliente.proximosAgendamentos[0];
+  const opcoesWhatsApp = [
+    { rotulo: 'Conversa (sem texto)' },
+    ...(proximo
+      ? [
+          {
+            rotulo: 'Lembrete do próximo horário',
+            texto: montarMensagem(mensagens.modelos.lembrete, {
+              ...variaveis,
+              servico: proximo.servico,
+              profissional: proximo.profissional,
+              data: dataPorExtenso(dataLocal(proximo.inicio, fuso)),
+              hora: horaLocal(proximo.inicio, fuso),
+            }),
+          },
+        ]
+      : []),
+    {
+      rotulo: 'Feliz aniversário',
+      texto: montarMensagem(mensagens.modelos.aniversario, variaveis),
+    },
+    { rotulo: 'Estamos com saudade', texto: montarMensagem(mensagens.modelos.saudade, variaveis) },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -101,14 +125,7 @@ export default async function ClientePage({ params }: PageProps<'/admin/clientes
         ]
           .filter(Boolean)
           .join(' · ')}
-        acoes={
-          whatsapp && (
-            <a href={whatsapp} target="_blank" rel="noreferrer" className={classeBotaoSecundario}>
-              <MessageCircle className="size-4" aria-hidden />
-              WhatsApp
-            </a>
-          )
-        }
+        acoes={<MenuWhatsApp telefone={cliente.telefone} opcoes={opcoesWhatsApp} />}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

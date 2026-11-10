@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import {
   formatarPreco,
+  montarMensagem,
   type AgendamentoAgenda,
   type ProfissionalNaAgenda,
 } from '@salonflow/shared';
@@ -18,11 +19,13 @@ export function DetalheAgendamento({
   agendamento,
   profissionais,
   fusoHorario,
+  lembrete,
   aoConcluir,
 }: {
   agendamento: AgendamentoAgenda;
   profissionais: ProfissionalNaAgenda[];
   fusoHorario: string;
+  lembrete: { modelo: string; salao: string };
   aoConcluir: () => void;
 }) {
   const router = useRouter();
@@ -32,6 +35,14 @@ export function DetalheAgendamento({
 
   const profissional = profissionais.find((p) => p.id === agendamento.profissionalId);
   const whatsapp = agendamento.cliente.telefone && linkWhatsApp(agendamento.cliente.telefone);
+  const textoLembrete = montarMensagem(lembrete.modelo, {
+    nome: agendamento.cliente.nome.trim().split(/\s+/)[0],
+    salao: lembrete.salao,
+    servico: agendamento.servico.nome,
+    profissional: profissional?.nome,
+    data: dataPorExtenso(dataLocal(agendamento.inicio, fusoHorario)),
+    hora: horaLocal(agendamento.inicio, fusoHorario),
+  });
   const acoes = ACOES_STATUS[agendamento.status];
 
   function mudarStatus(status: (typeof acoes)[number]['status']) {
@@ -85,6 +96,16 @@ export function DetalheAgendamento({
                   className="ml-2 text-sucesso underline"
                 >
                   WhatsApp
+                </a>
+              )}
+              {whatsapp && ['AGENDADO', 'CONFIRMADO'].includes(agendamento.status) && (
+                <a
+                  href={`${whatsapp}?text=${encodeURIComponent(textoLembrete)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-2 text-sucesso underline"
+                >
+                  Lembrar pelo WhatsApp
                 </a>
               )}
             </span>

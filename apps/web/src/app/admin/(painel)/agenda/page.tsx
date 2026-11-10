@@ -5,6 +5,7 @@ import { classeBotaoSecundario } from '@/components/ui/campo';
 import { apiSalao } from '@/lib/api/salao';
 import { obterContextoAdmin } from '@/lib/auth/contexto';
 import { dataPorExtenso, hojeNoFuso, somarDias } from '@/lib/data-hora';
+import { configMensagens } from '@/lib/mensagens';
 
 export const metadata = { title: 'Agenda' };
 
@@ -14,9 +15,10 @@ export default async function AgendaPage({ searchParams }: PageProps<'/admin/age
   const pedido = (await searchParams).data;
   const data = dataLocalSchema.safeParse(pedido).success ? (pedido as string) : hoje;
 
-  const [agenda, servicos] = await Promise.all([
+  const [agenda, servicos, mensagens] = await Promise.all([
     apiSalao<AgendaDia>(`/agenda?data=${data}`),
     apiSalao<ServicoResumo[]>('/servicos'),
+    configMensagens(),
   ]);
 
   return (
@@ -62,7 +64,11 @@ export default async function AgendaPage({ searchParams }: PageProps<'/admin/age
         </p>
       </div>
 
-      <GradeAgenda agenda={agenda} servicos={servicos} />
+      <GradeAgenda
+        agenda={agenda}
+        servicos={servicos}
+        lembrete={{ modelo: mensagens.modelos.lembrete, salao: salao.nome }}
+      />
     </div>
   );
 }

@@ -2,8 +2,13 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { BellOff, Cake, Search, Users } from 'lucide-react';
-import { formatarPreco, type ClienteNaLista } from '@salonflow/shared';
+import { BellOff, Cake, MessageCircle, Search, Users } from 'lucide-react';
+import {
+  formatarPreco,
+  linkWhatsApp,
+  montarMensagem,
+  type ClienteNaLista,
+} from '@salonflow/shared';
 import { classeInput } from '@/components/ui/campo';
 import { EstadoVazio } from '@/components/ui/estado-vazio';
 
@@ -39,9 +44,12 @@ function quandoVeio(c: ClienteNaLista) {
 export function ListaClientes({
   clientes,
   mesAtual,
+  whatsapp,
 }: {
   clientes: ClienteNaLista[];
   mesAtual: string;
+  /** Textos de aniversário/saudade (atalho do WhatsApp nesses filtros). */
+  whatsapp: { salao: string; link: string; aniversario: string; saudade: string };
 }) {
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState<Filtro>('todos');
@@ -141,11 +149,27 @@ export function ListaClientes({
           {visiveis.map((c) => {
             const aniversario = c.nascimento?.slice(5, 7) === mesAtual;
             const sumido = c.diasSemVir !== null && c.diasSemVir >= DIAS_SUMIDO;
+            const modelo =
+              filtro === 'aniversariantes'
+                ? whatsapp.aniversario
+                : filtro === 'sumidos'
+                  ? whatsapp.saudade
+                  : null;
+            const conversa =
+              modelo &&
+              linkWhatsApp(
+                c.telefone,
+                montarMensagem(modelo, {
+                  nome: c.nome.trim().split(/\s+/)[0],
+                  salao: whatsapp.salao,
+                  link: whatsapp.link,
+                }),
+              );
             return (
-              <li key={c.id}>
+              <li key={c.id} className="flex items-center">
                 <Link
                   href={`/admin/clientes/${c.id}`}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 transition hover:bg-nude/50"
+                  className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 transition hover:bg-nude/50"
                 >
                   <span className="flex min-w-0 flex-1 basis-48 flex-col">
                     <span className="flex items-center gap-1.5 font-medium">
@@ -159,7 +183,7 @@ export function ListaClientes({
                       {!c.recebeNotificacoes && (
                         <BellOff
                           className="size-3.5 shrink-0 text-suave"
-                          aria-label="Não recebe notificações"
+                          aria-label="Não recebe pedido de avaliação"
                         />
                       )}
                     </span>
@@ -186,6 +210,18 @@ export function ListaClientes({
                     {c.faltas > 0 && <span className="text-perigo"> · {c.faltas} falta(s)</span>}
                   </span>
                 </Link>
+                {conversa && (
+                  <a
+                    href={conversa}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mr-3 flex size-9 shrink-0 items-center justify-center rounded-full text-sucesso hover:bg-sucesso-suave"
+                    aria-label={`Mandar mensagem para ${c.nome} no WhatsApp`}
+                    title="Mandar mensagem pronta no WhatsApp"
+                  >
+                    <MessageCircle className="size-5" aria-hidden />
+                  </a>
+                )}
               </li>
             );
           })}

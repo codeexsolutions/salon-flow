@@ -40,9 +40,12 @@ function faixaDoDia(agenda: AgendaDia) {
 export function GradeAgenda({
   agenda,
   servicos,
+  lembrete,
 }: {
   agenda: AgendaDia;
   servicos: ServicoResumo[];
+  /** Modelo do WhatsApp "lembrete de horário" e nome do salão. */
+  lembrete: { modelo: string; salao: string };
 }) {
   const [selecionado, setSelecionado] = useState<AgendamentoAgenda | null>(null);
   const [novo, setNovo] = useState<Preenchimento | null>(null);
@@ -217,6 +220,7 @@ export function GradeAgenda({
             agendamento={detalhe}
             profissionais={agenda.profissionais}
             fusoHorario={agenda.fusoHorario}
+            lembrete={lembrete}
             aoConcluir={() => setSelecionado(null)}
           />
         )}

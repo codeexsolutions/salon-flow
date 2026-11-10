@@ -146,7 +146,7 @@ export interface ComandaResumo {
   id: string;
   numero: number;
   status: StatusComanda;
-  cliente: { id: string; nome: string } | null;
+  cliente: { id: string; nome: string; telefone?: string | null } | null;
   quantidadeItens: number;
   /** Subtotal menos desconto (na aberta é a previsão; na fechada, o total cobrado). */
   totalCentavos: number;

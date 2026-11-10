@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import type { MeuAgendamento, PerfilCliente } from '@salonflow/shared';
 import { CartaoAgendamento } from '@/components/cliente/cartao-agendamento';
+import { AtivarNotificacoes } from '@/components/pwa/ativar-notificacoes';
 import { ConviteInstalarApp } from '@/components/pwa/convite-instalar-app';
 import { api } from '@/lib/api/client';
 import { exigirSessao } from '@/lib/auth/sessao';
+import { chavePublicaPush } from '@/lib/push/chave';
 
 export const metadata = { title: 'Meus agendamentos' };
 
@@ -34,12 +36,18 @@ async function carregar() {
 }
 
 export default async function MeusAgendamentosPage() {
-  const { proximos, historico, convidarCadastro } = await carregar();
+  const [{ proximos, historico, convidarCadastro }, chavePush] = await Promise.all([
+    carregar(),
+    chavePublicaPush(),
+  ]);
 
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
         <h1 className="text-3xl">Meus agendamentos</h1>
+        {(proximos.length > 0 || historico.length > 0) && (
+          <AtivarNotificacoes chavePublica={chavePush} />
+        )}
         {convidarCadastro && (
           <Link
             href="/conta/dados"

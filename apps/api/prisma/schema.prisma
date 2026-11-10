@@ -40,10 +40,11 @@ model Usuario {
   recuperacaoTentativas   Int       @default(0) @map("recuperacao_tentativas")
   recuperacaoBloqueadaAte DateTime? @map("recuperacao_bloqueada_ate")
 
-  vinculos      MembroSalao[]
-  profissionais Profissional[]
-  clientes      Cliente[]
-  perfilCliente PerfilCliente?
+  vinculos        MembroSalao[]
+  profissionais   Profissional[]
+  clientes        Cliente[]
+  perfilCliente   PerfilCliente?
+  assinaturasPush AssinaturaPush[]
 
   @@map("usuarios")
 }
@@ -105,6 +106,8 @@ model Salao {
   reaberturasComanda   ReaberturaComanda[]
   contratoParcerias    ContratoParceria[]
   anotacoesCliente     AnotacaoCliente[]
+  configMensagens      ConfigMensagens?
+  avaliacoes           Avaliacao[]
   programaFidelidade   ProgramaFidelidade?
   premiosFidelidade    PremioFidelidade[]
   movimentosPontos     MovimentoPontos[]
@@ -304,6 +307,7 @@ model Cliente {
   comandas     Comanda[]
   anotacoes    AnotacaoCliente[]
   pontos       MovimentoPontos[]
+  avaliacoes   Avaliacao[]
 
   @@unique([salaoId, usuarioId])
   @@index([salaoId, nome])
@@ -313,20 +317,22 @@ model Cliente {
 /// Um serviço, com um profissional, num horário. Preço e duração são gravados
 /// no momento do agendamento (mudanças futuras no serviço não afetam este).
 model Agendamento {
-  id             String            @id @default(uuid()) @db.Uuid
-  salaoId        String            @map("salao_id") @db.Uuid
-  clienteId      String            @map("cliente_id") @db.Uuid
-  profissionalId String            @map("profissional_id") @db.Uuid
-  servicoId      String            @map("servico_id") @db.Uuid
-  inicio         DateTime          @db.Timestamptz
-  fim            DateTime          @db.Timestamptz
-  precoCentavos  Int               @map("preco_centavos")
-  status         StatusAgendamento @default(AGENDADO)
-  origem         OrigemAgendamento @default(SALAO)
-  observacoes    String?
-  criadoPorId    String?           @map("criado_por_id") @db.Uuid
-  criadoEm       DateTime          @default(now()) @map("criado_em")
-  atualizadoEm   DateTime          @updatedAt @map("atualizado_em")
+  id                String            @id @default(uuid()) @db.Uuid
+  salaoId           String            @map("salao_id") @db.Uuid
+  clienteId         String            @map("cliente_id") @db.Uuid
+  profissionalId    String            @map("profissional_id") @db.Uuid
+  servicoId         String            @map("servico_id") @db.Uuid
+  inicio            DateTime          @db.Timestamptz
+  fim               DateTime          @db.Timestamptz
+  precoCentavos     Int               @map("preco_centavos")
+  status            StatusAgendamento @default(AGENDADO)
+  origem            OrigemAgendamento @default(SALAO)
+  observacoes       String?
+  criadoPorId       String?           @map("criado_por_id") @db.Uuid
+  /// Push de lembrete já enviado (ou dispensado).
+  lembreteEnviadoEm DateTime?         @map("lembrete_enviado_em")
+  criadoEm          DateTime          @default(now()) @map("criado_em")
+  atualizadoEm      DateTime          @updatedAt @map("atualizado_em")
 
   salao        Salao        @relation(fields: [salaoId], references: [id], onDelete: Cascade)
   cliente      Cliente      @relation(fields: [clienteId], references: [id], onDelete: NoAction)
@@ -414,6 +420,7 @@ model Comanda {
   pagamentos  Pagamento[]
   reaberturas ReaberturaComanda[]
   pontos      MovimentoPontos?
+  avaliacao   Avaliacao?
 
   @@unique([salaoId, numero])
   @@index([salaoId, status])
@@ -915,4 +922,61 @@ model PerfilCliente {
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("perfis_cliente")
+}
+
+/// Aparelho/navegador do usuário inscrito para receber push.
+model AssinaturaPush {
+  id        String   @id @default(uuid()) @db.Uuid
+  usuarioId String   @map("usuario_id") @db.Uuid
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("assinaturas_push")
+}
+
+/// Pushes automáticos e modelos de mensagem do WhatsApp do salão.
+/// Sem registro = padrões (lembrete 24 h antes, avaliação 2 h depois).
+model ConfigMensagens {
+  salaoId              String   @id @map("salao_id") @db.Uuid
+  /// Horas antes do horário para o push de lembrete (null = não enviar).
+  lembreteHorasAntes   Int?     @default(24) @map("lembrete_horas_antes") @db.SmallInt
+  /// Horas depois do atendimento para o push de avaliação (null = não pedir).
+  avaliacaoHorasDepois Int?     @default(2) @map("avaliacao_horas_depois") @db.SmallInt
+  /// Textos do WhatsApp personalizados ({ lembrete, avaliacao, aniversario, saudade }).
+  modelos              Json?
+  atualizadoEm         DateTime @updatedAt @map("atualizado_em")
+
+  salao Salao @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+
+  @@map("config_mensagens")
+}
+
+/// Avaliação do atendimento (uma por comanda). Criada ao fechar a comanda; o
+/// cliente responde pelo link (token) recebido no push ou no WhatsApp.
+model Avaliacao {
+  id            String    @id @default(uuid()) @db.Uuid
+  salaoId       String    @map("salao_id") @db.Uuid
+  clienteId     String    @map("cliente_id") @db.Uuid
+  comandaId     String    @unique @map("comanda_id") @db.Uuid
+  token         String    @unique @default(uuid()) @db.Uuid
+  /// Quando o push pode ser enviado.
+  pedirEm       DateTime  @map("pedir_em")
+  pushEnviadoEm DateTime? @map("push_enviado_em")
+  nota          Int?      @db.SmallInt
+  comentario    String?
+  respondidaEm  DateTime? @map("respondida_em")
+  criadoEm      DateTime  @default(now()) @map("criado_em")
+
+  salao   Salao   @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  comanda Comanda @relation(fields: [comandaId], references: [id], onDelete: Cascade)
+
+  @@index([salaoId, respondidaEm])
+  @@index([pushEnviadoEm, pedirEm])
+  @@map("avaliacoes")
 }

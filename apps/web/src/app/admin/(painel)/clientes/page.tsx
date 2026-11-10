@@ -10,6 +10,8 @@ import { Secao } from '@/components/ui/secao';
 import { apiSalao } from '@/lib/api/salao';
 import { obterContextoAdmin, pode } from '@/lib/auth/contexto';
 import { hojeNoFuso } from '@/lib/data-hora';
+import { configMensagens } from '@/lib/mensagens';
+import { origemDoSite } from '@/lib/site';
 
 export const metadata = { title: 'Clientes' };
 
@@ -31,7 +33,11 @@ export default async function ClientesPage() {
     );
   }
 
-  const clientes = await apiSalao<ClienteNaLista[]>('/clientes/todos');
+  const [clientes, mensagens, origem] = await Promise.all([
+    apiSalao<ClienteNaLista[]>('/clientes/todos'),
+    configMensagens(),
+    origemDoSite(),
+  ]);
   const mesAtual = hojeNoFuso(salao.fusoHorario).slice(5, 7);
 
   const ativos = clientes.filter((c) => c.diasSemVir !== null && c.diasSemVir < DIAS_ATIVO);
@@ -75,7 +81,16 @@ export default async function ClientesPage() {
         />
       </div>
 
-      <ListaClientes clientes={clientes} mesAtual={mesAtual} />
+      <ListaClientes
+        clientes={clientes}
+        mesAtual={mesAtual}
+        whatsapp={{
+          salao: salao.nome,
+          link: `${origem}/s/${salao.slug}`,
+          aniversario: mensagens.modelos.aniversario,
+          saudade: mensagens.modelos.saudade,
+        }}
+      />
     </div>
   );
 }

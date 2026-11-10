@@ -70,7 +70,7 @@ export function FormPerfilCliente({ perfil }: { perfil: PerfilCliente }) {
           />
         </Campo>
       </div>
-      <Campo rotulo="E-mail" ajuda="Para receber lembretes e novidades dos salões.">
+      <Campo rotulo="E-mail" ajuda="Opcional.">
         <input
           type="email"
           value={d.email}

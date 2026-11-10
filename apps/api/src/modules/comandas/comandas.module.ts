@@ -4,6 +4,7 @@ import { CaixaModule } from '../caixa/caixa.module.js';
 import { ClientesModule } from '../clientes/clientes.module.js';
 import { ComissoesModule } from '../comissoes/comissoes.module.js';
 import { FidelidadeModule } from '../fidelidade/fidelidade.module.js';
+import { NotificacoesModule } from '../notificacoes/notificacoes.module.js';
 import { ProdutosModule } from '../produtos/produtos.module.js';
 import { ServicosModule } from '../servicos/servicos.module.js';
 import { ComandasController } from './comandas.controller.js';
@@ -17,6 +18,7 @@ import { ComandasService } from './comandas.service.js';
     ClientesModule,
     ComissoesModule,
     FidelidadeModule,
+    NotificacoesModule,
     ProdutosModule,
     ServicosModule,
   ],

@@ -7,7 +7,7 @@ import type {
 } from '../../generated/prisma/client.js';
 
 type ComandaCompleta = Comanda & {
-  cliente: { id: string; nome: string } | null;
+  cliente: { id: string; nome: string; telefone?: string | null } | null;
   itens: (ComandaItem & {
     profissional: { id: string; nome: string; contratos?: { servicoIds: string[] }[] } | null;
     servico?: { precoAPartirDe: boolean } | null;

@@ -8,6 +8,7 @@ import { AgendaModule } from './modules/agenda/agenda.module.js';
 import { CaixaModule } from './modules/caixa/caixa.module.js';
 import { ClientesModule } from './modules/clientes/clientes.module.js';
 import { FidelidadeModule } from './modules/fidelidade/fidelidade.module.js';
+import { NotificacoesModule } from './modules/notificacoes/notificacoes.module.js';
 import { ComandasModule } from './modules/comandas/comandas.module.js';
 import { ComissoesModule } from './modules/comissoes/comissoes.module.js';
 import { ContratosModule } from './modules/contratos/contratos.module.js';
@@ -36,6 +37,7 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module.js';
     ServicosModule,
     ClientesModule,
     FidelidadeModule,
+    NotificacoesModule,
     AgendaModule,
     ComissoesModule,
     ProdutosModule,

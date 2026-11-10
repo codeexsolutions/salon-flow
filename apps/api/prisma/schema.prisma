@@ -103,6 +103,7 @@ model Salao {
   maquininhas          Maquininha[]
   reaberturasComanda   ReaberturaComanda[]
   contratoParcerias    ContratoParceria[]
+  anotacoesCliente     AnotacaoCliente[]
 
   @@index([cidade, uf])
   @@map("saloes")
@@ -170,7 +171,8 @@ model Profissional {
   comandaItens   ComandaItem[]
   repasses       Repasse[]
 
-  contratos ContratoParceria[]
+  contratos        ContratoParceria[]
+  anotacoesCliente AnotacaoCliente[]
 
   @@unique([salaoId, email])
   @@unique([salaoId, usuarioId])
@@ -231,12 +233,13 @@ model Servico {
   criadoEm       DateTime @default(now()) @map("criado_em")
   atualizadoEm   DateTime @updatedAt @map("atualizado_em")
 
-  salao          Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
-  profissionais  ServicoProfissional[]
-  agendamentos   Agendamento[]
-  regrasComissao RegraComissao[]
-  comandaItens   ComandaItem[]
-  fichaTecnica   FichaTecnicaItem[]
+  salao            Salao                 @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  profissionais    ServicoProfissional[]
+  agendamentos     Agendamento[]
+  regrasComissao   RegraComissao[]
+  comandaItens     ComandaItem[]
+  fichaTecnica     FichaTecnicaItem[]
+  anotacoesCliente AnotacaoCliente[]
 
   @@unique([salaoId, nome])
   @@index([salaoId, ativo])
@@ -278,20 +281,24 @@ enum OrigemAgendamento {
 /// Ficha do cliente NO SALÃO. Pode existir sem conta no app (usuarioId nulo);
 /// quem agenda pelo app tem a ficha vinculada à própria conta.
 model Cliente {
-  id           String   @id @default(uuid()) @db.Uuid
-  salaoId      String   @map("salao_id") @db.Uuid
-  usuarioId    String?  @map("usuario_id") @db.Uuid
-  nome         String
-  telefone     String?
-  email        String?
-  observacoes  String?
-  criadoEm     DateTime @default(now()) @map("criado_em")
-  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+  id                 String    @id @default(uuid()) @db.Uuid
+  salaoId            String    @map("salao_id") @db.Uuid
+  usuarioId          String?   @map("usuario_id") @db.Uuid
+  nome               String
+  telefone           String?
+  email              String?
+  observacoes        String?
+  nascimento         DateTime? @db.Date
+  /// Lembretes, pedido de feedback e avisos. O salão desliga por cliente (padrão: ligado).
+  recebeNotificacoes Boolean   @default(true) @map("recebe_notificacoes")
+  criadoEm           DateTime  @default(now()) @map("criado_em")
+  atualizadoEm       DateTime  @updatedAt @map("atualizado_em")
 
-  salao        Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
-  usuario      Usuario?      @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  salao        Salao             @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  usuario      Usuario?          @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
   agendamentos Agendamento[]
   comandas     Comanda[]
+  anotacoes    AnotacaoCliente[]
 
   @@unique([salaoId, usuarioId])
   @@index([salaoId, nome])
@@ -793,4 +800,28 @@ model ArquivoContrato {
 
   @@index([salaoId])
   @@map("arquivos_contrato")
+}
+
+/// Ficha técnica do cliente: o que foi feito em cada atendimento
+/// (ex.: "coloração 2.5 castanho + OX 20 vol, pausa 35 min").
+model AnotacaoCliente {
+  id             String   @id @default(uuid()) @db.Uuid
+  salaoId        String   @map("salao_id") @db.Uuid
+  clienteId      String   @map("cliente_id") @db.Uuid
+  profissionalId String?  @map("profissional_id") @db.Uuid
+  servicoId      String?  @map("servico_id") @db.Uuid
+  /// Data do atendimento (pode ser anterior ao registro).
+  data           DateTime @db.Date
+  texto          String
+  autorId        String?  @map("autor_id") @db.Uuid
+  criadoEm       DateTime @default(now()) @map("criado_em")
+  atualizadoEm   DateTime @updatedAt @map("atualizado_em")
+
+  salao        Salao         @relation(fields: [salaoId], references: [id], onDelete: Cascade)
+  cliente      Cliente       @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  profissional Profissional? @relation(fields: [profissionalId], references: [id], onDelete: SetNull)
+  servico      Servico?      @relation(fields: [servicoId], references: [id], onDelete: SetNull)
+
+  @@index([salaoId, clienteId, data])
+  @@map("anotacoes_cliente")
 }

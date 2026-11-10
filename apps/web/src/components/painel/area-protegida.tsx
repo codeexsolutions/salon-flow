@@ -6,14 +6,16 @@ export async function AreaProtegida({
   permissao,
   children,
 }: {
-  permissao: Permissao;
+  /** Uma ou várias (qualquer uma libera; a primeira dá nome à área). */
+  permissao: Permissao | Permissao[];
   children: React.ReactNode;
 }) {
   const { salao } = await obterContextoAdmin();
-  if (!pode(salao, permissao)) {
+  const lista = [permissao].flat();
+  if (!lista.some((p) => pode(salao, p))) {
     return (
       <p className="text-sm text-suave">
-        A área &ldquo;{ROTULO_PERMISSAO[permissao].rotulo}&rdquo; não está liberada para você. Fale
+        A área &ldquo;{ROTULO_PERMISSAO[lista[0]].rotulo}&rdquo; não está liberada para você. Fale
         com o dono do salão.
       </p>
     );

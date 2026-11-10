@@ -98,22 +98,27 @@ export default async function ProAgendaPage({ searchParams }: PageProps<'/pro'>)
       ) : (
         <ul className="flex flex-col gap-2">
           {agenda.agendamentos.map((a) => (
-            <li
-              key={a.id}
-              className="flex gap-3 rounded-xl border border-borda border-l-4 p-3"
-              style={{ borderLeftColor: eu.corAgenda }}
-            >
-              <span className="w-12 shrink-0 font-semibold">
-                {horaLocal(a.inicio, agenda.fusoHorario)}
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate font-medium">{a.cliente.nome}</span>
-                <span className="truncate text-sm text-suave">
-                  {a.servico.nome} · até {horaLocal(a.fim, agenda.fusoHorario)}
+            <li key={a.id}>
+              <Link
+                href={`/pro/clientes/${a.cliente.id}?data=${data}&servico=${a.servico.id}`}
+                className="flex gap-3 rounded-xl border border-borda border-l-4 p-3 transition hover:bg-nude/50"
+                style={{ borderLeftColor: eu.corAgenda }}
+              >
+                <span className="w-12 shrink-0 font-semibold">
+                  {horaLocal(a.inicio, agenda.fusoHorario)}
                 </span>
-                {a.observacoes && <span className="text-xs text-suave">{a.observacoes}</span>}
-              </span>
-              <span className="shrink-0 text-xs text-suave">{ROTULO_STATUS[a.status]}</span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate font-medium">{a.cliente.nome}</span>
+                  <span className="truncate text-sm text-suave">
+                    {a.servico.nome} · até {horaLocal(a.fim, agenda.fusoHorario)}
+                  </span>
+                  {a.observacoes && <span className="text-xs text-suave">{a.observacoes}</span>}
+                </span>
+                <span className="flex shrink-0 flex-col items-end gap-1 text-xs text-suave">
+                  {ROTULO_STATUS[a.status]}
+                  <span className="text-primaria">Ficha</span>
+                </span>
+              </Link>
             </li>
           ))}
         </ul>

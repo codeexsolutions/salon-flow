@@ -8,6 +8,8 @@ import type { Papel } from './enums.js';
 export const PERMISSOES = [
   'AGENDA',
   'COMANDAS',
+  'CADASTRO_CLIENTES',
+  'CLIENTES',
   'CAIXA',
   'PROFISSIONAIS',
   'ESTOQUE',
@@ -23,6 +25,14 @@ export const ROTULO_PERMISSAO: Record<Permissao, { rotulo: string; descricao: st
     descricao: 'Ver e marcar horários de todos os profissionais',
   },
   COMANDAS: { rotulo: 'Comandas', descricao: 'Abrir, lançar e fechar comandas' },
+  CADASTRO_CLIENTES: {
+    rotulo: 'Cadastrar clientes',
+    descricao: 'Só o formulário de cadastro (sem histórico nem valores)',
+  },
+  CLIENTES: {
+    rotulo: 'Clientes: histórico e ficha',
+    descricao: 'Quanto cada cliente gastou, visitas e ficha técnica',
+  },
   CAIXA: { rotulo: 'Caixa', descricao: 'Abrir, entradas e saídas, fechar' },
   PROFISSIONAIS: { rotulo: 'Profissionais', descricao: 'Jornada e folgas da equipe' },
   ESTOQUE: { rotulo: 'Estoque', descricao: 'Entradas e saídas de produtos' },
@@ -45,7 +55,15 @@ export function permissoesPadrao(papel: Papel): Permissao[] {
     case 'DONO':
       return [...PERMISSOES];
     case 'RECEPCAO':
-      return ['AGENDA', 'COMANDAS', 'CAIXA', 'PROFISSIONAIS', 'ESTOQUE', 'MINHAS_COMISSOES'];
+      return [
+        'AGENDA',
+        'COMANDAS',
+        'CADASTRO_CLIENTES',
+        'CAIXA',
+        'PROFISSIONAIS',
+        'ESTOQUE',
+        'MINHAS_COMISSOES',
+      ];
     case 'PROFISSIONAL':
       return ['MINHAS_COMISSOES'];
   }

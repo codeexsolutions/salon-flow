@@ -6,6 +6,7 @@ import { useState } from 'react';
 import {
   ArrowLeftRight,
   CalendarDays,
+  Contact,
   ExternalLink,
   FileSignature,
   HandCoins,
@@ -37,13 +38,20 @@ interface Item {
   /** Papéis que veem o item (sem = todos). */
   papeis?: Papel[];
   /** Área que o dono precisa ter liberado para a pessoa. */
-  permissao?: Permissao;
+  /** Qualquer uma delas libera o item. */
+  permissao?: Permissao | Permissao[];
 }
 
 const ITENS: Item[] = [
   { rotulo: 'Início', href: '/admin', icone: LayoutDashboard },
   { rotulo: 'Agenda', href: '/admin/agenda', icone: CalendarDays, permissao: 'AGENDA' },
   { rotulo: 'Comandas', href: '/admin/comandas', icone: Receipt, permissao: 'COMANDAS' },
+  {
+    rotulo: 'Clientes',
+    href: '/admin/clientes',
+    icone: Contact,
+    permissao: ['CLIENTES', 'CADASTRO_CLIENTES'],
+  },
   { rotulo: 'Caixa', href: '/admin/caixa', icone: Wallet, permissao: 'CAIXA' },
   {
     rotulo: 'Profissionais',
@@ -136,7 +144,8 @@ function ConteudoMenu({
     href === '/admin' ? caminho === '/admin' : caminho === href || caminho.startsWith(`${href}/`);
   const itens = ITENS.filter(
     (i) =>
-      (!i.papeis || i.papeis.includes(salao.papel)) && (!i.permissao || pode(salao, i.permissao)),
+      (!i.papeis || i.papeis.includes(salao.papel)) &&
+      (!i.permissao || [i.permissao].flat().some((p) => pode(salao, p))),
   );
 
   return (

@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ClientesController } from './clientes.controller.js';
+import { ProfissionaisModule } from '../profissionais/profissionais.module.js';
+import { ClientesController, ProClientesController } from './clientes.controller.js';
 import { ClientesRepository } from './clientes.repository.js';
 import { ClientesService } from './clientes.service.js';
 
 @Module({
-  controllers: [ClientesController],
+  imports: [ProfissionaisModule],
+  controllers: [ClientesController, ProClientesController],
   providers: [ClientesService, ClientesRepository],
   exports: [ClientesService],
 })

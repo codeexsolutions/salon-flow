@@ -4,6 +4,7 @@ import {
   formatarPercentual,
   formatarPreco,
   ROTULO_FORMA_PAGAMENTO,
+  type AnotacaoCliente,
   type ComandaDetalhe,
   type MaquininhaDto,
   type ProdutoResumo,
@@ -16,7 +17,7 @@ import { ReabrirComanda } from '@/components/comandas/reabrir-comanda';
 import { Secao } from '@/components/ui/secao';
 import { ApiError } from '@/lib/api/client';
 import { apiSalao } from '@/lib/api/salao';
-import { obterContextoAdmin } from '@/lib/auth/contexto';
+import { obterContextoAdmin, pode } from '@/lib/auth/contexto';
 import { dataLocal, dataPorExtenso, hojeNoFuso, horaLocal, somarDias } from '@/lib/data-hora';
 
 const dma = (data: string) => data.split('-').reverse().join('/');
@@ -50,12 +51,48 @@ export default async function ComandaPage({ params }: PageProps<'/admin/comandas
         </p>
       </div>
 
+      {comanda.cliente && (
+        <FichaResumo clienteId={comanda.cliente.id} verFicha={pode(salao, 'CLIENTES')} />
+      )}
+
       {comanda.status === 'ABERTA' ? (
         <EditorAberta comanda={comanda} ehDono={salao.papel === 'DONO'} fuso={fuso} />
       ) : (
         <ComandaEncerrada comanda={comanda} ehDono={salao.papel === 'DONO'} fuso={fuso} />
       )}
     </div>
+  );
+}
+
+/** Últimos registros da ficha técnica do cliente (fórmulas, tons) para o atendimento. */
+async function FichaResumo({ clienteId, verFicha }: { clienteId: string; verFicha: boolean }) {
+  const anotacoes = await apiSalao<AnotacaoCliente[]>(
+    `/clientes/${clienteId}/anotacoes?limite=2`,
+  ).catch(() => [] as AnotacaoCliente[]);
+  if (anotacoes.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-2 rounded-xl border border-primaria/30 bg-nude/40 p-3 text-sm print:hidden">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-medium">Ficha técnica do cliente</h2>
+        {verFicha && (
+          <Link href={`/admin/clientes/${clienteId}`} className="text-xs text-primaria">
+            Ver ficha completa
+          </Link>
+        )}
+      </div>
+      <ul className="flex flex-col gap-2">
+        {anotacoes.map((a) => (
+          <li key={a.id}>
+            <span className="text-xs text-suave">
+              {dma(a.data)}
+              {a.servico && ` · ${a.servico.nome}`}
+              {a.profissional && ` · ${a.profissional.nome}`}
+            </span>
+            <p className="whitespace-pre-line">{a.texto}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

@@ -1,0 +1,5 @@
+import { AreaProtegida } from '@/components/painel/area-protegida';
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return <AreaProtegida permissao={['CLIENTES', 'CADASTRO_CLIENTES']}>{children}</AreaProtegida>;
+}

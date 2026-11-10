@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { Wallet } from 'lucide-react';
 import {
   FORMAS_PAGAMENTO,
   formatarPreco,
@@ -39,11 +40,8 @@ export function GerarRepasse({
 
   if (!aberto) {
     return (
-      <button
-        type="button"
-        onClick={() => setAberto(true)}
-        className="text-sm font-medium text-primaria"
-      >
+      <button type="button" onClick={() => setAberto(true)} className={classeBotaoPrimario}>
+        <Wallet className="size-4" aria-hidden />
         Pagar {formatarPreco(pendenteCentavos)}
       </button>
     );

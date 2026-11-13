@@ -15,7 +15,7 @@ export default function ClienteLayout({ children }: { children: React.ReactNode 
     <div className="flex flex-1 flex-col overflow-x-clip pb-20 sm:pb-0">
       <header className="sticky top-0 z-30 border-b border-borda bg-background/90 backdrop-blur print:hidden">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <Marca />
+          <Marca href="/saloes" />
           <div className="flex items-center gap-5">
             <MenuTopoCliente />
             <Suspense>

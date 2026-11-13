@@ -10,7 +10,7 @@ import {
   telefoneSchema,
 } from '@salonflow/shared';
 import { definirRecuperacao } from '@/lib/auth/recuperacao-actions';
-import { enderecoDisponivel } from '@/app/(cliente)/cadastro-salao/actions';
+import { enderecoDisponivel } from '@/app/(site)/cadastro-salao/actions';
 import { criarSalao } from '@/app/admin/novo-salao/actions';
 import { sugerirSlug } from '@/lib/slug';
 import { criarSupabaseBrowser } from '@/lib/supabase/client';
@@ -29,6 +29,8 @@ type Erros = Partial<Record<string, string[]>>;
 export function FormCadastroSalao() {
   const [slug, setSlug] = useState('');
   const [slugEditado, setSlugEditado] = useState(false);
+  /** O link da página só vira campo se a pessoa quiser trocar o sugerido. */
+  const [editarSlug, setEditarSlug] = useState(false);
   const [erros, setErros] = useState<Erros>({});
   const [mensagem, setMensagem] = useState<{ ok: boolean; texto: string } | null>(null);
   /** Conta já criada (não cria de novo se o salão falhar e a pessoa reenviar). */
@@ -45,27 +47,31 @@ export function FormCadastroSalao() {
       setErros(resultado.erros ?? {});
       setMensagem({
         ok: false,
-        texto: resultado.mensagem ?? 'Sua conta foi criada, mas o estabelecimento não. Confira os dados.',
+        texto:
+          resultado.mensagem ??
+          'Sua conta foi criada, mas o estabelecimento não. Confira os dados.',
       });
     }
   }
 
   function enviar(formData: FormData) {
     const texto = (c: string) => String(formData.get(c) ?? '').trim();
-    const dadosSalao = Object.fromEntries(
-      ['nome', 'slug', 'telefone', 'cidade', 'uf']
-        .map((c) => [c, texto(c)])
-        .filter(([, v]) => v !== ''),
-    );
     setErros({});
     setMensagem(null);
 
-    const validacao = criarSalaoSchema.safeParse(dadosSalao);
     const usuario = nomeUsuarioSchema.safeParse(texto('usuario'));
     const celular = telefoneSchema.safeParse(texto('celular'));
+    // Cadastro curto: o WhatsApp do dono vira o telefone do negócio; cidade e o resto, no painel.
+    const validacao = criarSalaoSchema.safeParse({
+      nome: texto('nome'),
+      slug,
+      ...(celular.success && { telefone: celular.data }),
+    });
     if (!validacao.success || !usuario.success || !celular.success) {
+      const errosSalao = validacao.error ? z.flattenError(validacao.error).fieldErrors : {};
+      if (errosSalao.slug) setEditarSlug(true);
       setErros({
-        ...(validacao.error && z.flattenError(validacao.error).fieldErrors),
+        ...errosSalao,
         ...(usuario.error && { usuario: usuario.error.issues.map((i) => i.message) }),
         ...(celular.error && { celular: celular.error.issues.map((i) => i.message) }),
       });
@@ -76,6 +82,7 @@ export function FormCadastroSalao() {
 
     iniciar(async () => {
       if (!(await enderecoDisponivel(validacao.data.slug))) {
+        setEditarSlug(true);
         setErros({ slug: ['Este endereço já está em uso. Escolha outro.'] });
         return;
       }
@@ -128,9 +135,8 @@ export function FormCadastroSalao() {
 
   return (
     <form action={enviar} className="flex flex-col gap-6">
-      <fieldset className="flex flex-col gap-4">
-        <legend className="mb-3 font-display text-xl">Seu negócio</legend>
-        <Campo rotulo="Nome do estabelecimento" erro={erros.nome}>
+      <div className="flex flex-col gap-4">
+        <Campo rotulo="Nome do salão ou negócio" erro={erros.nome}>
           <input
             name="nome"
             required
@@ -139,51 +145,41 @@ export function FormCadastroSalao() {
             className={classeInput}
           />
         </Campo>
-        <Campo
-          rotulo="Endereço da sua página"
-          erro={erros.slug}
-          ajuda="É o link que você divulga para os clientes agendarem."
-        >
-          <div className="flex items-center rounded-xl border border-borda bg-superficie focus-within:border-primaria focus-within:ring-2 focus-within:ring-primaria/20">
-            <span className="pl-3.5 text-sm text-suave">salonflow.com.br/s/</span>
-            <input
-              name="slug"
-              required
-              value={slug}
-              onChange={(e) => {
-                setSlugEditado(true);
-                setSlug(e.target.value.toLowerCase());
-              }}
-              className="min-w-0 flex-1 bg-transparent px-1 py-2.5 outline-none"
-            />
-          </div>
-        </Campo>
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_5rem]">
-          <Campo rotulo="Telefone / WhatsApp" erro={erros.telefone}>
-            <input
-              name="telefone"
-              type="tel"
-              placeholder="(11) 99999-9999"
-              className={classeInput}
-            />
+        {editarSlug ? (
+          <Campo
+            rotulo="Link da sua página"
+            erro={erros.slug}
+            ajuda="É o link que você divulga para os clientes agendarem."
+          >
+            <div className="flex items-center rounded-xl border border-borda bg-superficie focus-within:border-primaria focus-within:ring-2 focus-within:ring-primaria/20">
+              <span className="pl-3.5 text-sm text-suave">salonflow.com.br/s/</span>
+              <input
+                name="slug"
+                required
+                value={slug}
+                onChange={(e) => {
+                  setSlugEditado(true);
+                  setSlug(e.target.value.toLowerCase());
+                }}
+                className="min-w-0 flex-1 bg-transparent px-1 py-2.5 outline-none"
+              />
+            </div>
           </Campo>
-          <Campo rotulo="Cidade" erro={erros.cidade}>
-            <input name="cidade" className={classeInput} />
-          </Campo>
-          <Campo rotulo="UF" erro={erros.uf}>
-            <input
-              name="uf"
-              maxLength={2}
-              placeholder="SP"
-              className={`${classeInput} uppercase`}
-            />
-          </Campo>
-        </div>
-      </fieldset>
-
-      <fieldset className="flex flex-col gap-4 border-t border-borda pt-6">
-        <legend className="mb-3 font-display text-xl">Seu acesso</legend>
-        <Campo rotulo="Seu nome (responsável)">
+        ) : (
+          slug && (
+            <p className="-mt-2 text-sm text-suave">
+              Seu link: <span className="text-foreground">salonflow.com.br/s/{slug}</span>{' '}
+              <button
+                type="button"
+                onClick={() => setEditarSlug(true)}
+                className="font-medium text-primaria hover:underline"
+              >
+                alterar
+              </button>
+            </p>
+          )
+        )}
+        <Campo rotulo="Seu nome">
           <input
             name="responsavel"
             required
@@ -192,22 +188,23 @@ export function FormCadastroSalao() {
             className={classeInput}
           />
         </Campo>
+        <Campo
+          rotulo="Seu WhatsApp"
+          erro={erros.celular}
+          ajuda="Com DDD. Usamos para falar com você na implantação e para recuperar a senha."
+        >
+          <input
+            name="celular"
+            type="tel"
+            required
+            autoComplete="tel"
+            inputMode="tel"
+            placeholder="(85) 99999-9999"
+            className={classeInput}
+          />
+        </Campo>
         <div className="grid gap-3 sm:grid-cols-2">
           <CampoUsuario novo erro={erros.usuario} />
-          <Campo
-            rotulo="Seu celular"
-            erro={erros.celular}
-            ajuda="Com DDD. Usado para recuperar a senha."
-          >
-            <input
-              name="celular"
-              type="tel"
-              required
-              autoComplete="tel"
-              inputMode="tel"
-              className={classeInput}
-            />
-          </Campo>
           <Campo rotulo="Senha" ajuda="Mínimo de 6 caracteres.">
             <input
               name="senha"
@@ -219,7 +216,7 @@ export function FormCadastroSalao() {
             />
           </Campo>
         </div>
-      </fieldset>
+      </div>
 
       {mensagem && (
         <p
@@ -233,7 +230,7 @@ export function FormCadastroSalao() {
       )}
 
       <button type="submit" disabled={pendente} className={classeBotaoPrimario}>
-        {pendente ? 'Cadastrando…' : 'Cadastrar e entrar no painel'}
+        {pendente ? 'Criando sua conta…' : 'Criar conta grátis'}
       </button>
       <p className="text-center text-sm text-suave">
         Já tem conta?{' '}

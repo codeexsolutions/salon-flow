@@ -3,7 +3,7 @@
   "name": "SalonFlow",
   "short_name": "SalonFlow",
   "description": "Encontre salões e agende seus horários",
-  "start_url": "/",
+  "start_url": "/saloes",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

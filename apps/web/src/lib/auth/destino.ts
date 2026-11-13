@@ -20,5 +20,5 @@ export function destinoPorPapel(perfil: PerfilUsuario, tipoConta?: string): stri
   if (perfil.saloes.some((s) => s.papel === 'PROFISSIONAL')) return '/pro';
   if (tipoConta === 'salao') return '/admin/novo-salao';
   if (tipoConta === 'profissional') return '/pro';
-  return '/';
+  return '/saloes';
 }

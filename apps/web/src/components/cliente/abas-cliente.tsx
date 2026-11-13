@@ -14,8 +14,7 @@ export const ABAS_CLIENTE = [
 /** Aba ativa: "Conta" cobre as páginas de conta e notificações; "Explorar", as de salão. */
 export function abaAtiva(caminho: string, href: string) {
   if (href === '/conta/senha') return caminho.startsWith('/conta');
-  if (href === '/saloes')
-    return caminho === '/' || caminho.startsWith('/saloes') || caminho.startsWith('/s/');
+  if (href === '/saloes') return caminho.startsWith('/saloes') || caminho.startsWith('/s/');
   return caminho.startsWith(href);
 }
 
